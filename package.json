@@ -1,0 +1,19 @@
+{
+  "name": "sasdn",
+  "version": "0.0.1",
+  "description": "High Stability, High Availability, High Scalability, Distributed System, NodeJs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/agreatfool/SASDN.git"
+  },
+  "author": "Jonathan Dai",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/agreatfool/SASDN/issues"
+  },
+  "homepage": "https://github.com/agreatfool/SASDN#readme"
+}
