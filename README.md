@@ -20,7 +20,8 @@ tsc --version # @2.3.4
 
 ## TODO
 
-- [ ] 创建grpc简单sample
+- [x] 创建grpc简单sample
+- [ ] 制作工具脚本，为grpc-tools生成出来的js代码生成t.ds定义
 - [ ] 学习grpc中proto的设定细节
 - [ ] grpc => restful 研究
 - [ ] proto => swagger json
