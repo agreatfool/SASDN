@@ -22,9 +22,11 @@
   },
   "devDependencies": {
     "@types/google-protobuf": "^3.2.5",
+    "@types/handlebars": "^4.0.32",
     "@types/node": "^7.0.22",
     "gulp": "^3.9.1",
     "handlebars": "^4.0.10",
+    "protobufjs": "^6.7.3",
     "ts-protoc-gen": "^0.3.1"
   }
 }

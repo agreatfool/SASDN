@@ -5,12 +5,12 @@
  * specified in [plugin.proto](https://github.com/google/protobuf/blob/master/src/google/protobuf/compiler/plugin.proto).
  */
 import {ExportMap} from "./lib/ExportMap";
-import Utility from "./lib/Utility";
+import {Utility} from "./lib/Utility";
 import {CodeGeneratorRequest, CodeGeneratorResponse} from "google-protobuf/google/protobuf/compiler/plugin_pb";
 import {FileDescriptorProto} from "google-protobuf/google/protobuf/descriptor_pb";
 
-import ProtoMsgTsdFormatter from './lib/format/ProtoMsgTsdFormatter';
-import ProtoSvcTsdFormatter from './lib/format/ProtoSvcTsdFormatter';
+import {ProtoMsgTsdFormatter} from './lib/format/ProtoMsgTsdFormatter';
+import {ProtoSvcTsdFormatter} from './lib/format/ProtoSvcTsdFormatter';
 
 Utility.withAllStdIn((inputBuff: Buffer) => {
 
@@ -31,7 +31,7 @@ Utility.withAllStdIn((inputBuff: Buffer) => {
 
         codeGenRequest.getFileToGenerateList().forEach(fileName => {
             // message part
-            let msgFileName = Utility.msgFilePathFromProtoWithoutExt(fileName);
+            let msgFileName = Utility.filePathFromProtoWithoutExt(fileName);
             let msgTsdFile = new CodeGeneratorResponse.File();
             msgTsdFile.setName(msgFileName + ".d.ts");
             msgTsdFile.setContent(ProtoMsgTsdFormatter.format(fileNameToDescriptor[fileName], exportMap));

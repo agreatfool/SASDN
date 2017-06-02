@@ -3,15 +3,23 @@ syntax = "proto3";
 package com.book;
 
 message Book {
-  int64 isbn = 1;
-  string title = 2;
-  string author = 3;
+    int64 isbn = 1;
+    string title = 2;
+    string author = 3;
 }
 
 message GetBookRequest {
-  int64 isbn = 1;
+    int64 isbn = 1;
 }
 
 service BookService {
-  rpc GetBook(GetBookRequest) returns (Book) {}
+    rpc GetBook (GetBookRequest) returns (Book) {
+    }
+}
+
+enum EnumSample {
+    option allow_alias = true;
+    UNKNOWN = 0;
+    STARTED = 1;
+    RUNNING = 1;
 }

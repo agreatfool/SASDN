@@ -1,9 +1,9 @@
 import {FileDescriptorProto} from "google-protobuf/google/protobuf/descriptor_pb";
 import {ExportMap} from "../ExportMap";
 
-export default class ProtoSvcTsdFormatter {
+export namespace ProtoSvcTsdFormatter {
 
-    static format(descriptor: FileDescriptorProto, map: ExportMap): string {
+    export function format(descriptor: FileDescriptorProto, exportMap: ExportMap): string {
         return '';
     }
 
