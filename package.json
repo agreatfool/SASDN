@@ -24,7 +24,7 @@
     "@types/google-protobuf": "^3.2.5",
     "@types/node": "^7.0.22",
     "gulp": "^3.9.1",
-    "protobufjs": "^6.7.3",
+    "handlebars": "^4.0.10",
     "ts-protoc-gen": "^0.3.1"
   }
 }

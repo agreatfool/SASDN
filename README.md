@@ -5,8 +5,8 @@ Name: High **S**tability, High **A**vailability, High **S**calability, **D**istr
 
 ## Install
 ```bash
-node --version # v7.10.0
-npm --version # 4.2.0
+node --version # v8.0.0
+npm --version # 5.0.0
 
 brew install protobuf
 protoc --version # libprotoc 3.3.0
