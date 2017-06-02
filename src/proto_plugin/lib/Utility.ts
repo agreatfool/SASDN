@@ -45,7 +45,7 @@ export default class Utility {
         return exportEntry.pkg ? name.substring(exportEntry.pkg.length + 1) : name;
     }
 
-    static msgFilePathFromProtoWithoutExt(protoFilePath: string): string {
+    static filePathFromProtoWithoutExt(protoFilePath: string): string {
         return protoFilePath.replace(".proto", "_pb");
     }
 
