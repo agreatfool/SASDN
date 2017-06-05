@@ -10,6 +10,7 @@ import {EnumFormatter} from "./EnumFormatter";
 import {ExtensionFormatter} from "./ExtensionFormatter";
 import {OneofFormatter} from "./OneofFormatter";
 import {TplEngine} from "../../TplEngine";
+import {Debug} from "../../Debug";
 
 export const OBJECT_TYPE_NAME = 'AsObject';
 
@@ -26,7 +27,7 @@ export namespace MessageFormatter {
         formattedExtListStr: Array<string>;
     }
 
-    export const defaultMessageType = {
+    export const defaultMessageType = JSON.stringify({
         messageName: "",
         oneofGroups: [],
         oneofDeclList: [],
@@ -35,7 +36,7 @@ export namespace MessageFormatter {
         formattedEnumListStr: [],
         formattedOneofListStr: [],
         formattedExtListStr: [],
-    } as MessageType;
+    } as MessageType);
 
     export interface MessageFieldType {
         snakeCaseName: string;
@@ -53,7 +54,7 @@ export namespace MessageFormatter {
         hasFieldPresence: boolean;
     }
 
-    export const defaultMessageFieldType = {
+    export const defaultMessageFieldType = JSON.stringify({
         snakeCaseName: "",
         camelCaseName: "",
         camelUpperName: "",
@@ -67,7 +68,7 @@ export namespace MessageFormatter {
         canBeUndefined: false,
         hasClearMethodCreated: false,
         hasFieldPresence: false,
-    } as MessageFieldType;
+    } as MessageFieldType);
 
     export interface MessageMapField {
         keyType: FieldDescriptorProto.Type;
@@ -98,7 +99,7 @@ export namespace MessageFormatter {
                            indentLevel: number,
                            fileDescriptor: FileDescriptorProto): string {
 
-        let messageData = defaultMessageType as MessageType;
+        let messageData = JSON.parse(defaultMessageType) as MessageType;
 
         messageData.messageName = descriptor.getName();
         messageData.oneofDeclList = descriptor.getOneofDeclList();
@@ -112,7 +113,7 @@ export namespace MessageFormatter {
 
         descriptor.getFieldList().forEach((field: FieldDescriptorProto) => {
 
-            let fieldData = defaultMessageFieldType as MessageFieldType;
+            let fieldData = JSON.parse(defaultMessageFieldType) as MessageFieldType;
 
             if (field.hasOneofIndex()) {
                 let oneOfIndex = field.getOneofIndex();
@@ -159,6 +160,7 @@ export namespace MessageFormatter {
                     mapData.valueType = valueType;
                     mapData.valueTypeName = valueTypeName;
                     fieldData.mapFieldInfo = mapData;
+                    messageData.fields.push(fieldData);
                     return;
                 }
 
@@ -186,7 +188,7 @@ export namespace MessageFormatter {
 
             } else {
 
-                fieldData.exportType = FieldTypesFormatter.getTypeName(fieldData.type);
+                exportType = fieldData.exportType = FieldTypesFormatter.getTypeName(fieldData.type);
 
             }
 
