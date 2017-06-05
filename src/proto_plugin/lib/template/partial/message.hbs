@@ -1,0 +1,12 @@
+
+{{!-- MessagePart --}}
+{{{indent}}}export class {{{message.messageName}}} extends jspb.Message {
+{{#each message.fields}}
+{{#if this.isMapField}}
+{{{indent}}}    get{{{this.camelUpperName}}}Map(): jspb.Map<{{{this.mapFieldInfo.keyTypeName}}}, {{{this.mapFieldInfo.valueTypeName}}}>;
+{{{indent}}}    clear{{{this.camelUpperName}}}Map(): void;
+{{/if}}
+{{/each}}
+{{{indent}}}\}
+
+{{!-- ToObjectPart --}}

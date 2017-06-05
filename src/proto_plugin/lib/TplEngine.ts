@@ -6,6 +6,10 @@ const TPL_BASE_PATH = LibPath.join(__dirname, 'template');
 
 export namespace TplEngine {
 
+    export function registerHelper(name: string, fn: Function, inverse?: boolean): void {
+        handlebars.registerHelper(name, fn, inverse);
+    }
+
     export function render(templateName: string, params: {[key: string]: any}): string {
         return compile(templateName)(params);
     }
