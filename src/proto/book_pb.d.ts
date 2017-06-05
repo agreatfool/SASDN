@@ -51,6 +51,29 @@ export namespace GetBookRequest {
   }
 }
 
+export class BookStore extends jspb.Message {
+  getName(): string;
+  setName(value: string): void;
+
+  getBooksMap(): jspb.Map<number, string>;
+  clearBooksMap(): void;
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): BookStore.AsObject;
+  static toObject(includeInstance: boolean, msg: BookStore): BookStore.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: BookStore, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): BookStore;
+  static deserializeBinaryFromReader(message: BookStore, reader: jspb.BinaryReader): BookStore;
+}
+
+export namespace BookStore {
+  export type AsObject = {
+    name: string,
+    booksMap: Array<[number, string]>,
+  }
+}
+
 export enum EnumSample {
   UNKNOWN = 0,
   STARTED = 1,
