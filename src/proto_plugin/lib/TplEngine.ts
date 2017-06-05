@@ -4,6 +4,12 @@ import * as handlebars from "handlebars";
 import * as helpers from "handlebars-helpers";
 
 helpers({handlebars: handlebars});
+handlebars.registerHelper('curlyLeft', function () {
+    return '{';
+});
+handlebars.registerHelper('curlyRight', function () {
+    return '}';
+});
 
 const TPL_BASE_PATH = LibPath.join(__dirname, 'template');
 
@@ -19,7 +25,7 @@ export namespace TplEngine {
 
     export function compile(templateName: string): HandlebarsTemplateDelegate {
         return handlebars.compile(
-            LibFs.readFileSync(`${LibPath.join(TPL_BASE_PATH, templateName)}.hbs`)
+            LibFs.readFileSync(`${LibPath.join(TPL_BASE_PATH, templateName)}.hbs`).toString()
         );
     }
 

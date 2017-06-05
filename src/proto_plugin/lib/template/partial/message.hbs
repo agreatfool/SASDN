@@ -52,7 +52,7 @@
 {{{indent}}}    static serializeBinaryToWriter(message: {{{message.messageName}}}, writer: jspb.BinaryWriter): void;
 {{{indent}}}    static deserializeBinary(bytes: Uint8Array): {{{message.messageName}}};
 {{{indent}}}    static deserializeBinaryFromReader(message: {{{message.messageName}}}, reader: jspb.BinaryReader): {{{message.messageName}}};
-{{{indent}}}\} {{!-- type class end --}}
+{{{indent}}}{{curlyRight}} {{!-- type class end --}}
 
 {{!-- namespace --}}
 {{{indent}}}export namespace {{{message.messageName}}} {
@@ -95,4 +95,4 @@
 {{{indent}}}{{{this}}}
 {{/each}}
 
-{{{indent}}}\}
+{{{indent}}}{{curlyRight}}
