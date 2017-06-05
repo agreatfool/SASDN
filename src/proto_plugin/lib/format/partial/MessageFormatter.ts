@@ -237,10 +237,18 @@ export namespace MessageFormatter {
                 return `clear${fieldData.camelUpperName}${fieldData.isRepeatField ? "List" : ""}(): void;`;
             }
         });
+        TplEngine.registerHelper('printRepeatedAddMethod', function (fieldData: MessageFieldType, valueType: string) {
+            return `add${fieldData.camelUpperName}(value${fieldData.isOptionalValue ? "?" : ""}: ${valueType}, index?: number): ${valueType};`;
+        });
+        TplEngine.registerHelper('oneOfName', function (oneOfDecl: OneofDescriptorProto) {
+            return Utility.oneOfName(oneOfDecl.getName());
+        });
 
         return TplEngine.render('partial/message', {
             indent: Utility.generateIndent(indentLevel),
             objectTypeName: OBJECT_TYPE_NAME,
+            BYTES_TYPE: BYTES_TYPE,
+            MESSAGE_TYPE: MESSAGE_TYPE,
             message: messageData,
         });
     }

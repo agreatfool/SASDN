@@ -1,53 +1,54 @@
 import {FileDescriptorProto} from "google-protobuf/google/protobuf/descriptor_pb";
 import {ExportMap} from "../ExportMap";
-import Printer from "../Printer";
 import {Utility} from "../Utility";
-import {WellKnownTypesMap} from '../WellKnown';
-import {printMessage} from "ts-protoc-gen/lib/ts/message";
-import {printExtension} from "../../ts/extensions";
-import {printEnum} from "ts-protoc-gen/lib/ts/enum";
+import {WellKnownTypesMap} from "../WellKnown";
+import {TplEngine} from "../TplEngine";
+import {MessageFormatter} from "./partial/MessageFormatter";
+import {ExtensionFormatter} from "./partial/ExtensionFormatter";
+import {EnumFormatter} from "./partial/EnumFormatter";
 
 export namespace ProtoMsgTsdFormatter {
 
     export function format(descriptor: FileDescriptorProto, exportMap: ExportMap): string {
-        const fileName = descriptor.getName();
-        const packageName = descriptor.getPackage();
+        let fileName = descriptor.getName();
+        let packageName = descriptor.getPackage();
 
-        const printer = new Printer(0);
+        let imports: Array<string> = [];
+        let messages: Array<string> = [];
+        let extensions: Array<string> = [];
+        let enums: Array<string> = [];
 
-        printer.printLn(`// package: ${packageName}`);
-        printer.printLn(`// file: ${descriptor.getName()}`);
+        let upToRoot = Utility.getPathToRoot(fileName);
 
-        const upToRoot = Utility.getPathToRoot(fileName);
-
-        printer.printEmptyLn();
-        printer.printLn(`import * as jspb from "google-protobuf";`);
-
+        imports.push(`import * as jspb from "google-protobuf";`);
         descriptor.getDependencyList().forEach((dependency: string) => {
-            const pseudoNamespace = Utility.filePathToPseudoNamespace(dependency);
+            let pseudoNamespace = Utility.filePathToPseudoNamespace(dependency);
             if (dependency in WellKnownTypesMap) {
-                printer.printLn(`import * as ${pseudoNamespace} from "${WellKnownTypesMap[dependency]}";`);
+                imports.push(`import * as ${pseudoNamespace} from "${WellKnownTypesMap[dependency]}";`);
             } else {
-                const filePath = Utility.filePathFromProtoWithoutExt(dependency);
-                printer.printLn(`import * as ${pseudoNamespace} from "${upToRoot}${filePath}";`);
+                let filePath = Utility.filePathFromProtoWithoutExt(dependency);
+                imports.push(`import * as ${pseudoNamespace} from "${upToRoot}${filePath}";`);
             }
         });
 
         descriptor.getMessageTypeList().forEach(enumType => {
-            printer.print(printMessage(fileName, exportMap, enumType, 0, descriptor));
+            messages.push(MessageFormatter.format(fileName, exportMap, enumType, 0, descriptor));
         });
-
         descriptor.getExtensionList().forEach(extension => {
-            printer.print(printExtension(fileName, exportMap, extension, 0));
+            extensions.push(ExtensionFormatter.format(fileName, exportMap, extension, 0));
         });
-
         descriptor.getEnumTypeList().forEach(enumType => {
-            printer.print(printEnum(enumType, 0));
+            enums.push(EnumFormatter.format(enumType, 0));
         });
 
-        printer.printEmptyLn();
-
-        return printer.getOutput();
+        return TplEngine.render('msg_tsd', {
+            packageName: packageName,
+            fileName: fileName,
+            imports: imports,
+            messages: messages,
+            extensions: extensions,
+            enums: enums,
+        });
     }
 
 }

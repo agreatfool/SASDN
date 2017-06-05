@@ -26,6 +26,7 @@
     "@types/node": "^7.0.22",
     "gulp": "^3.9.1",
     "handlebars": "^4.0.10",
+    "handlebars-helpers": "^0.8.2",
     "protobufjs": "^6.7.3",
     "ts-protoc-gen": "^0.3.1"
   }
