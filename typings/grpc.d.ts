@@ -23,7 +23,7 @@ declare module 'grpc' {
         /**
          * Deserialize enum values as strings instead of numbers. Defaults to `true`.
          */
-        enumsAsStrings: boolean;
+        enumsAsStrings?: boolean;
     }
 
     export interface ILoadProtobufOptions extends ILoadOptions {
@@ -54,7 +54,7 @@ declare module 'grpc' {
      * - Anything else becomes the relevant reflection object that ProtoBuf.js would create
      */
     export interface IProtobufDefinition {
-        [key: string]: any;
+        [namespace: string]: { [service: string]: typeof Client };
     }
 
     /**
@@ -64,7 +64,7 @@ declare module 'grpc' {
      *   ProtoBuf.js is provided in the value argument. If the option is 'detect',
      *   gRPC will guess what the version is based on the structure of the value.
      *   Defaults to 'detect'.
-     * @param {Object} value The ProtoBuf.js reflection object to load
+     * @param {Object} replectionObject The ProtoBuf.js reflection object to load
      * @param {Object=} options Options to apply to the loaded file
      * @return {Object<string, *>} The resulting gRPC object
      */
@@ -169,7 +169,7 @@ declare module 'grpc' {
          * @param metadataGenerator The function that generates metadata
          * @return The credentials object
          */
-        createFromMetadataGenerator(metadataGenerator: (s: string, callback: (error: Error, metadata: Metadata) => void) => void): CallCredentials;
+        createFromMetadataGenerator(metadataGenerator: (target: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) => void): CallCredentials;
 
         /**
          * Create a gRPC credential from a Google credential object.
@@ -201,7 +201,7 @@ declare module 'grpc' {
          * @return The insecure credentials object
          */
         createInsecure(): ChannelCredentials;
-    }
+    };
 
     export class ChannelCredentials {
         static Init(exports: object): void;
@@ -429,22 +429,22 @@ declare module 'grpc' {
     /**
      * Propagate flag name to number mapping
      */
-    export const propagate: {}
+    export const propagate: {};
 
     /**
      * Call error name to code number mapping
      */
-    export const callError: {}
+    export const callError: {};
 
     /**
      * Write flag name to code number mapping
      */
-    export const writeFlags: {}
+    export const writeFlags: {};
 
     /**
      * Log verbosity setting name to code number mapping
      */
-    export const logVerbosity: {}
+    export const logVerbosity: {};
 
     /**
      * Creates a constructor for a client with the given methods.
@@ -520,7 +520,7 @@ declare module 'grpc' {
      * @param deadline When to stop waiting for a connection. Pass Infinity to wait forever.
      * @param callback The callback to call when done attempting to connect.
      */
-    export function waitForClientReady(client: Client, deadline: Date | number, callback: (error?: Error) => void): void;
+    export function waitForClientReady(client: Client, deadline: Date | number, callback: (error: Error | null) => void): void;
 
     export function closeClient(clientObj: Client): void;
 }
