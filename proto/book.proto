@@ -17,6 +17,11 @@ service BookService {
     }
 }
 
+message BookStore {
+    string name = 1;
+    map<int64, string> books = 2;
+}
+
 enum EnumSample {
     option allow_alias = true;
     UNKNOWN = 0;
