@@ -10,7 +10,7 @@
     "emitDecoratorMetadata": true
   },
   "include": [
-    "stub/grpc.d.ts",
+    "typings/**/*.d.ts",
     "src/**/*.ts"
   ],
   "exclude": [
