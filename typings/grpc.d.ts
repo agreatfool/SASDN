@@ -452,7 +452,7 @@ declare module 'grpc' {
      * @param serviceName The fully qualified name of the service
      * @return New client constructor
      */
-    export function makeGenericClientConstructor(methods: IMethodsMap, serviceName: string): Client;
+    export function makeGenericClientConstructor(methods: IMethodsMap, serviceName?: string): Client;
 
     /**
      * Create a client with the given methods
