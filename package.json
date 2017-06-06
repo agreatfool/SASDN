@@ -24,10 +24,10 @@
     "@types/google-protobuf": "^3.2.5",
     "@types/handlebars": "^4.0.32",
     "@types/node": "^7.0.22",
+    "grpc_tools_node_protoc_ts": "^1.0.5",
     "gulp": "^3.9.1",
     "handlebars": "^4.0.10",
     "handlebars-helpers": "^0.8.2",
-    "protobufjs": "^6.7.3",
-    "ts-protoc-gen": "^0.3.1"
+    "protobufjs": "^6.7.3"
   }
 }

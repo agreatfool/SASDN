@@ -1,16 +1,16 @@
 import * as gRPC from 'grpc';
 
-const messages = require('./proto/book_pb');
-const services = require('./proto/book_grpc_pb');
+import {BookServiceClient} from "./proto/book_grpc_pb";
+import {Book, GetBookRequest} from "./proto/book_pb";
 
 function main() {
-    let client = new services.BookServiceClient('127.0.0.1:50051', gRPC.credentials.createInsecure());
+    let client = new BookServiceClient('127.0.0.1:50051', gRPC.credentials.createInsecure());
 
-    let request = new messages.GetBookRequest();
+    let request = new GetBookRequest();
     request.setIsbn(1402894627);
 
-    client.getBook(request, function(err, response) {
-        console.log('Response:', response);
+    client.getBook(request, function(err, response: Book) {
+        console.log('Response:', response, response.getAuthor());
     });
 }
 main();

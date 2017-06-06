@@ -1,10 +1,9 @@
 import * as gRPC from 'grpc';
-
-const messages = require('./proto/book_pb');
-const services = require('./proto/book_grpc_pb');
+import {Book} from "./proto/book_pb";
+import {BookServiceService as BookService} from "./proto/book_grpc_pb";
 
 function getBook(call, callback) {
-    let reply = new messages.Book();
+    let reply = new Book();
     reply.setTitle('Good Book');
     reply.setAuthor('Jonathan');
     console.log(call.request.getIsbn(), reply);
@@ -13,7 +12,7 @@ function getBook(call, callback) {
 
 function main() {
     let server = new gRPC.Server();
-    server.addService(services.BookServiceService, {getBook: getBook});
+    server.addService(BookService, {getBook: getBook});
     server.bind('127.0.0.1:50051', gRPC.ServerCredentials.createInsecure());
     console.log('Listening on: 127.0.0.1:50051');
     server.start();
