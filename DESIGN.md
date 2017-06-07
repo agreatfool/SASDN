@@ -26,3 +26,4 @@ DESIGN
 * [protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
 * [Swagger Tools](http://swagger.io/tools/)
 * [grpc](https://github.com/grpc/grpc)
+* [gRPC Concepts](http://www.grpc.io/docs/guides/concepts.html)
