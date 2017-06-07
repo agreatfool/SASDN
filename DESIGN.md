@@ -16,7 +16,13 @@ DESIGN
 * 启动服务器，响应rpc调用，所有处理都以Promise/Async来实现
 
 ### gateway框架
-* 直接基于koa框架
+* 直接基于koa框架封装一层
 
 ## Resources
-* 
+* [grpc-gateway](https://github.com/grpc-ecosystem/grpc-gateway)
+* [gRPC Web](https://github.com/grpc/grpc/blob/master/doc/PROTOCOL-WEB.md)
+* [mali](https://malijs.github.io)
+* [koa](http://koajs.com/)
+* [protobuf](https://developers.google.com/protocol-buffers/docs/proto3)
+* [Swagger Tools](http://swagger.io/tools/)
+* [grpc](https://github.com/grpc/grpc)
