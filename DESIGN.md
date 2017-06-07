@@ -27,3 +27,4 @@ DESIGN
 * [Swagger Tools](http://swagger.io/tools/)
 * [grpc](https://github.com/grpc/grpc)
 * [gRPC Concepts](http://www.grpc.io/docs/guides/concepts.html)
+* [another grpc.d.ts](https://github.com/mixer/etcd3/blob/master/src/types/grpc.d.ts)
