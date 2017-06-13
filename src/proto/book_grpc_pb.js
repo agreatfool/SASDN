@@ -86,3 +86,18 @@ var BookServiceService = exports.BookServiceService = {
 };
 
 exports.BookServiceClient = grpc.makeGenericClientConstructor(BookServiceService);
+var TestServiceService = exports.TestServiceService = {
+  test: {
+    path: '/com.book.TestService/Test',
+    requestStream: false,
+    responseStream: false,
+    requestType: book_pb.GetBookRequest,
+    responseType: book_pb.Book,
+    requestSerialize: serialize_com_book_GetBookRequest,
+    requestDeserialize: deserialize_com_book_GetBookRequest,
+    responseSerialize: serialize_com_book_Book,
+    responseDeserialize: deserialize_com_book_Book,
+  },
+};
+
+exports.TestServiceClient = grpc.makeGenericClientConstructor(TestServiceService);

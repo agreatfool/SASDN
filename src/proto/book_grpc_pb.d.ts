@@ -4,7 +4,7 @@
 import * as grpc from "grpc";
 import * as book_pb from "./book_pb";
 
-interface IBookServiceService {
+interface IBookServiceService extends grpc.IMethodsMap {
     getBook: IGetBook;
     getBooksViaAuthor: IGetBooksViaAuthor;
     getGreatestBook: IGetGreatestBook;
@@ -63,4 +63,26 @@ export class BookServiceClient extends grpc.Client {
     getBooksViaAuthor(request: book_pb.GetBookViaAuthor): grpc.ClientReadableStream;
     getGreatestBook(callback: (error: Error | null, response: book_pb.Book) => void): grpc.ClientWritableStream;
     getBooks(): grpc.ClientDuplexStream;
+}
+
+interface ITestServiceService extends grpc.IMethodsMap {
+    test: ITest;
+}
+
+interface ITest {
+    path: string; // "/com.book.TestService/Test"
+    requestStream: boolean; // false
+    responseStream: boolean; // false
+    requestType: book_pb.GetBookRequest,
+    responseType: book_pb.Book,
+    requestSerialize: (arg: book_pb.GetBookRequest) => Buffer;
+    requestDeserialize: (buffer: Uint8Array) => book_pb.GetBookRequest;
+    responseSerialize: (arg: book_pb.Book) => Buffer;
+    responseDeserialize: (buffer: Uint8Array) => book_pb.Book;
+}
+
+export const TestServiceService: ITestServiceService;
+export class TestServiceClient extends grpc.Client {
+    constructor(address: string, credentials: any, options?: grpc.IClientOptions);
+    test(request: book_pb.GetBookRequest, callback: (error: Error | null, response: book_pb.Book) => void): grpc.ClientUnaryCall;
 }

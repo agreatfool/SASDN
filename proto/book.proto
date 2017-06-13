@@ -23,6 +23,10 @@ service BookService {
     rpc GetBooks (stream GetBookRequest) returns (stream Book) {}
 }
 
+service TestService {
+    rpc Test (GetBookRequest) returns (Book) {}
+}
+
 message BookStore {
     string name = 1;
     map<int64, string> books = 2;
@@ -34,3 +38,16 @@ enum EnumSample {
     STARTED = 1;
     RUNNING = 1;
 }
+
+//message EchoMessage {
+//    string value = 1;
+//}
+//
+//service EchoService {
+//    rpc Echo(EchoMessage) returns (EchoMessage) {
+//        option (google.api.http) = {
+//            post: "/v1/echo"
+//            body: "*"
+//        };
+//    }
+//}
