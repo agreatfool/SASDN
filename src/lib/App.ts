@@ -2,9 +2,12 @@
 import * as EventEmitter from "events";
 import * as assert from "assert";
 import * as koaCompose from "koa-compose";
+import * as koaConvert from "koa-convert";
+import * as isGeneratorFunction from "is-generator-function";
 import {IServerCall, RpcImplCallback, Server, ServerCredentials} from "grpc";
 import {Context} from "./Context";
 
+const deprecate = require('depd')('SASDN');
 const debug = require('debug')('SASDN:application');
 
 export type Middleware = (ctx: Context, next: MiddlewareNext) => Promise<any>;
@@ -61,6 +64,12 @@ export class Application extends EventEmitter {
      */
     use(middleware: Middleware) {
         if (typeof middleware !== 'function') throw new TypeError('middleware must be a function!');
+        if (isGeneratorFunction(middleware)) {
+            deprecate('Support for generators will be removed in v3. ' +
+                'See the documentation for examples of how to convert old middleware ' +
+                'https://github.com/koajs/koa/blob/master/docs/migration.md');
+            middleware = koaConvert(middleware);
+        }
         debug('use %s', (middleware as any)._name || middleware.name || '-');
         this._middleware.push(middleware);
         return this;
