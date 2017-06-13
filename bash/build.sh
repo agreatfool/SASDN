@@ -3,4 +3,4 @@
 BASEDIR=$(dirname "$0")
 cd ${BASEDIR}/../
 
-tsc -p tsconfig.json --watch
+tsc -p tsconfig.json -d --watch
