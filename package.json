@@ -2,7 +2,7 @@
   "name": "sasdn",
   "version": "0.0.1",
   "description": "High Stability, High Availability, High Scalability, Distributed System, NodeJs",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
