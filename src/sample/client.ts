@@ -1,7 +1,7 @@
 import * as grpc from "grpc";
 
-import {BookServiceClient} from "./proto/book_grpc_pb";
-import {Book, GetBookRequest, GetBookViaAuthor} from "./proto/book_pb";
+import {BookServiceClient} from "../proto/book_grpc_pb";
+import {Book, GetBookRequest, GetBookViaAuthor} from "../proto/book_pb";
 import {Duplex, Readable, Writable} from "stream";
 
 let client = new BookServiceClient('127.0.0.1:50051', grpc.credentials.createInsecure());
@@ -59,8 +59,8 @@ function getBooks() {
 
 function main() {
     // getBook();
-    // getBooksViaAuthor();
+    getBooksViaAuthor();
     // getGreatestBook();
-    getBooks();
+    // getBooks();
 }
 main();

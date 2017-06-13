@@ -1,7 +1,7 @@
 import * as grpc from "grpc";
 
-import {Book, GetBookRequest, GetBookViaAuthor} from "./proto/book_pb";
-import {BookServiceService as BookService} from "./proto/book_grpc_pb";
+import {Book, GetBookRequest, GetBookViaAuthor} from "../proto/book_pb";
+import {BookServiceService as BookService} from "../proto/book_grpc_pb";
 import {Readable} from "stream";
 
 function getBook(call, callback) {
