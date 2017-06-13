@@ -8,4 +8,4 @@ git commit -m "Update."
 
 npm version patch --verbose
 npm publish --verbose
-git push origin master --verbose
+git push origin design --verbose
