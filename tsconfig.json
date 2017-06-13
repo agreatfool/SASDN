@@ -3,7 +3,6 @@
     "target": "ES6",
     "module": "commonjs",
     "sourceMap": true,
-    "allowJs": true,
     "rootDir": "src",
     "outDir": "build",
     "experimentalDecorators": true,
