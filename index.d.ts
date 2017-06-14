@@ -56,11 +56,9 @@ export declare class Application extends EventEmitter {
     /**
      * Wrap gRPC handler with other middleware.
      * @param {Middleware} reqHandler
-     * @param {IServerCall} call
-     * @param {RpcImplCallback} callback optional
      * @returns {WrappedHandler}
      */
-    wrapGrpcHandler(reqHandler: Middleware, call: IServerCall, callback?: RpcImplCallback): (call: IServerCall, callback?: RpcImplCallback) => Promise<any>;
+    wrapGrpcHandler(reqHandler: Middleware): (call: IServerCall, callback?: RpcImplCallback) => Promise<any>;
 }
 
 export declare enum GrpcOpType {

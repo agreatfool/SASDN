@@ -110,11 +110,9 @@ export class Application extends EventEmitter {
     /**
      * Wrap gRPC handler with other middleware.
      * @param {Middleware} reqHandler
-     * @param {IServerCall} call
-     * @param {RpcImplCallback} callback optional
      * @returns {WrappedHandler}
      */
-    public wrapGrpcHandler(reqHandler: Middleware, call: IServerCall, callback?: RpcImplCallback) {
+    public wrapGrpcHandler(reqHandler: Middleware) {
         let middleware = [...this._middleware, reqHandler];
         let fn = koaCompose(middleware);
 
