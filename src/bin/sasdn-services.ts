@@ -1,10 +1,8 @@
 import * as LibFs from "mz/fs";
 import * as program from "commander";
-import * as recursive from "recursive-readdir";
 import * as LibPath from "path";
-import * as grpc from "grpc";
-import * as protobuf from "protobufjs";
-import {Namespace, Service} from "protobufjs";
+import {lcfirst, mkdir, parseServicesFromProto, ProtoFile, readProtoList} from "./lib/lib";
+import {Method, Service} from "protobufjs";
 
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:Services');
@@ -16,12 +14,6 @@ program.version(pkg.version)
 
 const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.normalize((program as any).proto);
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
-
-interface ProtoFile {
-    protoPath: string;
-    relativePath: string;
-    fileName: string;
-}
 
 class ServiceCLI {
 
@@ -35,7 +27,7 @@ class ServiceCLI {
         debug('ServiceCLI start.');
         await this._validate();
         await this._loadProtos();
-        await this._genServices();
+        await this._genProtoServices();
     }
 
     private async _validate() {
@@ -52,7 +44,6 @@ class ServiceCLI {
         if (!protoStat.isDirectory()) {
             throw new Error('--proto is not a directory');
         }
-
         let outputStat = await LibFs.stat(OUTPUT_DIR);
         if (!outputStat.isDirectory()) {
             throw new Error('--output is not a directory');
@@ -62,53 +53,56 @@ class ServiceCLI {
     private async _loadProtos() {
         debug('ServiceCLI load proto files.');
 
-        let files = await recursive(PROTO_DIR, ['.DS_Store']);
-        this._protoFiles = files.map((file: string) => {
-            let protoFile = {} as ProtoFile;
-
-            file = file.replace(PROTO_DIR, ''); // remove base dir
-            protoFile.protoPath = PROTO_DIR;
-            protoFile.relativePath = LibPath.dirname(file);
-            protoFile.fileName = LibPath.basename(file);
-
-            if (protoFile.fileName.match(/.+\.proto/) !== null) {
-                return protoFile;
-            } else {
-                return undefined;
-            }
-        }).filter((value: undefined | ProtoFile) => {
-            return value !== undefined;
-        });
-
+        this._protoFiles = await readProtoList(PROTO_DIR);
         if (this._protoFiles.length === 0) {
             throw new Error('no proto files found');
         }
     }
 
-    private async _genServices() {
+    private async _genProtoServices() {
         debug('ServiceCLI generate services.');
 
-        let content = await LibFs.readFile(this._getFullProtoFilePath(this._protoFiles[0]));
-        let proto = protobuf.parse(content.toString());
-        let pkgRoot = proto.root.lookup(proto.package) as Namespace;
-
-        let nestedKeys = Object.keys(pkgRoot.nested);
-        console.log(nestedKeys);
-        nestedKeys.forEach((nestedKey) => {
-            let nestedInstance = pkgRoot.nested[nestedKey];
-            if (!(nestedInstance instanceof Service)) {
-                return;
+        for (let i = 0; i < this._protoFiles.length; i++) {
+            let protoFile = this._protoFiles[i];
+            if (!protoFile) {
+                continue;
             }
-            console.log((nestedInstance as Service).methods);
-        });
-        // for (let [key, value] of pkgRoot.nested) {
-        //     console.log(key);
-        // }
+            let services = await parseServicesFromProto(protoFile);
+            if (services.length === 0) {
+                continue;
+            }
 
+            await mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+            for (let i = 0; i < services.length; i++) {
+                await this._genService(protoFile, services[i]);
+            }
+        }
     }
 
-    private _getFullProtoFilePath(file: ProtoFile): string {
-        return LibPath.join(file.protoPath, file.relativePath, file.fileName);
+    private async _genService(protoFile: ProtoFile, service: Service) {
+        debug('ServiceCLI generate service: %s', service.name);
+
+        let methodKeys = Object.keys(service.methods);
+        if (methodKeys.length === 0) {
+            return;
+        }
+
+        let outputDir = LibPath.join(OUTPUT_DIR, 'services', service.name);
+        await mkdir(outputDir);
+
+        for (let i = 0; i < methodKeys.length; i++) {
+            let methodKey = methodKeys[i];
+            let method = service.methods[methodKey];
+            await this._genServiceMethod(protoFile, service, method);
+        }
+    }
+
+    private async _genServiceMethod(protoFile: ProtoFile, service: Service, method: Method) {
+        debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
+
+        let outputPath = LibPath.join(OUTPUT_DIR, 'services', service.name, lcfirst(method.name) + '.ts');
+
+
     }
 
 }

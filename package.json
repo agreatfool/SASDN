@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/agreatfool/SASDN#readme",
   "dependencies": {
+    "bluebird": "^3.5.0",
     "commander": "^2.9.0",
     "debug": "^2.6.8",
     "depd": "^1.1.0",
@@ -32,15 +33,18 @@
     "is-generator-function": "^1.0.6",
     "koa-compose": "^4.0.0",
     "koa-convert": "^1.2.0",
+    "mkdirp": "^0.5.1",
     "mz": "^2.6.0",
     "prompt": "^1.0.0",
     "protobufjs": "^6.7.3",
     "recursive-readdir": "^2.2.1"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.5",
     "@types/commander": "^2.9.1",
     "@types/google-protobuf": "^3.2.5",
     "@types/handlebars": "^4.0.32",
+    "@types/mkdirp": "^0.3.29",
     "@types/mz": "0.0.31",
     "@types/node": "^7.0.22"
   }

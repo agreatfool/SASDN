@@ -10,10 +10,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const LibFs = require("mz/fs");
 const program = require("commander");
-const recursive = require("recursive-readdir");
 const LibPath = require("path");
-const protobuf = require("protobufjs");
-const protobufjs_1 = require("protobufjs");
+const lib_1 = require("./lib/lib");
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:Services');
 program.version(pkg.version)
@@ -34,7 +32,7 @@ class ServiceCLI {
             debug('ServiceCLI start.');
             yield this._validate();
             yield this._loadProtos();
-            yield this._genServices();
+            yield this._genProtoServices();
         });
     }
     _validate() {
@@ -59,49 +57,52 @@ class ServiceCLI {
     _loadProtos() {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI load proto files.');
-            let files = yield recursive(PROTO_DIR, ['.DS_Store']);
-            this._protoFiles = files.map((file) => {
-                let protoFile = {};
-                file = file.replace(PROTO_DIR, ''); // remove base dir
-                protoFile.protoPath = PROTO_DIR;
-                protoFile.relativePath = LibPath.dirname(file);
-                protoFile.fileName = LibPath.basename(file);
-                if (protoFile.fileName.match(/.+\.proto/) !== null) {
-                    return protoFile;
-                }
-                else {
-                    return undefined;
-                }
-            }).filter((value) => {
-                return value !== undefined;
-            });
+            this._protoFiles = yield lib_1.readProtoList(PROTO_DIR);
             if (this._protoFiles.length === 0) {
                 throw new Error('no proto files found');
             }
         });
     }
-    _genServices() {
+    _genProtoServices() {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI generate services.');
-            let content = yield LibFs.readFile(this._getFullProtoFilePath(this._protoFiles[0]));
-            let proto = protobuf.parse(content.toString());
-            let pkgRoot = proto.root.lookup(proto.package);
-            let nestedKeys = Object.keys(pkgRoot.nested);
-            console.log(nestedKeys);
-            nestedKeys.forEach((nestedKey) => {
-                let nestedInstance = pkgRoot.nested[nestedKey];
-                if (!(nestedInstance instanceof protobufjs_1.Service)) {
-                    return;
+            for (let i = 0; i < this._protoFiles.length; i++) {
+                let protoFile = this._protoFiles[i];
+                if (!protoFile) {
+                    continue;
                 }
-                console.log(nestedInstance.methods);
-            });
-            // for (let [key, value] of pkgRoot.nested) {
-            //     console.log(key);
-            // }
+                let services = yield lib_1.parseServicesFromProto(protoFile);
+                if (services.length === 0) {
+                    continue;
+                }
+                yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+                for (let i = 0; i < services.length; i++) {
+                    yield this._genService(protoFile, services[i]);
+                }
+            }
         });
     }
-    _getFullProtoFilePath(file) {
-        return LibPath.join(file.protoPath, file.relativePath, file.fileName);
+    _genService(protoFile, service) {
+        return __awaiter(this, void 0, void 0, function* () {
+            debug('ServiceCLI generate service: %s', service.name);
+            let methodKeys = Object.keys(service.methods);
+            if (methodKeys.length === 0) {
+                return;
+            }
+            let outputDir = LibPath.join(OUTPUT_DIR, 'services', service.name);
+            yield lib_1.mkdir(outputDir);
+            for (let i = 0; i < methodKeys.length; i++) {
+                let methodKey = methodKeys[i];
+                let method = service.methods[methodKey];
+                yield this._genServiceMethod(protoFile, service, method);
+            }
+        });
+    }
+    _genServiceMethod(protoFile, service, method) {
+        return __awaiter(this, void 0, void 0, function* () {
+            debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
+            let outputPath = LibPath.join(OUTPUT_DIR, 'services', service.name, lib_1.lcfirst(method.name) + '.ts');
+        });
     }
 }
 ServiceCLI.instance().run().catch((err) => {
