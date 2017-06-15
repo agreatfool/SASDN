@@ -12,6 +12,7 @@ const LibFs = require("mz/fs");
 const program = require("commander");
 const LibPath = require("path");
 const lib_1 = require("./lib/lib");
+const template_1 = require("./lib/template");
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:Services');
 program.version(pkg.version)
@@ -57,7 +58,7 @@ class ServiceCLI {
     _loadProtos() {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI load proto files.');
-            this._protoFiles = yield lib_1.readProtoList(PROTO_DIR);
+            this._protoFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR);
             if (this._protoFiles.length === 0) {
                 throw new Error('no proto files found');
             }
@@ -66,6 +67,7 @@ class ServiceCLI {
     _genProtoServices() {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI generate services.');
+            let protoServicesInfos = [];
             for (let i = 0; i < this._protoFiles.length; i++) {
                 let protoFile = this._protoFiles[i];
                 if (!protoFile) {
@@ -76,10 +78,25 @@ class ServiceCLI {
                     continue;
                 }
                 yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+                let protoServicesInfo = {
+                    protoFile: protoFile,
+                    protoServiceImportPath: lib_1.Proto.genProtoServiceImportPath(protoFile),
+                    services: {},
+                };
                 for (let i = 0; i < services.length; i++) {
-                    yield this._genService(protoFile, services[i]);
+                    protoServicesInfo.services[services[i].name] = yield this._genService(protoFile, services[i]);
                 }
+                protoServicesInfos.push(protoServicesInfo);
             }
+            if (protoServicesInfos.length === 0) {
+                return;
+            }
+            let outputPath = LibPath.join(OUTPUT_DIR, 'services', 'register.ts');
+            template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
+            let content = template_1.TplEngine.render('rpcs/register', {
+                infos: protoServicesInfos,
+            });
+            yield LibFs.writeFile(outputPath, content);
         });
     }
     _genService(protoFile, service) {
@@ -89,23 +106,59 @@ class ServiceCLI {
             if (methodKeys.length === 0) {
                 return;
             }
-            let outputDir = LibPath.join(OUTPUT_DIR, 'services', service.name);
-            yield lib_1.mkdir(outputDir);
+            let methodInfos = [];
             for (let i = 0; i < methodKeys.length; i++) {
                 let methodKey = methodKeys[i];
                 let method = service.methods[methodKey];
-                yield this._genServiceMethod(protoFile, service, method);
+                methodInfos.push(yield this._genServiceMethod(protoFile, service, method));
             }
+            return Promise.resolve(methodInfos);
         });
     }
     _genServiceMethod(protoFile, service, method) {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
-            let outputPath = LibPath.join(OUTPUT_DIR, 'services', service.name, lib_1.lcfirst(method.name) + '.ts');
+            let outputPath = lib_1.Proto.genFullOutputServicePath(protoFile, service, method);
+            yield lib_1.mkdir(LibPath.dirname(outputPath));
+            let methodInfo = {
+                callTypeStr: '',
+                requestTypeStr: method.requestType,
+                responseTypeStr: method.responseType,
+                hasCallback: false,
+                hasRequest: false,
+                methodName: lib_1.lcfirst(method.name),
+                protoMsgImportPath: lib_1.Proto.genProtoMsgImportPath(protoFile, outputPath),
+            };
+            if (!method.requestStream && !method.responseStream) {
+                methodInfo.callTypeStr = 'ServerUnaryCall';
+                methodInfo.hasCallback = true;
+                methodInfo.hasRequest = true;
+            }
+            else if (!method.requestStream && method.responseStream) {
+                methodInfo.callTypeStr = 'ServerWritableStream';
+                methodInfo.hasRequest = true;
+            }
+            else if (method.requestStream && !method.responseStream) {
+                methodInfo.callTypeStr = 'ServerReadableStream';
+                methodInfo.hasCallback = true;
+            }
+            else if (method.requestStream && method.responseStream) {
+                methodInfo.callTypeStr = 'ServerDuplexStream';
+            }
+            let content = template_1.TplEngine.render('rpcs/service', {
+                callTypeStr: methodInfo.callTypeStr,
+                requestTypeStr: methodInfo.requestTypeStr,
+                responseTypeStr: methodInfo.responseTypeStr,
+                hasCallback: methodInfo.hasCallback,
+                hasRequest: methodInfo.hasRequest,
+                methodName: methodInfo.methodName,
+                protoMsgImportPath: methodInfo.protoMsgImportPath,
+            });
+            yield LibFs.writeFile(outputPath, content);
+            return Promise.resolve(methodInfo);
         });
     }
 }
 ServiceCLI.instance().run().catch((err) => {
     debug('err: %O', err.message);
 });
-//# sourceMappingURL=sasdn-rpcs.js.map

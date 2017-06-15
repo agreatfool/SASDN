@@ -2,19 +2,51 @@ import * as LibPath from "path";
 import * as LibFs from "mz/fs";
 import * as recursive from "recursive-readdir";
 import * as protobuf from "protobufjs";
-import {Namespace, Service} from "protobufjs";
+import {Method, Namespace, Service} from "protobufjs";
 import * as bluebird from "bluebird";
 import * as LibMkdirP from "mkdirp";
 
 const mkdirp = bluebird.promisify<string, string>(LibMkdirP);
 
+/**
+ * protoDir: /Users/XXX/Projects/projectX/proto
+ * outputDir: /output/dir/specified
+ * file: /Users/XXX/Projects/projectX/proto/dummy/your.proto
+ *     => dummy/your.proto
+ * protoFile.protoPath = /Users/XXX/Projects/projectX/proto
+ * protoFile.relativePath = dummy
+ * protoFile.fileName = your.proto
+ * protoFile.filePath = dummy/your.proto
+ * protoFile.msgNamespace = your_pb
+ * protoFile.svcNamespace = your_grpc_pb
+ */
 export interface ProtoFile {
     protoPath: string;
+    outputPath: string;
     relativePath: string;
     fileName: string;
+    filePath: string;
+    msgNamespace: string;
+    svcNamespace: string;
 }
 
-export const readProtoList = async function (protoDir: string): Promise<Array<ProtoFile>> {
+export interface RpcProtoServicesInfo {
+    protoFile: ProtoFile;
+    protoServiceImportPath: string;
+    services: { [serviceName: string]: Array<RpcMethodInfo> };
+}
+
+export interface RpcMethodInfo {
+    callTypeStr: string;
+    requestTypeStr: string;
+    responseTypeStr: string;
+    hasCallback: boolean;
+    hasRequest: boolean;
+    methodName: string;
+    protoMsgImportPath: string;
+}
+
+export const readProtoList = async function (protoDir: string, outputDir: string): Promise<Array<ProtoFile>> {
     let files = await recursive(protoDir, ['.DS_Store']);
 
     let protoFiles = files.map((file: string) => {
@@ -22,8 +54,12 @@ export const readProtoList = async function (protoDir: string): Promise<Array<Pr
 
         file = file.replace(protoDir, ''); // remove base dir
         protoFile.protoPath = protoDir;
+        protoFile.outputPath = outputDir;
         protoFile.relativePath = LibPath.dirname(file);
         protoFile.fileName = LibPath.basename(file);
+        protoFile.filePath = file;
+        protoFile.msgNamespace = Proto.filePathToPseudoNamespace(protoFile.fileName);
+        protoFile.svcNamespace = Proto.filePathToServiceNamespace(protoFile.fileName);
 
         if (protoFile.fileName.match(/.+\.proto/) !== null) {
             return protoFile;
@@ -37,8 +73,8 @@ export const readProtoList = async function (protoDir: string): Promise<Array<Pr
     return Promise.resolve(protoFiles);
 };
 
-export const parseServicesFromProto = async function (filePath: ProtoFile): Promise<Array<Service>> {
-    let content = await LibFs.readFile(getFullProtoFilePath(filePath));
+export const parseServicesFromProto = async function (protoFile: ProtoFile): Promise<Array<Service>> {
+    let content = await LibFs.readFile(Proto.genFullProtoFilePath(protoFile));
     let proto = protobuf.parse(content.toString());
     let pkgRoot = proto.root.lookup(proto.package) as Namespace;
 
@@ -63,6 +99,94 @@ export const lcfirst = function (str): string {
     return str.charAt(0).toLowerCase() + str.slice(1);
 };
 
-export const getFullProtoFilePath = function (file: ProtoFile): string {
-    return LibPath.join(file.protoPath, file.relativePath, file.fileName);
-};
+export namespace Proto {
+
+    /**
+     * dummy/your.proto => ../
+     * dummy/and/dummy/your.proto => ../../../
+     * @param {string} filePath
+     * @returns {string}
+     */
+    export function getPathToRoot(filePath: string) {
+        const depth = filePath.split("/").length;
+        return depth === 1 ? "./" : new Array(depth).join("../");
+    }
+
+    /**
+     * dummy/your.proto => dummy_your_pb
+     * @param {string} filePath
+     * @returns {string}
+     */
+    export const filePathToPseudoNamespace = function (filePath: string): string {
+        return filePath.replace(".proto", "").replace(/\//g, "_").replace(/\./g, "_").replace(/-/g, "_") + "_pb";
+    };
+
+    /**
+     * dummy/your.proto => dummy_your_grpc_pb
+     * @param {string} filePath
+     * @returns {string}
+     */
+    export function filePathToServiceNamespace(filePath: string): string {
+        return filePath.replace(".proto", "").replace(/\//g, "_").replace(/\./g, "_").replace(/-/g, "_") + "_grpc_pb";
+    }
+
+    /**
+     * Generate service proto js file (e.g *_grpc_pb.js) import path.
+     * Source code is "register.ts", service proto js import path is relative to it.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
+    export const genProtoServiceImportPath = function (protoFile: ProtoFile): string {
+        return LibPath.join(
+            '..',
+            'proto',
+            protoFile.relativePath,
+            protoFile.svcNamespace
+        );
+    };
+
+    /**
+     * Generate origin protobuf definition (e.g *.proto) full file path.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
+    export const genFullProtoFilePath = function (protoFile: ProtoFile): string {
+        return LibPath.join(protoFile.protoPath, protoFile.relativePath, protoFile.fileName);
+    };
+
+    /**
+     * Generate message proto js file (e.g *_pb.js) import path.
+     * Source code path is generated with {@link genFullOutputServicePath},
+     * message proto js import path is relative to it.
+     * @param {ProtoFile} protoFile
+     * @param {string} serviceFilePath
+     * @returns {string}
+     */
+    export const genProtoMsgImportPath = function (protoFile: ProtoFile, serviceFilePath: string): string {
+        return LibPath.join(
+            getPathToRoot(serviceFilePath.substr(serviceFilePath.indexOf('services'))),
+            'proto',
+            protoFile.relativePath,
+            protoFile.msgNamespace
+        );
+    };
+
+    /**
+     * Generate full service stub code output path.
+     * @param {ProtoFile} protoFile
+     * @param {Service} service
+     * @param {Method} method
+     * @returns {string}
+     */
+    export const genFullOutputServicePath = function (protoFile: ProtoFile, service: Service, method: Method) {
+        return LibPath.join(
+            protoFile.outputPath,
+            'services',
+            protoFile.relativePath,
+            protoFile.svcNamespace,
+            service.name,
+            lcfirst(method.name) + '.ts'
+        );
+    };
+
+}

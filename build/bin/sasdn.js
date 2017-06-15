@@ -7,4 +7,3 @@ program.version(pkg.version)
     .command('rpcs [options]', 'generate rpc server service stubs from proto files')
     .command('scaffold [options]', 'create a new scaffold project')
     .parse(process.argv);
-//# sourceMappingURL=sasdn.js.map

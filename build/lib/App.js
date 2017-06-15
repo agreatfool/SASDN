@@ -116,4 +116,3 @@ class Application extends EventEmitter {
     }
 }
 exports.Application = Application;
-//# sourceMappingURL=App.js.map

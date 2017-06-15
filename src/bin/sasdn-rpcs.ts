@@ -1,7 +1,11 @@
 import * as LibFs from "mz/fs";
 import * as program from "commander";
 import * as LibPath from "path";
-import {lcfirst, mkdir, parseServicesFromProto, ProtoFile, readProtoList} from "./lib/lib";
+import {
+    Proto, lcfirst, mkdir, parseServicesFromProto, ProtoFile, readProtoList,
+    RpcMethodInfo, RpcProtoServicesInfo
+} from "./lib/lib";
+import {TplEngine} from "./lib/template";
 import {Method, Service} from "protobufjs";
 
 const pkg = require('../../package.json');
@@ -53,7 +57,7 @@ class ServiceCLI {
     private async _loadProtos() {
         debug('ServiceCLI load proto files.');
 
-        this._protoFiles = await readProtoList(PROTO_DIR);
+        this._protoFiles = await readProtoList(PROTO_DIR, OUTPUT_DIR);
         if (this._protoFiles.length === 0) {
             throw new Error('no proto files found');
         }
@@ -61,6 +65,8 @@ class ServiceCLI {
 
     private async _genProtoServices() {
         debug('ServiceCLI generate services.');
+
+        let protoServicesInfos = [] as Array<RpcProtoServicesInfo>;
 
         for (let i = 0; i < this._protoFiles.length; i++) {
             let protoFile = this._protoFiles[i];
@@ -73,13 +79,31 @@ class ServiceCLI {
             }
 
             await mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+
+            let protoServicesInfo = {
+                protoFile: protoFile,
+                protoServiceImportPath: Proto.genProtoServiceImportPath(protoFile),
+                services: {} as { [serviceName: string]: Array<RpcMethodInfo> },
+            } as RpcProtoServicesInfo;
             for (let i = 0; i < services.length; i++) {
-                await this._genService(protoFile, services[i]);
+                protoServicesInfo.services[services[i].name] = await this._genService(protoFile, services[i]);
             }
+            protoServicesInfos.push(protoServicesInfo);
         }
+
+        if (protoServicesInfos.length === 0) {
+            return;
+        }
+        let outputPath = LibPath.join(OUTPUT_DIR, 'services', 'register.ts');
+        TplEngine.registerHelper('lcfirst', lcfirst);
+        let content = TplEngine.render('rpcs/register', {
+            infos: protoServicesInfos,
+        });
+
+        await LibFs.writeFile(outputPath, content);
     }
 
-    private async _genService(protoFile: ProtoFile, service: Service) {
+    private async _genService(protoFile: ProtoFile, service: Service): Promise<Array<RpcMethodInfo>> {
         debug('ServiceCLI generate service: %s', service.name);
 
         let methodKeys = Object.keys(service.methods);
@@ -87,22 +111,59 @@ class ServiceCLI {
             return;
         }
 
-        let outputDir = LibPath.join(OUTPUT_DIR, 'services', service.name);
-        await mkdir(outputDir);
-
+        let methodInfos = [];
         for (let i = 0; i < methodKeys.length; i++) {
             let methodKey = methodKeys[i];
             let method = service.methods[methodKey];
-            await this._genServiceMethod(protoFile, service, method);
+            methodInfos.push(await this._genServiceMethod(protoFile, service, method));
         }
+
+        return Promise.resolve(methodInfos);
     }
 
-    private async _genServiceMethod(protoFile: ProtoFile, service: Service, method: Method) {
+    private async _genServiceMethod(protoFile: ProtoFile, service: Service, method: Method): Promise<RpcMethodInfo> {
         debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
 
-        let outputPath = LibPath.join(OUTPUT_DIR, 'services', service.name, lcfirst(method.name) + '.ts');
+        let outputPath = Proto.genFullOutputServicePath(protoFile, service, method);
+        await mkdir(LibPath.dirname(outputPath));
 
-        
+        let methodInfo = {
+            callTypeStr: '',
+            requestTypeStr: method.requestType,
+            responseTypeStr: method.responseType,
+            hasCallback: false,
+            hasRequest: false,
+            methodName: lcfirst(method.name),
+            protoMsgImportPath: Proto.genProtoMsgImportPath(protoFile, outputPath),
+        } as RpcMethodInfo;
+
+        if (!method.requestStream && !method.responseStream) {
+            methodInfo.callTypeStr = 'ServerUnaryCall';
+            methodInfo.hasCallback = true;
+            methodInfo.hasRequest = true;
+        } else if (!method.requestStream && method.responseStream) {
+            methodInfo.callTypeStr = 'ServerWritableStream';
+            methodInfo.hasRequest = true;
+        } else if (method.requestStream && !method.responseStream) {
+            methodInfo.callTypeStr = 'ServerReadableStream';
+            methodInfo.hasCallback = true;
+        } else if (method.requestStream && method.responseStream) {
+            methodInfo.callTypeStr = 'ServerDuplexStream';
+        }
+
+        let content = TplEngine.render('rpcs/service', {
+            callTypeStr: methodInfo.callTypeStr,
+            requestTypeStr: methodInfo.requestTypeStr,
+            responseTypeStr: methodInfo.responseTypeStr,
+            hasCallback: methodInfo.hasCallback,
+            hasRequest: methodInfo.hasRequest,
+            methodName: methodInfo.methodName,
+            protoMsgImportPath: methodInfo.protoMsgImportPath,
+        });
+
+        await LibFs.writeFile(outputPath, content);
+
+        return Promise.resolve(methodInfo);
     }
 
 }
