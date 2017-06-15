@@ -102,11 +102,11 @@ class ServiceCLI {
 
         let outputPath = LibPath.join(OUTPUT_DIR, 'services', service.name, lcfirst(method.name) + '.ts');
 
-
+        
     }
 
 }
 
 ServiceCLI.instance().run().catch((err: Error) => {
-    debug('err: %O', err);
+    debug('err: %O', err.message);
 });
