@@ -14,7 +14,7 @@ const LibPath = require("path");
 const lib_1 = require("./lib/lib");
 const template_1 = require("./lib/template");
 const pkg = require('../../package.json');
-const debug = require('debug')('SASDN:CLI:Services');
+const debug = require('debug')('SASDN:CLI:RpcServices');
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-o, --output <dir>', 'directory to output service codes')

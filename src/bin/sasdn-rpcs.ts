@@ -2,14 +2,20 @@ import * as LibFs from "mz/fs";
 import * as program from "commander";
 import * as LibPath from "path";
 import {
-    Proto, lcfirst, mkdir, parseServicesFromProto, ProtoFile, readProtoList,
-    RpcMethodInfo, RpcProtoServicesInfo
+    lcfirst,
+    mkdir,
+    parseServicesFromProto,
+    Proto,
+    ProtoFile,
+    readProtoList,
+    RpcMethodInfo,
+    RpcProtoServicesInfo
 } from "./lib/lib";
 import {TplEngine} from "./lib/template";
 import {Method, Service} from "protobufjs";
 
 const pkg = require('../../package.json');
-const debug = require('debug')('SASDN:CLI:Services');
+const debug = require('debug')('SASDN:CLI:RpcServices');
 
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
