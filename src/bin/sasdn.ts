@@ -1,5 +1,9 @@
-#!/usr/bin/env node
-import * as handlebars from "handlebars";
+import * as program from "commander";
 
-const debug = require('debug')('SASDN:CLI');
+const pkg = require('../../package.json');
 
+program.version(pkg.version)
+    .command('proto [options]', 'generate node.js source codes from proto files')
+    .command('services [options]', 'generate service stubs from proto files')
+    .command('scaffold [options]', 'create a new scaffold project')
+    .parse(process.argv);
