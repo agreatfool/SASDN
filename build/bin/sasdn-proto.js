@@ -27,12 +27,14 @@ program.version(pkg.version)
     .option('-j, --javascript', 'add -j to output javascript codes')
     .option('-t, --typescript', 'add -t to output typescript d.ts definitions')
     .option('-s, --swagger', 'add -s to output swagger json')
+    .option('-a, --all', 'also parse & output all proto files in import path?')
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
 const JS = program.javascript !== undefined;
 const DTS = program.typescript !== undefined;
 const SWAGGER = program.swagger !== undefined;
+const ALL = program.all !== undefined;
 const EXCLUDES = program.exclude === undefined ? [] : program.exclude;
 const IMPORTS = program.import === undefined ? [] : program.import;
 class ProtoCLI {
@@ -72,7 +74,12 @@ class ProtoCLI {
     _loadProtos() {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ProtoCLI load proto files.');
-            this._protoFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR, EXCLUDES);
+            this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR, EXCLUDES));
+            if (IMPORTS.length > 0) {
+                for (let i = 0; i < IMPORTS.length; i++) {
+                    this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(IMPORTS[i], OUTPUT_DIR, EXCLUDES));
+                }
+            }
             if (this._protoFiles.length === 0) {
                 throw new Error('no proto files found');
             }
