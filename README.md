@@ -31,3 +31,14 @@ tsc --version # @2.3.4
 - [ ] 架构设计：RPC后端服务
 - [ ] 测试框架选定
 - [ ] 单元测试
+
+## grpc-gateway
+### protoc-gen-swagger install
+```
+go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+
+protoc \
+--swagger_out=logtostderr=true:${PROTO_DEST} \
+-I ./proto \
+proto/book.proto
+```

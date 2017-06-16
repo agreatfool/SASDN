@@ -16,9 +16,21 @@ const protobufjs_1 = require("protobufjs");
 const bluebird = require("bluebird");
 const LibMkdirP = require("mkdirp");
 const mkdirp = bluebird.promisify(LibMkdirP);
-exports.readProtoList = function (protoDir, outputDir) {
+exports.readProtoList = function (protoDir, outputDir, excludes) {
     return __awaiter(this, void 0, void 0, function* () {
-        let files = yield recursive(protoDir, ['.DS_Store']);
+        let files = yield recursive(protoDir, ['.DS_Store', function ignoreFunc(file, stats) {
+                let shallIgnore = false;
+                if (!excludes || excludes.length === 0) {
+                    return shallIgnore;
+                }
+                excludes.forEach((exclude) => {
+                    if (file.indexOf(exclude) !== -1) {
+                        shallIgnore = true;
+                    }
+                });
+                console.log(file, shallIgnore);
+                return shallIgnore;
+            }]);
         let protoFiles = files.map((file) => {
             let protoFile = {};
             file = file.replace(protoDir, ''); // remove base dir

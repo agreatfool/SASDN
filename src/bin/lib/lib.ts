@@ -46,8 +46,20 @@ export interface RpcMethodInfo {
     protoMsgImportPath: string;
 }
 
-export const readProtoList = async function (protoDir: string, outputDir: string): Promise<Array<ProtoFile>> {
-    let files = await recursive(protoDir, ['.DS_Store']);
+export const readProtoList = async function (protoDir: string, outputDir: string, excludes?: Array<string>): Promise<Array<ProtoFile>> {
+    let files = await recursive(protoDir, ['.DS_Store', function ignoreFunc(file, stats) {
+        let shallIgnore = false;
+        if (!excludes || excludes.length === 0) {
+            return shallIgnore;
+        }
+        excludes.forEach((exclude: string) => {
+            if (file.indexOf(exclude) !== -1) {
+                shallIgnore = true;
+            }
+        });
+        console.log(file, shallIgnore);
+        return shallIgnore;
+    }]);
 
     let protoFiles = files.map((file: string) => {
         let protoFile = {} as ProtoFile;

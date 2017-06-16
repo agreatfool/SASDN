@@ -36,7 +36,7 @@ export interface RpcMethodInfo {
     methodName: string;
     protoMsgImportPath: string;
 }
-export declare const readProtoList: (protoDir: string, outputDir: string) => Promise<ProtoFile[]>;
+export declare const readProtoList: (protoDir: string, outputDir: string, excludes?: string[]) => Promise<ProtoFile[]>;
 export declare const parseServicesFromProto: (protoFile: ProtoFile) => Promise<protobuf.Service[]>;
 export declare const mkdir: (path: string) => Promise<string>;
 export declare const lcfirst: (str: any) => string;
