@@ -57,7 +57,6 @@ export const readProtoList = async function (protoDir: string, outputDir: string
                 shallIgnore = true;
             }
         });
-        console.log(file, shallIgnore);
         return shallIgnore;
     }]);
 

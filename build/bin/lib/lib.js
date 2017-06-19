@@ -28,7 +28,6 @@ exports.readProtoList = function (protoDir, outputDir, excludes) {
                         shallIgnore = true;
                     }
                 });
-                console.log(file, shallIgnore);
                 return shallIgnore;
             }]);
         let protoFiles = files.map((file) => {
