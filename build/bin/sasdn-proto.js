@@ -75,7 +75,7 @@ class ProtoCLI {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ProtoCLI load proto files.');
             this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR, EXCLUDES));
-            if (IMPORTS.length > 0) {
+            if (ALL && IMPORTS.length > 0) {
                 for (let i = 0; i < IMPORTS.length; i++) {
                     this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(IMPORTS[i], OUTPUT_DIR, EXCLUDES));
                 }

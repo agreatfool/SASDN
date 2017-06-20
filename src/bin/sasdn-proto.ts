@@ -70,7 +70,7 @@ class ProtoCLI {
         debug('ProtoCLI load proto files.');
 
         this._protoFiles = this._protoFiles.concat(await readProtoList(PROTO_DIR, OUTPUT_DIR, EXCLUDES));
-        if (IMPORTS.length > 0) {
+        if (ALL && IMPORTS.length > 0) {
             for (let i = 0; i < IMPORTS.length; i++) {
                 this._protoFiles = this._protoFiles.concat(await readProtoList(IMPORTS[i], OUTPUT_DIR, EXCLUDES));
             }
