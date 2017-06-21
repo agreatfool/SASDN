@@ -1,6 +1,6 @@
 {
   "name": "sasdn",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "Stable, Available, Scalable, Distributed, NodeJs",
   "main": "index.js",
   "bin": {
