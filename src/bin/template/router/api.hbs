@@ -8,21 +8,33 @@ class {{apiInfo.operationId}} {
     public uri = '{{apiInfo.uri}}';
     public type = '{{apiInfo.type}}';
     public schema = {
-    {{#each apiInfo.parameters}}
-        {{#eq this.type "object"}}
+{{#each apiInfo.parameters}}
+    {{#eq this.type "object"}}
         {{this.name}}: joi.object({
-        {{#each this.schema}}{{#eq this.type "object"}}{{this.name}}: joi.object({
-            {{#each this.schema}}{{#eq this.type "object"}}{{this.name}}: joi.object({
-                {{#each this.schema}}{{this.name}}: joi.{{this.type}}().{{this.required}}(),{{/each}}
+    {{#each this.schema}}
+        {{#eq this.type "object"}}
+            {{this.name}}: joi.object({
+        {{#each this.schema}}
+            {{#eq this.type "object"}}
+                {{this.name}}: joi.object({
+                {{#each this.schema}}
+                    {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+                {{/each}}
                 }).{{this.required}}(),
-            {{else}}{{this.name}}: joi.{{this.type}}().{{this.required}}(),{{/eq}}{{/each}}
+            {{else}}
+                {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+            {{/eq}}
+        {{/each}}
             }).{{this.required}}(),
-        {{else}}{{this.name}}: joi.{{this.type}}().{{this.required}}(),{{/eq}}{{/each}}
-        }).{{this.required}}(),
         {{else}}
-        {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+            {{this.name}}: joi.{{this.type}}().{{this.required}}(),
         {{/eq}}
     {{/each}}
+        }).{{this.required}}(),
+    {{else}}
+        {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+    {{/eq}}
+{{/each}}
     };
 
     constructor() {
