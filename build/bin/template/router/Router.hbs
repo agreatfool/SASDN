@@ -1,0 +1,63 @@
+"use strict";
+
+import * as LibFs from "mz/fs";
+import * as LibPath from "path";
+import * as Router from 'koa-router'
+
+const apiPaths = [
+    {{#each apiInfos}}
+    "../router/{{this.serviceName}}/{{this.fileName}}",
+    {{/each}}
+];
+
+export default class RouteLoader {
+    private static _instance: RouteLoader;
+
+    private initialized: boolean;
+    public router: Router;
+
+    public static instance(): RouteLoader {
+        if (RouteLoader._instance === undefined) {
+            RouteLoader._instance = new RouteLoader();
+        }
+        return RouteLoader._instance;
+    }
+
+    private constructor() {
+        this.initialized = false;
+        this.router = new Router();
+    }
+
+    public init() {
+        return new Promise((resolve, reject) => {
+            // create koa-router
+            let queue = [];
+            for (let apiPath of apiPaths) {
+                queue.push(this.createRouter(apiPath));
+            }
+
+            // promise queue
+            Promise.all(queue).then(() => {
+                this.initialized = true;
+                resolve();
+            }).catch((err: Error) => {
+                reject(err);
+            });
+        });
+    }
+
+    public getRouter(): Router {
+        return this.router
+    }
+
+    public async createRouter(apiPath) {
+        let fileStat = await LibFs.stat(apiPath);
+        if (fileStat.isFile()) {
+            // invoke
+            let api = require(LibPath.normalize(apiPath));
+
+            // router apply
+            this.router[api.method].apply(this.router, api.register());
+        }
+    }
+}

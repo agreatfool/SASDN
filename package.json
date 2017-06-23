@@ -20,6 +20,10 @@
   },
   "homepage": "https://github.com/agreatfool/SASDN#readme",
   "dependencies": {
+    "@types/bluebird": "^3.5.6",
+    "@types/joi": "^10.4.0",
+    "@types/swagger-parser": "^4.0.0",
+    "@types/swagger-schema-official": "^2.0.5",
     "bluebird": "^3.5.0",
     "commander": "^2.9.0",
     "debug": "^2.6.8",
@@ -34,6 +38,7 @@
     "handlebars": "^4.0.10",
     "handlebars-helpers": "^0.8.2",
     "is-generator-function": "^1.0.6",
+    "joi": "^10.6.0",
     "koa-compose": "^4.0.0",
     "koa-convert": "^1.2.0",
     "merge2": "^1.0.3",
@@ -43,10 +48,10 @@
     "protobufjs": "^6.7.3",
     "recursive-readdir": "^2.2.1",
     "shelljs": "^0.7.8",
+    "swagger-schema-official": "^2.0.0-bab6bed",
     "typescript": "^2.3.4"
   },
   "devDependencies": {
-    "@types/bluebird": "^3.5.5",
     "@types/commander": "^2.9.1",
     "@types/google-protobuf": "^3.2.5",
     "@types/handlebars": "^4.0.32",

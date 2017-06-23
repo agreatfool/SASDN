@@ -52,6 +52,40 @@ exports.readProtoList = function (protoDir, outputDir, excludes) {
         return Promise.resolve(protoFiles);
     });
 };
+exports.readSwaggerSpecList = function (swaggerDir, outputDir, excludes) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let files = yield recursive(swaggerDir, ['.DS_Store', function ignoreFunc(file, stats) {
+                let shallIgnore = false;
+                if (!excludes || excludes.length === 0) {
+                    return shallIgnore;
+                }
+                excludes.forEach((exclude) => {
+                    if (file.indexOf(exclude) !== -1) {
+                        shallIgnore = true;
+                    }
+                });
+                return shallIgnore;
+            }]);
+        let swaggerSpecList = files.map((file) => {
+            file = file.replace(swaggerDir, ''); // remove base dir
+            if (LibPath.basename(file).match(/.+\.json/) !== null) {
+                let filePath = LibPath.join(swaggerDir, LibPath.dirname(file), LibPath.basename(file));
+                try {
+                    return JSON.parse(LibFs.readFileSync(filePath).toString());
+                }
+                catch (e) {
+                    return undefined;
+                }
+            }
+            else {
+                return undefined;
+            }
+        }).filter((value) => {
+            return value !== undefined;
+        });
+        return Promise.resolve(swaggerSpecList);
+    });
+};
 exports.parseServicesFromProto = function (protoFile) {
     return __awaiter(this, void 0, void 0, function* () {
         let content = yield LibFs.readFile(Proto.genFullProtoFilePath(protoFile));
@@ -76,6 +110,9 @@ exports.mkdir = function (path) {
 };
 exports.lcfirst = function (str) {
     return str.charAt(0).toLowerCase() + str.slice(1);
+};
+exports.ucfirst = function (str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 };
 var Proto;
 (function (Proto) {
@@ -146,3 +183,4 @@ var Proto;
         return LibPath.join(protoFile.outputPath, 'services', protoFile.relativePath, protoFile.svcNamespace, service.name, exports.lcfirst(method.name) + '.ts');
     };
 })(Proto = exports.Proto || (exports.Proto = {}));
+//# sourceMappingURL=lib.js.map

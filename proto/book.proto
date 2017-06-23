@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/api/annotations.proto";
+
 package com.book;
 
 message Book {
@@ -8,12 +10,18 @@ message Book {
     string author = 3;
 }
 
+message BookMap {
+    repeated Book list = 1;
+    repeated string key = 2;
+}
+
 message GetBookRequest {
     int64 isbn = 1;
 }
 
 message GetBookViaAuthor {
     string author = 1;
+    repeated Book list = 2;
 }
 
 service BookService {
@@ -23,31 +31,19 @@ service BookService {
     rpc GetBooks (stream GetBookRequest) returns (stream Book) {}
 }
 
-service TestService {
-    rpc Test (GetBookRequest) returns (Book) {}
-}
+// gPRC-getway Test
+service BookApiService {
+    rpc GetBook (GetBookRequest) returns (Book) {
+        option (google.api.http) = {
+            post: "/v1/getBook"
+            body: "*"
+        };
+    }
 
-message BookStore {
-    string name = 1;
-    map<int64, string> books = 2;
+    rpc GetBooksViaAuthor (GetBookViaAuthor) returns (BookMap) {
+        option (google.api.http) = {
+            post: "/v1/getBooksViaAuthor"
+            body: "*"
+        };
+    }
 }
-
-enum EnumSample {
-    option allow_alias = true;
-    UNKNOWN = 0;
-    STARTED = 1;
-    RUNNING = 1;
-}
-
-//message EchoMessage {
-//    string value = 1;
-//}
-//
-//service EchoService {
-//    rpc Echo(EchoMessage) returns (EchoMessage) {
-//        option (google.api.http) = {
-//            post: "/v1/echo"
-//            body: "*"
-//        };
-//    }
-//}

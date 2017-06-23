@@ -1,0 +1,69 @@
+"use strict";
+
+import { joi, joiValidate } from 'sasdn';
+import {{curlyLeft}} {{apiInfo.responseTypeStr}} {{curlyRight}} from "../../proto/{{apiInfo.protoName}}_pb";
+
+class {{apiInfo.operationId}} {
+    public method = '{{apiInfo.method}}';
+    public uri = '{{apiInfo.uri}}';
+    public type = '{{apiInfo.type}}';
+    public schema = {
+{{#each apiInfo.parameters}}
+    {{#eq this.type "object"}}
+        {{this.name}}: joi.object({
+    {{#each this.schema}}
+        {{#eq this.type "object"}}
+            {{this.name}}: joi.object({
+        {{#each this.schema}}
+            {{#eq this.type "object"}}
+                {{this.name}}: joi.object({
+                {{#each this.schema}}
+                    {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+                {{/each}}
+                }).{{this.required}}(),
+            {{else}}
+                {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+            {{/eq}}
+        {{/each}}
+            }).{{this.required}}(),
+        {{else}}
+            {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+        {{/eq}}
+    {{/each}}
+        }).{{this.required}}(),
+    {{else}}
+        {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+    {{/eq}}
+{{/each}}
+    };
+
+    constructor() {
+        // do nothing
+    }
+
+    register() {
+        return [this.uri, validate, execute];
+    }
+}
+
+
+async function validate(next) {
+    let aggregatedParams = Object.assign({}, this.params, this.query, this.request.body);
+    try {
+        await joiValidate(aggregatedParams, api.schema, { allowUnknown: true });
+        await next;
+    } catch (err) {
+        this.body = err.toString();
+    }
+}
+
+async function execute(next) {
+    this.body = await buildResponse();
+}
+
+async function buildResponse() {
+    return new {{ apiInfo.responseTypeStr }}().toObject();
+}
+
+const api = new {{apiInfo.operationId}}();
+module.exports = api;

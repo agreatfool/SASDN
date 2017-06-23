@@ -5,6 +5,7 @@ import * as protobuf from "protobufjs";
 import {Method, Namespace, Service} from "protobufjs";
 import * as bluebird from "bluebird";
 import * as LibMkdirP from "mkdirp";
+import { Spec as SwaggerSpec } from "swagger-schema-official";
 
 const mkdirp = bluebird.promisify<string, string>(LibMkdirP);
 
@@ -84,6 +85,39 @@ export const readProtoList = async function (protoDir: string, outputDir: string
     return Promise.resolve(protoFiles);
 };
 
+export const readSwaggerSpecList = async function (swaggerDir: string, outputDir: string, excludes?: Array<string>): Promise<Array<SwaggerSpec>> {
+    let files = await recursive(swaggerDir, ['.DS_Store', function ignoreFunc(file, stats) {
+        let shallIgnore = false;
+        if (!excludes || excludes.length === 0) {
+            return shallIgnore;
+        }
+        excludes.forEach((exclude: string) => {
+            if (file.indexOf(exclude) !== -1) {
+                shallIgnore = true;
+            }
+        });
+        return shallIgnore;
+    }]);
+
+    let swaggerSpecList = files.map((file: string) => {
+      file = file.replace(swaggerDir, ''); // remove base dir
+      if (LibPath.basename(file).match(/.+\.json/) !== null) {
+          let filePath = LibPath.join(swaggerDir, LibPath.dirname(file), LibPath.basename(file));
+          try {
+            return JSON.parse(LibFs.readFileSync(filePath).toString());
+          } catch(e) {
+            return undefined
+          }
+      } else {
+          return undefined;
+      }
+    }).filter((value: undefined | SwaggerSpec) => {
+        return value !== undefined;
+    });
+
+    return Promise.resolve(swaggerSpecList)
+};
+
 export const parseServicesFromProto = async function (protoFile: ProtoFile): Promise<Array<Service>> {
     let content = await LibFs.readFile(Proto.genFullProtoFilePath(protoFile));
     let proto = protobuf.parse(content.toString());
@@ -108,6 +142,10 @@ export const mkdir = async function (path: string): Promise<string> {
 
 export const lcfirst = function (str): string {
     return str.charAt(0).toLowerCase() + str.slice(1);
+};
+
+export const ucfirst = function (str): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
 export namespace Proto {
