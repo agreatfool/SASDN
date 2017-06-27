@@ -1,3 +1,3 @@
 export * from "./lib/App";
 export * from "./lib/Context";
-export * from "./lib/Utility";
+export * from "./lib/getway/GatewayApiBase";

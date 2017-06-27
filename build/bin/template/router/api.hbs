@@ -1,7 +1,7 @@
 "use strict";
 
 import { joi, joiValidate } from 'sasdn';
-import {{curlyLeft}} {{apiInfo.responseTypeStr}} {{curlyRight}} from "../../proto/{{apiInfo.protoName}}_pb";
+import {{curlyLeft}} {{apiInfo.responseTypeStr}} {{curlyRight}} from "{{apiInfo.protoMsgImportPath}}";
 
 class {{apiInfo.operationId}} {
     public method = '{{apiInfo.method}}';

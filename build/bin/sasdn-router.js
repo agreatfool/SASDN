@@ -78,6 +78,7 @@ class RouterCLI {
                 for (let definitionName in swaggerSpec.definitions) {
                     definitionsSchema[definitionName] = parseDefinitionsSchema(swaggerSpec.definitions, definitionName);
                 }
+                yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router'));
                 // 逐个处理uri的参数与返回结果
                 for (let uri in swaggerSpec.paths) {
                     for (let method in swaggerSpec.paths[uri]) {
@@ -88,11 +89,10 @@ class RouterCLI {
                         routerApiInfo.fileName = lib_1.lcfirst(method) + methodOptions.operationId + ".ts";
                         routerApiInfo.method = method;
                         routerApiInfo.uri = uri;
-                        routerApiInfo.type = "application/json; charset=utf-8";
                         routerApiInfo.parameters = [];
-                        routerApiInfo.protoName = protoName;
+                        routerApiInfo.protoMsgImportPath = LibPath.join('..', '..', 'proto', protoName + '_pb').replace(/\\/g, '/');
                         // 返回结果处理
-                        let responseDefinitionName = parseRefs(methodOptions.responses[200].schema.$ref);
+                        let responseDefinitionName = parseRefs(methodOptions.responses[200].schemaDefObj.$ref);
                         routerApiInfo.responseTypeStr = responseDefinitionName.replace(protoName, '');
                         // 参数处理
                         for (let parameter of methodOptions.parameters) {
@@ -119,7 +119,6 @@ class RouterCLI {
                         routerApiInfos.push(routerApiInfo);
                     }
                 }
-                yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router'));
                 // write Router Loader
                 template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
                 let routerContent = template_1.TplEngine.render('router/router', {

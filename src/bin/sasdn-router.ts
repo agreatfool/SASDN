@@ -25,9 +25,8 @@ interface RouterApiInfo {
   fileName: string;     // post-UpdateUser
   method: string;       // post
   uri: string;          // /v1/updateUser
-  type: string;         // application/json; charset=utf-8
   parameters: ParameterSchemas;
-  protoName: string,
+  protoMsgImportPath: string,
   responseTypeStr: string
 }
 
@@ -47,9 +46,9 @@ interface DefinitionSchemas {
 }
 
 program.version(pkg.version)
-    .option('-s, --swagger <dir>', 'directory of swagger spec files')
-    .option('-o, --output <dir>', 'directory to output service codes')
-    .parse(process.argv);
+  .option('-s, --swagger <dir>', 'directory of swagger spec files')
+  .option('-o, --output <dir>', 'directory to output service codes')
+  .parse(process.argv);
 
 const SWAGGER_DIR = (program as any).swagger === undefined ? undefined : LibPath.normalize((program as any).swagger);
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
@@ -114,6 +113,8 @@ class RouterCLI {
           definitionsSchema[definitionName] = parseDefinitionsSchema(swaggerSpec.definitions, definitionName);
         }
 
+        await mkdir(LibPath.join(OUTPUT_DIR, 'router'));
+
         // 逐个处理uri的参数与返回结果
         for (let uri in swaggerSpec.paths) {
           for (let method in swaggerSpec.paths[uri]) {
@@ -124,12 +125,11 @@ class RouterCLI {
             routerApiInfo.fileName = lcfirst(method) + methodOptions.operationId + ".ts";
             routerApiInfo.method = method;
             routerApiInfo.uri = uri;
-            routerApiInfo.type = "application/json; charset=utf-8";
             routerApiInfo.parameters = [];
-            routerApiInfo.protoName = protoName;
+            routerApiInfo.protoMsgImportPath = LibPath.join('..', '..', 'proto', protoName + '_pb').replace(/\\/g, '/');
 
             // 返回结果处理
-            let responseDefinitionName = parseRefs(methodOptions.responses[200].schema.$ref);
+            let responseDefinitionName = parseRefs(methodOptions.responses[200].schemaDefObj.$ref);
             routerApiInfo.responseTypeStr = responseDefinitionName.replace(protoName, '');
 
             // 参数处理
@@ -160,8 +160,6 @@ class RouterCLI {
             routerApiInfos.push(routerApiInfo);
           }
         }
-
-        await mkdir(LibPath.join(OUTPUT_DIR, 'router'));
 
         // write Router Loader
         TplEngine.registerHelper('lcfirst', lcfirst);

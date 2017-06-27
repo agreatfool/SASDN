@@ -1,12 +1,12 @@
 "use strict";
 
 import { joi, joiValidate } from 'sasdn';
-import {{curlyLeft}} {{apiInfo.responseTypeStr}} {{curlyRight}} from "../../proto/{{apiInfo.protoName}}_pb";
+import {{curlyLeft}} {{apiInfo.responseTypeStr}} {{curlyRight}} from "{{apiInfo.protoMsgImportPath}}";
 
 class {{apiInfo.operationId}} {
     public method = '{{apiInfo.method}}';
     public uri = '{{apiInfo.uri}}';
-    public type = '{{apiInfo.type}}';
+    public type = 'application/json; charset=utf-8';
     public schema = {
 {{#each apiInfo.parameters}}
     {{#eq this.type "object"}}
