@@ -2,8 +2,11 @@
 import {Middleware as KoaMiddleware, Context as KoaContext, Request as KoaRequest} from "koa";
 import {joi, joiValidate} from "../Utility";
 import {MiddlewareNext} from "../App";
+import * as ts from "typescript/lib/tsserverlibrary";
+import Err = ts.server.Msg.Err;
 
 export interface GatewayContext extends KoaContext {
+  params: any,
   request: GatewayRequest;
 }
 export interface GatewayRequest extends KoaRequest {
@@ -26,25 +29,31 @@ export abstract class GatewayApiBase {
   public abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayParams): Promise<any>;
 
   public register(): Array<string | KoaMiddleware> {
-    return [this.uri, this._validate, this._execute];
+    return [this.uri, this._validate(), this._execute()];
   };
 
-  protected async _validate(ctx: GatewayContext, next: MiddlewareNext): Promise<void> {
-    let aggregatedParams = this._parseParams(ctx);
-    let joiSchemas = this._convertSchemaDefToJoiSchema(this.schemaDefObj);
+  protected _validate(): KoaMiddleware {
+    let _this: GatewayApiBase = this;
+    return async function (ctx: GatewayContext, next: MiddlewareNext): Promise<void> {
+      let aggregatedParams = _this._parseParams(ctx);
+      let joiSchemas = _this._convertSchemaDefToJoiSchema(_this.schemaDefObj);
 
-    try {
-      await joiValidate(aggregatedParams, joiSchemas, {allowUnknown: true});
-      await next();
-    } catch (err) {
-      ctx.body = err.toString();
+      try {
+        await joiValidate(aggregatedParams, joiSchemas, {allowUnknown: true});
+        await next();
+      } catch (err) {
+        ctx.body = err.toString();
+      }
     }
   }
 
-  protected async _execute(ctx: GatewayContext, next: MiddlewareNext) {
-    let aggregatedParams = this._parseParams(ctx);
-    ctx.body = await this.handle(ctx, next, aggregatedParams);
-    await next();
+  protected _execute(): KoaMiddleware {
+    let _this: GatewayApiBase = this;
+    return async function (ctx: GatewayContext, next: MiddlewareNext): Promise<void> {
+      let aggregatedParams = _this._parseParams(ctx);
+      ctx.body = await _this.handle(ctx, next, aggregatedParams);
+      await next();
+    }
   }
 
   protected _parseParams(ctx: GatewayContext): { [key: string]: any } {

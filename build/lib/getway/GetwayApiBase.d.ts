@@ -2,6 +2,7 @@ import {Middleware as KoaMiddleware, Context as KoaContext, Request as KoaReques
 import {MiddlewareNext} from "../App";
 
 export declare interface GatewayContext extends KoaContext {
+    params: any,
     request: GatewayRequest;
 }
 export declare interface GatewayRequest extends KoaRequest {

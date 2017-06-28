@@ -92,14 +92,10 @@ export declare class Context {
     onError(err: Error): void;
 }
 
-declare module "koa" {
-  interface Context {
-    params: any;
-  }
-}
 import {Middleware as KoaMiddleware, Context as KoaContext, Request as KoaRequest} from "koa";
 
 export declare interface GatewayContext extends KoaContext {
+  params: any,
   request: GatewayRequest;
 }
 export declare interface GatewayRequest extends KoaRequest {

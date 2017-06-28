@@ -13,7 +13,6 @@ const program = require("commander");
 const LibPath = require("path");
 const lib_1 = require("./lib/lib");
 const template_1 = require("./lib/template");
-const lib_2 = require("./lib/lib");
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:Router');
 program.version(pkg.version)
@@ -59,7 +58,7 @@ class RouterCLI {
     _loadSpecs() {
         return __awaiter(this, void 0, void 0, function* () {
             debug('RouterCLI load swagger spec files.');
-            this._swaggerSpecList = yield lib_2.readSwaggerSpecList(SWAGGER_DIR, OUTPUT_DIR);
+            this._swaggerSpecList = yield lib_1.readSwaggerSpecList(SWAGGER_DIR, OUTPUT_DIR);
             if (this._swaggerSpecList.length === 0) {
                 throw new Error('no swagger spec files found');
             }
@@ -86,19 +85,29 @@ class RouterCLI {
                         let routerApiInfo = {};
                         routerApiInfo.operationId = lib_1.ucfirst(method) + methodOptions.operationId;
                         routerApiInfo.serviceName = methodOptions.tags[0];
-                        routerApiInfo.fileName = lib_1.lcfirst(method) + methodOptions.operationId + ".ts";
+                        routerApiInfo.fileName = lib_1.lcfirst(method) + methodOptions.operationId;
                         routerApiInfo.method = method;
-                        routerApiInfo.uri = uri;
                         routerApiInfo.parameters = [];
                         routerApiInfo.protoMsgImportPath = LibPath.join('..', '..', 'proto', protoName + '_pb').replace(/\\/g, '/');
+                        // 处理uri
+                        let pathParams = uri.match(/{(.*?)}/igm);
+                        if (pathParams == null) {
+                            routerApiInfo.uri = uri;
+                        }
+                        else {
+                            for (let pathParam of pathParams) {
+                                uri = uri.replace(pathParam, pathParam.replace('{', ':').replace('}', ''));
+                            }
+                            routerApiInfo.uri = uri;
+                        }
                         // 返回结果处理
-                        let responseDefinitionName = parseRefs(methodOptions.responses[200].schemaDefObj.$ref);
+                        let responseDefinitionName = parseRefs(methodOptions.responses[200].schema.$ref);
                         routerApiInfo.responseTypeStr = responseDefinitionName.replace(protoName, '');
                         // 参数处理
                         for (let parameter of methodOptions.parameters) {
                             let apiParameters = {};
                             apiParameters.name = parameter.name;
-                            apiParameters.required = parameter.required == true ? 'required' : 'optional';
+                            apiParameters.required = parameter.required;
                             switch (parameter.in) {
                                 case "body":
                                     let requestDefinitionName = parseRefs(parameter.schema.$ref);
@@ -122,16 +131,16 @@ class RouterCLI {
                 // write Router Loader
                 template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
                 let routerContent = template_1.TplEngine.render('router/router', {
-                    apiInfos: routerApiInfos,
+                    infos: routerApiInfos,
                 });
                 yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'Router.ts'), routerContent);
                 // write Router Api
                 for (let apiInfo of routerApiInfos) {
                     yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router', apiInfo.serviceName));
                     let apiContent = template_1.TplEngine.render('router/api', {
-                        apiInfo: apiInfo,
+                        info: apiInfo,
                     });
-                    yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', apiInfo.serviceName, apiInfo.fileName), apiContent);
+                    yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', apiInfo.serviceName, apiInfo.fileName + ".ts"), apiContent);
                 }
             }
         });
@@ -149,7 +158,7 @@ function parseDefinitionsSchema(definitions, definitionName) {
         for (let propertyName in properties) {
             let parameterSchema = {};
             parameterSchema.name = propertyName;
-            parameterSchema.required = (requiredProperties !== null && requiredProperties.indexOf(propertyName) >= 0) ? 'required' : 'optional';
+            parameterSchema.required = (requiredProperties !== null && requiredProperties.indexOf(propertyName) >= 0);
             parameterSchema.type = "any";
             if (properties[propertyName].$ref) {
                 let definitionName = parseRefs(properties[propertyName].$ref);

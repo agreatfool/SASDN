@@ -1,69 +1,87 @@
 "use strict";
 
-import { joi, joiValidate } from 'sasdn';
-import {{curlyLeft}} {{apiInfo.responseTypeStr}} {{curlyRight}} from "{{apiInfo.protoMsgImportPath}}";
+import {GatewayApiBase, GatewayContext, MiddlewareNext} from 'sasdn';
+import {{{curlyLeft}}}{{info.responseTypeStr}}{{{curlyRight}}} from "{{info.protoMsgImportPath}}";
 
-class {{apiInfo.operationId}} {
-    public method = '{{apiInfo.method}}';
-    public uri = '{{apiInfo.uri}}';
-    public type = 'application/json; charset=utf-8';
-    public schema = {
-{{#each apiInfo.parameters}}
-    {{#eq this.type "object"}}
-        {{this.name}}: joi.object({
+interface RequestParams {
+{{#each info.parameters}}
+{{#eq this.type "object"}}
+    {{this.name}}{{#eq this.required false}}?{{/eq}}: {
     {{#each this.schema}}
-        {{#eq this.type "object"}}
-            {{this.name}}: joi.object({
+    {{#eq this.type "object"}}
+        {{this.name}}{{#eq this.required false}}?{{/eq}}: {
         {{#each this.schema}}
-            {{#eq this.type "object"}}
-                {{this.name}}: joi.object({
-                {{#each this.schema}}
-                    {{this.name}}: joi.{{this.type}}().{{this.required}}(),
-                {{/each}}
-                }).{{this.required}}(),
-            {{else}}
-                {{this.name}}: joi.{{this.type}}().{{this.required}}(),
-            {{/eq}}
-        {{/each}}
-            }).{{this.required}}(),
+        {{#eq this.type "object"}}
+            {{this.name}}{{#eq this.required false}}?{{/eq}}: {
+            {{#each this.schema}}
+                {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}},
+            {{/each}}
+            },
         {{else}}
-            {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+            {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}},
         {{/eq}}
-    {{/each}}
-        }).{{this.required}}(),
+        {{/each}}
+        },
     {{else}}
-        {{this.name}}: joi.{{this.type}}().{{this.required}}(),
+        {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}},
     {{/eq}}
+    {{/each}}
+    },
+{{else}}
+    {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}},
+{{/eq}}
 {{/each}}
-    };
+}
 
+class {{info.operationId}} extends GatewayApiBase {
     constructor() {
-        // do nothing
+        super();
+        this.method = '{{info.method}}';
+        this.uri = '{{info.uri}}';
+        this.type = 'application/json; charset=utf-8';
+        this.schemaDefObj = {
+        {{#each info.parameters}}
+            {{this.name}}: {
+                type: '{{this.type}}',
+                required: {{this.required}},
+            {{#if this.schema}}
+                schema: {
+                {{#each this.schema}}
+                    {{this.name}}: {
+                        type: '{{this.type}}',
+                        required: {{this.required}},
+                    {{#if this.schema}}
+                        schema: {
+                        {{#each this.schema}}
+                            {{this.name}}: {
+                                type: '{{this.type}}',
+                                required: {{this.required}},
+                            {{#if this.schema}}
+                                schema: {
+                                {{#each this.schema}}
+                                    {{this.name}}: {
+                                        type: '{{this.type}}',
+                                        required: {{this.required}},
+                                    },
+                                {{/each}}
+                                },
+                            {{/if}}
+                            },
+                        {{/each}}
+                        },
+                    {{/if}}
+                    },
+                {{/each}}
+                },
+            {{/if}}
+            },
+        {{/each}}
+        };
     }
 
-    register() {
-        return [this.uri, validate, execute];
+    public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<{{ info.responseTypeStr }}.AsObject> {
+        return await new {{ info.responseTypeStr }}().toObject();
     }
 }
 
-
-async function validate(next) {
-    let aggregatedParams = Object.assign({}, this.params, this.query, this.request.body);
-    try {
-        await joiValidate(aggregatedParams, api.schema, { allowUnknown: true });
-        await next;
-    } catch (err) {
-        this.body = err.toString();
-    }
-}
-
-async function execute(next) {
-    this.body = await buildResponse();
-}
-
-async function buildResponse() {
-    return new {{ apiInfo.responseTypeStr }}().toObject();
-}
-
-const api = new {{apiInfo.operationId}}();
-module.exports = api;
+export default new {{info.operationId}}();

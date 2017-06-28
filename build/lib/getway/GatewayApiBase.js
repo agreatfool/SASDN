@@ -11,28 +11,34 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const Utility_1 = require("../Utility");
 class GatewayApiBase {
     register() {
-        return [this.uri, this._validate, this._execute];
+        return [this.uri, this._validate(), this._execute()];
     }
     ;
-    _validate(ctx, next) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let aggregatedParams = this._parseParams(ctx);
-            let joiSchemas = this._convertSchemaDefToJoiSchema(this.schemaDefObj);
-            try {
-                yield Utility_1.joiValidate(aggregatedParams, joiSchemas, { allowUnknown: true });
-                yield next();
-            }
-            catch (err) {
-                ctx.body = err.toString();
-            }
-        });
+    _validate() {
+        let _this = this;
+        return function (ctx, next) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let aggregatedParams = _this._parseParams(ctx);
+                let joiSchemas = _this._convertSchemaDefToJoiSchema(_this.schemaDefObj);
+                try {
+                    yield Utility_1.joiValidate(aggregatedParams, joiSchemas, { allowUnknown: true });
+                    yield next();
+                }
+                catch (err) {
+                    ctx.body = err.toString();
+                }
+            });
+        };
     }
-    _execute(ctx, next) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let aggregatedParams = this._parseParams(ctx);
-            ctx.body = yield this.handle(ctx, next, aggregatedParams);
-            yield next();
-        });
+    _execute() {
+        let _this = this;
+        return function (ctx, next) {
+            return __awaiter(this, void 0, void 0, function* () {
+                let aggregatedParams = _this._parseParams(ctx);
+                ctx.body = yield _this.handle(ctx, next, aggregatedParams);
+                yield next();
+            });
+        };
     }
     _parseParams(ctx) {
         return Object.assign({}, ctx.params, ctx.query, { body: ctx.request.body }); // bodyParse required
