@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const joi = require("joi");
 exports.joi = joi;
-const util = require("util");
-let joiValidate = util.promisify(joi.validate);
+const Bluebird = require("Bluebird");
+let joiValidate = Bluebird.promisify(joi.validate);
 exports.joiValidate = joiValidate;
-//# sourceMappingURL=Utility.js.map
+//# sourceMappingURL=Joi.js.map

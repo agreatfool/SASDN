@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-///<reference path="../../node_modules/grpc-tsd/src/grpc.d.ts"/>
+///<reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 const assert = require("assert");
 const grpc_1 = require("grpc");
 var GrpcOpType;

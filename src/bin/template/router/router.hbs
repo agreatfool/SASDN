@@ -1,22 +1,20 @@
-"use strict";
-
-import * as Router from 'koa-router'
+import * as Router from "koa-router"
 
 const API_PATHS = [
     {{#each infos}}
-    "../router/{{this.serviceName}}/{{this.fileName}}",
+    '../router/{{this.serviceName}}/{{this.fileName}}',
     {{/each}}
 ];
 
 export default class RouteLoader {
     private static _instance: RouteLoader;
 
-    private initialized: boolean;
-    private router: Router;
+    private _initialized: boolean;
+    private _router: Router;
 
     private constructor() {
-        this.initialized = false;
-        this.router = new Router();
+        this._initialized = false;
+        this._router = new Router();
     }
 
     public static instance(): RouteLoader {
@@ -36,7 +34,7 @@ export default class RouteLoader {
 
             // promise queue
             Promise.all(queue).then(() => {
-                this.initialized = true;
+                this._initialized = true;
                 resolve(true);
             }).catch((err: Error) => {
                 reject(err);
@@ -45,13 +43,13 @@ export default class RouteLoader {
     }
 
     public getRouter(): Router {
-        return this.router
+        return this._router;
     }
 
     private async _createRouter(path: string): Promise<void> {
         try {
             let api = require(path).default;
-            this.router[api.method].apply(this.router, api.register());
+            this._router[api.method].apply(this.router, api.register());
         } catch (err) {
             console.error(err.toString());
         }

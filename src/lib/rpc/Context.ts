@@ -1,4 +1,4 @@
-///<reference path="../../node_modules/grpc-tsd/src/grpc.d.ts"/>
+///<reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 import * as assert from "assert";
 import {ICallStatus, IServerCall, Metadata, RpcImplCallback, status as GrpcStatus} from "grpc";
 

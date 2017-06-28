@@ -6,7 +6,6 @@ import {Method, Namespace, Service} from "protobufjs";
 import * as bluebird from "bluebird";
 import * as LibMkdirP from "mkdirp";
 import {Operation as SwaggerOperation, Schema as SwaggerSchema, Spec as SwaggerSpec} from "swagger-schema-official";
-import {isUndefined} from "util";
 
 const mkdirp = bluebird.promisify<string, string>(LibMkdirP);
 
@@ -48,15 +47,15 @@ export interface RpcMethodInfo {
     protoMsgImportPath: string;
 }
 
-export type GatewayParameter = {
+export interface GatewaySwaggerSchema {
     name: string;
     type: string;           // string, number, array, object, ANY INTERFACE
     required: boolean;      // required, optional
-    schema?: GatewayParameterList;
-    uri?: Array<string>;
+    schema?: Array<GatewaySwaggerSchema>;
 }
-export type GatewayParameterList = Array<GatewayParameter>
-export type SwaggerDefinitionMap = { [definitionsName: string]: SwaggerSchema }
+export interface SwaggerDefinitionMap {
+    [definitionsName: string]: SwaggerSchema;
+}
 
 export const readProtoList = async function (protoDir: string, outputDir: string, excludes?: Array<string>): Promise<Array<ProtoFile>> {
     let files = await recursive(protoDir, ['.DS_Store', function ignoreFunc(file, stats) {
@@ -217,8 +216,16 @@ export namespace Proto {
     };
 }
 
+/**
+ * Read Swagger spec schema from swagger dir
+ *
+ * @param {string} swaggerDir
+ * @param {string} outputDir
+ * @param {Array<string>} excludes, optional param
+ * @returns {Promise<Array<SwaggerSpec>}
+ */
 export const readSwaggerList = async function (swaggerDir: string, outputDir: string, excludes?: Array<string>): Promise<Array<SwaggerSpec>> {
-    let files = await recursive(swaggerDir, ['.DS_Store', function(file) {
+    let files = await recursive(swaggerDir, ['.DS_Store', function (file) {
         let shallIgnore = false;
         if (!excludes || excludes.length === 0) {
             return shallIgnore;
@@ -237,7 +244,8 @@ export const readSwaggerList = async function (swaggerDir: string, outputDir: st
             let filePath = LibPath.join(swaggerDir, LibPath.dirname(file), LibPath.basename(file));
             try {
                 return JSON.parse(LibFs.readFileSync(filePath).toString());
-            } catch(e) {
+            } catch (e) {
+                console.log("Error:" + e.message);
                 return undefined;
             }
         } else {
@@ -263,7 +271,7 @@ export namespace Swagger {
     }
 
     /**
-     * convert SwaggerType To JoiType
+     * Convert SwaggerType To JoiType
      * <pre>
      *   integer => number
      * </pre>
@@ -272,25 +280,27 @@ export namespace Swagger {
      * @returns {string}
      */
     export function convertSwaggerTypeToJoiType(type: string): string {
-        let enumTypes = {
-            "integer":  "number",
-            "number":   "number",
-            "string":   "string",
-            "boolean":  "boolean",
-            "object":   "object",
-            "array":    "array"
-        };
-
-        return enumTypes.hasOwnProperty(type) ? enumTypes[type] : "any";
+        switch (type) {
+            case 'string':
+            case 'boolean':
+            case 'object':
+            case 'array':
+            case 'number':
+                return type;
+            case 'integer':
+                return 'number';
+            default:
+                return 'any';
+        }
     }
 
     /**
-     * convert Swagger Uri to Koa Uri
+     * Convert Swagger Uri to Koa Uri
      * <pre>
      *   /v1/book/{isbn}/{version} => /v1/book/:isbn/:version
      * </pre>
      *
-     * @param uri
+     * @param {string} uri
      * @returns {string}
      */
     export function convertSwaggerUriToKoaUri(uri: string): string {
@@ -306,7 +316,10 @@ export namespace Swagger {
     /**
      * Get swagger response type
      * <pre>
-     *  #/definitions/bookBookMap => BookMap
+     *     // getRefName
+     *     #/definitions/bookBookMap => bookBookMap
+     *     // getSwaggerResponseType
+     *     bookBookMap => BookMap
      * </pre>
      *
      * @param {SwaggerOperation} option
@@ -318,51 +331,53 @@ export namespace Swagger {
     }
 
     /**
-     * Parse swagger definitions schema to {GatewayParameterList}
+     * Parse swagger definitions schema to Array<GatewaySwaggerSchema>
      *
      * @param {SwaggerDefinitionMap} definitionMap
      * @param {string} definitionName
-     * @returns {GatewayParameterList}
+     * @returns {Array<GatewaySwaggerSchema>}
      */
-    export function parseSwaggerDefinitionMap(definitionMap: SwaggerDefinitionMap, definitionName: string): GatewayParameterList {
-        let parameterList = [] as GatewayParameterList;
-
-        if (definitionMap.hasOwnProperty(definitionName)) {
-            let definition = definitionMap[definitionName] as SwaggerSchema;
-
-            // key: string => value: SwaggerSchema
-            for (let propertyName in definition.properties) {
-                let definitionSchema = definition.properties[propertyName] as SwaggerSchema;
-
-                let type: string;
-                let schema: GatewayParameterList = [];
-                if (definitionSchema.$ref) {
-                    type = "object";
-                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref));
-                } else if (definitionSchema.type) {
-                    type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
-                    if (definitionSchema.type == 'array' && definitionSchema.items.hasOwnProperty("$ref")) {
-                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items["$ref"]));
-                    }
-                } else {
-                    type = "any";
-                }
-
-                let parameterSchema: GatewayParameter = {
-                    name: propertyName,
-                    required: (!isUndefined(definition.required) && definition.required.length > 0 && definition.required.indexOf(propertyName) >= 0),
-                    type: type
-                };
-
-                if (schema.length > 0) {
-                    parameterSchema.schema = schema
-                }
-
-                parameterList.push(parameterSchema);
-            }
+    export function parseSwaggerDefinitionMap(definitionMap: SwaggerDefinitionMap, definitionName: string): Array<GatewaySwaggerSchema> {
+        // definitionName not found, return []
+        if (!definitionMap.hasOwnProperty(definitionName)) {
+            return [];
         }
 
-        return parameterList
+        let swaggerSchemaList = [] as Array<GatewaySwaggerSchema>;
+        let definition = definitionMap[definitionName] as SwaggerSchema;
+
+        // key: string => value: SwaggerSchema
+        for (let propertyName in definition.properties) {
+            let definitionSchema = definition.properties[propertyName] as SwaggerSchema;
+
+            let type: string;
+            let schema: Array<GatewaySwaggerSchema> = [];
+            if (definitionSchema.$ref) {
+                type = 'object';
+                schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref));
+            } else if (definitionSchema.type) {
+                type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
+                if (definitionSchema.type === 'array' && definitionSchema.items.hasOwnProperty('$ref')) {
+                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items['$ref']));
+                }
+            } else {
+                type = 'any';
+            }
+
+            let swaggerSchema: GatewaySwaggerSchema = {
+                name: propertyName,
+                required: (!definition.required == undefined && definition.required.length > 0 && definition.required.indexOf(propertyName) >= 0),
+                type: type,
+            };
+
+            if (schema.length > 0) {
+                swaggerSchema.schema = schema;
+            }
+
+            swaggerSchemaList.push(swaggerSchema);
+        }
+
+        return swaggerSchemaList;
     }
 
 }

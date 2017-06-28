@@ -15,7 +15,6 @@ const protobuf = require("protobufjs");
 const protobufjs_1 = require("protobufjs");
 const bluebird = require("bluebird");
 const LibMkdirP = require("mkdirp");
-const util_1 = require("util");
 const mkdirp = bluebird.promisify(LibMkdirP);
 exports.readProtoList = function (protoDir, outputDir, excludes) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -150,6 +149,14 @@ var Proto;
         return LibPath.join(protoFile.outputPath, 'services', protoFile.relativePath, protoFile.svcNamespace, service.name, exports.lcfirst(method.name) + '.ts');
     };
 })(Proto = exports.Proto || (exports.Proto = {}));
+/**
+ * Read Swagger spec schema from swagger dir
+ *
+ * @param {string} swaggerDir
+ * @param {string} outputDir
+ * @param {Array<string>} excludes, optional param
+ * @returns {Promise<Array<SwaggerSpec>}
+ */
 exports.readSwaggerList = function (swaggerDir, outputDir, excludes) {
     return __awaiter(this, void 0, void 0, function* () {
         let files = yield recursive(swaggerDir, ['.DS_Store', function (file) {
@@ -172,6 +179,7 @@ exports.readSwaggerList = function (swaggerDir, outputDir, excludes) {
                     return JSON.parse(LibFs.readFileSync(filePath).toString());
                 }
                 catch (e) {
+                    console.log("Error:" + e.message);
                     return undefined;
                 }
             }
@@ -197,7 +205,7 @@ var Swagger;
     }
     Swagger.getRefName = getRefName;
     /**
-     * convert SwaggerType To JoiType
+     * Convert SwaggerType To JoiType
      * <pre>
      *   integer => number
      * </pre>
@@ -206,24 +214,27 @@ var Swagger;
      * @returns {string}
      */
     function convertSwaggerTypeToJoiType(type) {
-        let enumTypes = {
-            "integer": "number",
-            "number": "number",
-            "string": "string",
-            "boolean": "boolean",
-            "object": "object",
-            "array": "array"
-        };
-        return enumTypes.hasOwnProperty(type) ? enumTypes[type] : "any";
+        switch (type) {
+            case 'string':
+            case 'boolean':
+            case 'object':
+            case 'array':
+            case 'number':
+                return type;
+            case 'integer':
+                return 'number';
+            default:
+                return 'any';
+        }
     }
     Swagger.convertSwaggerTypeToJoiType = convertSwaggerTypeToJoiType;
     /**
-     * convert Swagger Uri to Koa Uri
+     * Convert Swagger Uri to Koa Uri
      * <pre>
      *   /v1/book/{isbn}/{version} => /v1/book/:isbn/:version
      * </pre>
      *
-     * @param uri
+     * @param {string} uri
      * @returns {string}
      */
     function convertSwaggerUriToKoaUri(uri) {
@@ -239,7 +250,10 @@ var Swagger;
     /**
      * Get swagger response type
      * <pre>
-     *  #/definitions/bookBookMap => BookMap
+     *     // getRefName
+     *     #/definitions/bookBookMap => bookBookMap
+     *     // getSwaggerResponseType
+     *     bookBookMap => BookMap
      * </pre>
      *
      * @param {SwaggerOperation} option
@@ -251,46 +265,48 @@ var Swagger;
     }
     Swagger.getSwaggerResponseType = getSwaggerResponseType;
     /**
-     * Parse swagger definitions schema to {GatewayParameterList}
+     * Parse swagger definitions schema to Array<GatewaySwaggerSchema>
      *
      * @param {SwaggerDefinitionMap} definitionMap
      * @param {string} definitionName
-     * @returns {GatewayParameterList}
+     * @returns {Array<GatewaySwaggerSchema>}
      */
     function parseSwaggerDefinitionMap(definitionMap, definitionName) {
-        let parameterList = [];
-        if (definitionMap.hasOwnProperty(definitionName)) {
-            let definition = definitionMap[definitionName];
-            // key: string => value: SwaggerSchema
-            for (let propertyName in definition.properties) {
-                let definitionSchema = definition.properties[propertyName];
-                let type;
-                let schema = [];
-                if (definitionSchema.$ref) {
-                    type = "object";
-                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref));
-                }
-                else if (definitionSchema.type) {
-                    type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
-                    if (definitionSchema.type == 'array' && definitionSchema.items.hasOwnProperty("$ref")) {
-                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items["$ref"]));
-                    }
-                }
-                else {
-                    type = "any";
-                }
-                let parameterSchema = {
-                    name: propertyName,
-                    required: (!util_1.isUndefined(definition.required) && definition.required.length > 0 && definition.required.indexOf(propertyName) >= 0),
-                    type: type
-                };
-                if (schema.length > 0) {
-                    parameterSchema.schema = schema;
-                }
-                parameterList.push(parameterSchema);
-            }
+        // definitionName not found, return []
+        if (!definitionMap.hasOwnProperty(definitionName)) {
+            return [];
         }
-        return parameterList;
+        let swaggerSchemaList = [];
+        let definition = definitionMap[definitionName];
+        // key: string => value: SwaggerSchema
+        for (let propertyName in definition.properties) {
+            let definitionSchema = definition.properties[propertyName];
+            let type;
+            let schema = [];
+            if (definitionSchema.$ref) {
+                type = 'object';
+                schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref));
+            }
+            else if (definitionSchema.type) {
+                type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
+                if (definitionSchema.type === 'array' && definitionSchema.items.hasOwnProperty('$ref')) {
+                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items['$ref']));
+                }
+            }
+            else {
+                type = 'any';
+            }
+            let swaggerSchema = {
+                name: propertyName,
+                required: (!definition.required == undefined && definition.required.length > 0 && definition.required.indexOf(propertyName) >= 0),
+                type: type,
+            };
+            if (schema.length > 0) {
+                swaggerSchema.schema = schema;
+            }
+            swaggerSchemaList.push(swaggerSchema);
+        }
+        return swaggerSchemaList;
     }
     Swagger.parseSwaggerDefinitionMap = parseSwaggerDefinitionMap;
 })(Swagger = exports.Swagger || (exports.Swagger = {}));

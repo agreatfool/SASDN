@@ -1,3 +1,3 @@
-export * from "./lib/App";
-export * from "./lib/Context";
-export * from "./lib/getway/GatewayApiBase";
+export * from "./lib/rpc/App";
+export * from "./lib/rpc/Context";
+export * from "./lib/gateway/GatewayApiBase";

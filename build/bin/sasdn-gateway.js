@@ -21,7 +21,7 @@ program.version(pkg.version)
     .parse(process.argv);
 const SWAGGER_DIR = program.swagger === undefined ? undefined : LibPath.normalize(program.swagger);
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
-const METHOD_OPTIONS = ["get", "put", "post", "delete", "options", "head", "patch"];
+const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 class GatewayCLI {
     constructor() {
         this._swaggerList = [];
@@ -61,7 +61,7 @@ class GatewayCLI {
             debug('GatewayCLI load swagger spec files.');
             this._swaggerList = yield lib_1.readSwaggerList(SWAGGER_DIR, OUTPUT_DIR);
             if (this._swaggerList.length === 0) {
-                throw new Error('no swagger spec files found');
+                throw new Error('no valid swagger spec json found');
             }
         });
     }
@@ -71,7 +71,7 @@ class GatewayCLI {
             let gatewayInfoList = [];
             for (let swaggerSpec of this._swaggerList) {
                 debug(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
-                // Parse swagger definitions schema to {GatewayParameterList}
+                // Parse swagger definitions schema to {Array<GatewaySwaggerSchema>}
                 let gatewayDefinitionSchemaMap = {};
                 for (let definitionName in swaggerSpec.definitions) {
                     gatewayDefinitionSchemaMap[definitionName] = lib_1.Swagger.parseSwaggerDefinitionMap(swaggerSpec.definitions, definitionName);
@@ -90,42 +90,42 @@ class GatewayCLI {
                         // read method operation
                         let methodOperation = swaggerPath[method];
                         // loop method parameters
-                        let parameterList = [];
+                        let swaggerSchemaList = [];
                         for (let parameter of methodOperation.parameters) {
                             let type;
                             let schema = [];
                             switch (parameter.in) {
-                                case "body":
+                                case 'body':
                                     type = 'object';
                                     schema = gatewayDefinitionSchemaMap[lib_1.Swagger.getRefName(parameter.schema.$ref)];
                                     break;
-                                case "query":
-                                case "path":
+                                case 'query':
+                                case 'path':
                                     type = parameter.type;
                                     break;
                                 default:
                                     type = 'any'; // headParameter, formDataParameter
                                     break;
                             }
-                            let parameterSchema = {
+                            let swaggerSchema = {
                                 name: parameter.name,
                                 required: parameter.required,
                                 type: type,
                             };
                             if (schema.length > 0) {
-                                parameterSchema.schema = schema;
+                                swaggerSchema.schema = schema;
                             }
-                            parameterList.push(parameterSchema);
+                            swaggerSchemaList.push(swaggerSchema);
                         }
                         gatewayInfoList.push({
-                            operationId: lib_1.ucfirst(method) + methodOperation.operationId,
+                            apiName: lib_1.ucfirst(method) + methodOperation.operationId,
                             serviceName: methodOperation.tags[0],
                             fileName: lib_1.lcfirst(method) + methodOperation.operationId,
                             method: method,
                             uri: lib_1.Swagger.convertSwaggerUriToKoaUri(pathName),
                             responseTypeStr: lib_1.Swagger.getSwaggerResponseType(methodOperation, protoName),
                             protoMsgImportPath: LibPath.join('..', '..', 'proto', protoName + '_pb').replace(/\\/g, '/'),
-                            parameters: parameterList,
+                            parameters: swaggerSchemaList,
                         });
                     }
                 }
@@ -137,13 +137,13 @@ class GatewayCLI {
                     infos: gatewayInfoList,
                 });
                 yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'Router.ts'), routerContent);
-                // write file {gatewayApiName}.ts in OUTPUT_DIR/router/{gatewayApiService}/
+                // write file ${gatewayApiName}.ts in OUTPUT_DIR/router/${gatewayApiService}/
                 for (let gatewayInfo of gatewayInfoList) {
                     yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName));
                     let apiContent = template_1.TplEngine.render('router/api', {
                         info: gatewayInfo,
                     });
-                    yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName, gatewayInfo.fileName + ".ts"), apiContent);
+                    yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName, gatewayInfo.fileName + '.ts'), apiContent);
                 }
             }
         });
