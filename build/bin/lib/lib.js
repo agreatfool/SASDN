@@ -15,6 +15,7 @@ const protobuf = require("protobufjs");
 const protobufjs_1 = require("protobufjs");
 const bluebird = require("bluebird");
 const LibMkdirP = require("mkdirp");
+const util_1 = require("util");
 const mkdirp = bluebird.promisify(LibMkdirP);
 exports.readProtoList = function (protoDir, outputDir, excludes) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -76,6 +77,9 @@ exports.mkdir = function (path) {
 };
 exports.lcfirst = function (str) {
     return str.charAt(0).toLowerCase() + str.slice(1);
+};
+exports.ucfirst = function (str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 };
 var Proto;
 (function (Proto) {
@@ -146,3 +150,148 @@ var Proto;
         return LibPath.join(protoFile.outputPath, 'services', protoFile.relativePath, protoFile.svcNamespace, service.name, exports.lcfirst(method.name) + '.ts');
     };
 })(Proto = exports.Proto || (exports.Proto = {}));
+exports.readSwaggerList = function (swaggerDir, outputDir, excludes) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let files = yield recursive(swaggerDir, ['.DS_Store', function (file) {
+                let shallIgnore = false;
+                if (!excludes || excludes.length === 0) {
+                    return shallIgnore;
+                }
+                excludes.forEach((exclude) => {
+                    if (file.indexOf(exclude) !== -1) {
+                        shallIgnore = true;
+                    }
+                });
+                return shallIgnore;
+            }]);
+        let swaggerList = files.map((file) => {
+            file = file.replace(swaggerDir, ''); // remove base dir
+            if (LibPath.basename(file).match(/.+\.json/) !== null) {
+                let filePath = LibPath.join(swaggerDir, LibPath.dirname(file), LibPath.basename(file));
+                try {
+                    return JSON.parse(LibFs.readFileSync(filePath).toString());
+                }
+                catch (e) {
+                    return undefined;
+                }
+            }
+            else {
+                return undefined;
+            }
+        }).filter((value) => {
+            return value !== undefined;
+        });
+        return Promise.resolve(swaggerList);
+    });
+};
+var Swagger;
+(function (Swagger) {
+    /**
+     * #/definitions/BookModel => BookModel
+     *
+     * @param {string} ref
+     * @returns {string}
+     */
+    function getRefName(ref) {
+        return ref.replace('#/definitions/', '');
+    }
+    Swagger.getRefName = getRefName;
+    /**
+     * convert SwaggerType To JoiType
+     * <pre>
+     *   integer => number
+     * </pre>
+     *
+     * @param {string} type
+     * @returns {string}
+     */
+    function convertSwaggerTypeToJoiType(type) {
+        let enumTypes = {
+            "integer": "number",
+            "number": "number",
+            "string": "string",
+            "boolean": "boolean",
+            "object": "object",
+            "array": "array"
+        };
+        return enumTypes.hasOwnProperty(type) ? enumTypes[type] : "any";
+    }
+    Swagger.convertSwaggerTypeToJoiType = convertSwaggerTypeToJoiType;
+    /**
+     * convert Swagger Uri to Koa Uri
+     * <pre>
+     *   /v1/book/{isbn}/{version} => /v1/book/:isbn/:version
+     * </pre>
+     *
+     * @param uri
+     * @returns {string}
+     */
+    function convertSwaggerUriToKoaUri(uri) {
+        let pathParams = uri.match(/{(.*?)}/igm);
+        if (pathParams != null) {
+            for (let pathParam of pathParams) {
+                uri = uri.replace(pathParam, pathParam.replace('{', ':').replace('}', ''));
+            }
+        }
+        return uri;
+    }
+    Swagger.convertSwaggerUriToKoaUri = convertSwaggerUriToKoaUri;
+    /**
+     * Get swagger response type
+     * <pre>
+     *  #/definitions/bookBookMap => BookMap
+     * </pre>
+     *
+     * @param {SwaggerOperation} option
+     * @param {string} protoName
+     * @returns {string}
+     */
+    function getSwaggerResponseType(option, protoName) {
+        return Swagger.getRefName(option.responses[200].schema.$ref).replace(protoName, '');
+    }
+    Swagger.getSwaggerResponseType = getSwaggerResponseType;
+    /**
+     * Parse swagger definitions schema to {GatewayParameterList}
+     *
+     * @param {SwaggerDefinitionMap} definitionMap
+     * @param {string} definitionName
+     * @returns {GatewayParameterList}
+     */
+    function parseSwaggerDefinitionMap(definitionMap, definitionName) {
+        let parameterList = [];
+        if (definitionMap.hasOwnProperty(definitionName)) {
+            let definition = definitionMap[definitionName];
+            // key: string => value: SwaggerSchema
+            for (let propertyName in definition.properties) {
+                let definitionSchema = definition.properties[propertyName];
+                let type;
+                let schema = [];
+                if (definitionSchema.$ref) {
+                    type = "object";
+                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref));
+                }
+                else if (definitionSchema.type) {
+                    type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
+                    if (definitionSchema.type == 'array' && definitionSchema.items.hasOwnProperty("$ref")) {
+                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items["$ref"]));
+                    }
+                }
+                else {
+                    type = "any";
+                }
+                let parameterSchema = {
+                    name: propertyName,
+                    required: (!util_1.isUndefined(definition.required) && definition.required.length > 0 && definition.required.indexOf(propertyName) >= 0),
+                    type: type
+                };
+                if (schema.length > 0) {
+                    parameterSchema.schema = schema;
+                }
+                parameterList.push(parameterSchema);
+            }
+        }
+        return parameterList;
+    }
+    Swagger.parseSwaggerDefinitionMap = parseSwaggerDefinitionMap;
+})(Swagger = exports.Swagger || (exports.Swagger = {}));
+//# sourceMappingURL=lib.js.map

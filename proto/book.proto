@@ -1,53 +1,67 @@
 syntax = "proto3";
 
+import "google/api/annotations.proto";
+
 package com.book;
 
 message Book {
     int64 isbn = 1;
     string title = 2;
     string author = 3;
+    //BookCategory category = 4;
+}
+
+message BookCategory {
+    int64 id = 1;
+    string name = 2;
+    bool isParent = 3;
+    //repeated int64 categoryId = 4;
+}
+
+message BookMap {
+    //repeated Book list = 1;
 }
 
 message GetBookRequest {
     int64 isbn = 1;
 }
 
-message GetBookViaAuthor {
+message GetBookViaAuthorRequest {
     string author = 1;
+}
+
+message UpdateBookRequest {
+    string isbn = 1; // mapped to the URL
+    //Book book = 2;   // mapped to the body
 }
 
 service BookService {
     rpc GetBook (GetBookRequest) returns (Book) {}
-    rpc GetBooksViaAuthor (GetBookViaAuthor) returns (stream Book) {}
+    rpc GetBooksViaAuthor (GetBookViaAuthorRequest) returns (stream Book) {}
     rpc GetGreatestBook (stream GetBookRequest) returns (Book) {}
     rpc GetBooks (stream GetBookRequest) returns (stream Book) {}
 }
 
-service TestService {
-    rpc Test (GetBookRequest) returns (Book) {}
-}
+// gPRC-getway Test
+service BookApiService {
+    rpc GetBookApi (GetBookRequest) returns (Book) {
+        option (google.api.http) = {
+            post: "/v1/getBook"
+            body: "*"
+        };
+    }
 
-message BookStore {
-    string name = 1;
-    map<int64, string> books = 2;
-}
+    rpc GetBooksViaAuthorApi (GetBookViaAuthorRequest) returns (BookMap) {
+        option (google.api.http) = {
+            post: "/v1/getBooksViaAuthor"
+            body: "*"
+        };
+    }
 
-enum EnumSample {
-    option allow_alias = true;
-    UNKNOWN = 0;
-    STARTED = 1;
-    RUNNING = 1;
+    rpc UpdateBooksApi (UpdateBookRequest) returns (Book) {
+        option (google.api.http) = {
+            post: "/v1/updateBook/{isbn}"
+            body: "*"
+        };
+    }
 }
-
-//message EchoMessage {
-//    string value = 1;
-//}
-//
-//service EchoService {
-//    rpc Echo(EchoMessage) returns (EchoMessage) {
-//        option (google.api.http) = {
-//            post: "/v1/echo"
-//            body: "*"
-//        };
-//    }
-//}
