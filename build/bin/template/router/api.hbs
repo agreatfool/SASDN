@@ -1,6 +1,4 @@
-"use strict";
-
-import {GatewayApiBase, GatewayContext, MiddlewareNext} from 'sasdn';
+import {GatewayApiBase, GatewayContext, MiddlewareNext} from "sasdn";
 import {{{curlyLeft}}}{{info.responseTypeStr}}{{{curlyRight}}} from "{{info.protoMsgImportPath}}";
 
 interface RequestParams {
@@ -14,26 +12,26 @@ interface RequestParams {
         {{#eq this.type "object"}}
             {{this.name}}{{#eq this.required false}}?{{/eq}}: {
             {{#each this.schema}}
-                {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}},
+                {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}};
             {{/each}}
-            },
+            };
         {{else}}
-            {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}},
+            {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}};
         {{/eq}}
         {{/each}}
-        },
+        };
     {{else}}
-        {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}},
+        {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}};
     {{/eq}}
     {{/each}}
-    },
+    };
 {{else}}
-    {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}},
+    {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}};
 {{/eq}}
 {{/each}}
 }
 
-class {{info.operationId}} extends GatewayApiBase {
+class {{info.apiName}} extends GatewayApiBase {
     constructor() {
         super();
         this.method = '{{info.method}}';
@@ -84,4 +82,4 @@ class {{info.operationId}} extends GatewayApiBase {
     }
 }
 
-export default new {{info.operationId}}();
+export default new {{info.apiName}}();
