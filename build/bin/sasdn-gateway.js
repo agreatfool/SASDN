@@ -71,7 +71,7 @@ class GatewayCLI {
             let gatewayInfoList = [];
             for (let swaggerSpec of this._swaggerList) {
                 debug(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
-                // Parse swagger definitions schema to {Array<GatewaySwaggerSchema>}
+                // Parse swagger definitions schema to ${Array<GatewaySwaggerSchema>}
                 let gatewayDefinitionSchemaMap = {};
                 for (let definitionName in swaggerSpec.definitions) {
                     gatewayDefinitionSchemaMap[definitionName] = lib_1.Swagger.parseSwaggerDefinitionMap(swaggerSpec.definitions, definitionName);
@@ -89,15 +89,20 @@ class GatewayCLI {
                         }
                         // read method operation
                         let methodOperation = swaggerPath[method];
+                        let responseTypeStr = lib_1.Swagger.getSwaggerResponseType(methodOperation, protoName);
+                        let requestTypeStr = [];
                         // loop method parameters
                         let swaggerSchemaList = [];
                         for (let parameter of methodOperation.parameters) {
                             let type;
                             let schema = [];
+                            let refName;
                             switch (parameter.in) {
                                 case 'body':
+                                    let definitionName = lib_1.Swagger.getRefName(parameter.schema.$ref);
                                     type = 'object';
-                                    schema = gatewayDefinitionSchemaMap[lib_1.Swagger.getRefName(parameter.schema.$ref)];
+                                    schema = gatewayDefinitionSchemaMap[definitionName];
+                                    refName = lib_1.Swagger.removeProtoName(definitionName, protoName);
                                     break;
                                 case 'query':
                                 case 'path':
@@ -112,6 +117,12 @@ class GatewayCLI {
                                 required: parameter.required,
                                 type: type,
                             };
+                            if (refName) {
+                                swaggerSchema.refName = refName;
+                                if (refName != responseTypeStr && requestTypeStr.indexOf(refName) < 0) {
+                                    requestTypeStr.push(refName);
+                                }
+                            }
                             if (schema.length > 0) {
                                 swaggerSchema.schema = schema;
                             }
@@ -123,9 +134,10 @@ class GatewayCLI {
                             fileName: lib_1.lcfirst(method) + methodOperation.operationId,
                             method: method,
                             uri: lib_1.Swagger.convertSwaggerUriToKoaUri(pathName),
-                            responseTypeStr: lib_1.Swagger.getSwaggerResponseType(methodOperation, protoName),
                             protoMsgImportPath: LibPath.join('..', '..', 'proto', protoName + '_pb').replace(/\\/g, '/'),
                             parameters: swaggerSchemaList,
+                            responseTypeStr: responseTypeStr,
+                            requestTypeStr: requestTypeStr.length > 0 ? requestTypeStr : false,
                         });
                     }
                 }

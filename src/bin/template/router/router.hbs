@@ -49,7 +49,7 @@ export default class RouteLoader {
     private async _createRouter(path: string): Promise<void> {
         try {
             let api = require(path).default;
-            this._router[api.method].apply(this.router, api.register());
+            this._router[api.method].apply(this._router, api.register());
         } catch (err) {
             console.error(err.toString());
         }

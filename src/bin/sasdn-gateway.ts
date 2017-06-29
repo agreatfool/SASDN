@@ -20,6 +20,7 @@ interface GatewayInfo {
     parameters: Array<GatewaySwaggerSchema>;
     protoMsgImportPath: string;
     responseTypeStr: string;
+    requestTypeStr: Array<string> | boolean;
 }
 
 interface GatewayDefinitionSchemaMap {
@@ -88,7 +89,7 @@ class GatewayCLI {
         for (let swaggerSpec of this._swaggerList) {
             debug(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
 
-            // Parse swagger definitions schema to {Array<GatewaySwaggerSchema>}
+            // Parse swagger definitions schema to ${Array<GatewaySwaggerSchema>}
             let gatewayDefinitionSchemaMap = {} as GatewayDefinitionSchemaMap;
             for (let definitionName in swaggerSpec.definitions) {
                 gatewayDefinitionSchemaMap[definitionName] = Swagger.parseSwaggerDefinitionMap(swaggerSpec.definitions, definitionName);
@@ -110,6 +111,8 @@ class GatewayCLI {
 
                     // read method operation
                     let methodOperation = swaggerPath[method] as Operation;
+                    let responseTypeStr = Swagger.getSwaggerResponseType(methodOperation, protoName);
+                    let requestTypeStr = [] as Array<string>;
 
                     // loop method parameters
                     let swaggerSchemaList = [] as Array<GatewaySwaggerSchema>;
@@ -117,15 +120,18 @@ class GatewayCLI {
 
                         let type: string;
                         let schema: Array<GatewaySwaggerSchema> = [];
+                        let refName: string;
 
                         switch (parameter.in) {
                             case 'body':
+                                let definitionName = Swagger.getRefName((parameter as BodyParameter).schema.$ref);
                                 type = 'object';
-                                schema = gatewayDefinitionSchemaMap[Swagger.getRefName((parameter as BodyParameter).schema.$ref)];
+                                schema = gatewayDefinitionSchemaMap[definitionName];
+                                refName = Swagger.removeProtoName(definitionName, protoName);
                                 break;
                             case 'query':
                             case 'path':
-                                type = (parameter as QueryParameter | PathParameter ).type;
+                                type = (parameter as QueryParameter | PathParameter).type;
                                 break;
                             default:
                                 type = 'any'; // headParameter, formDataParameter
@@ -137,6 +143,13 @@ class GatewayCLI {
                             required: parameter.required,
                             type: type,
                         };
+
+                        if (refName) {
+                            swaggerSchema.refName = refName;
+                            if (refName != responseTypeStr && requestTypeStr.indexOf(refName) < 0) {
+                                requestTypeStr.push(refName);
+                            }
+                        }
 
                         if (schema.length > 0) {
                             swaggerSchema.schema = schema;
@@ -151,9 +164,10 @@ class GatewayCLI {
                         fileName: lcfirst(method) + methodOperation.operationId,
                         method: method,
                         uri: Swagger.convertSwaggerUriToKoaUri(pathName),
-                        responseTypeStr: Swagger.getSwaggerResponseType(methodOperation, protoName),
                         protoMsgImportPath: LibPath.join('..', '..', 'proto', protoName + '_pb').replace(/\\/g, '/'),
                         parameters: swaggerSchemaList,
+                        responseTypeStr: responseTypeStr,
+                        requestTypeStr: requestTypeStr.length > 0 ? requestTypeStr : false,
                     });
                 }
             }

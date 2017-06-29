@@ -155,7 +155,7 @@ var Proto;
  * @param {string} swaggerDir
  * @param {string} outputDir
  * @param {Array<string>} excludes, optional param
- * @returns {Promise<Array<SwaggerSpec>}
+ * @returns {Promise<Array<SwaggerSpec>>}
  */
 exports.readSwaggerList = function (swaggerDir, outputDir, excludes) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -195,7 +195,7 @@ exports.readSwaggerList = function (swaggerDir, outputDir, excludes) {
 var Swagger;
 (function (Swagger) {
     /**
-     * #/definitions/BookModel => BookModel
+     * #/definitions/bookBookModel => bookBookModel
      *
      * @param {string} ref
      * @returns {string}
@@ -204,6 +204,17 @@ var Swagger;
         return ref.replace('#/definitions/', '');
     }
     Swagger.getRefName = getRefName;
+    /**
+     * bookBookModel => BookModel
+     *
+     * @param {string} ref
+     * @param {string} protoName
+     * @returns {string}
+     */
+    function removeProtoName(ref, protoName) {
+        return ref.replace(protoName, '');
+    }
+    Swagger.removeProtoName = removeProtoName;
     /**
      * Convert SwaggerType To JoiType
      * <pre>
@@ -261,7 +272,7 @@ var Swagger;
      * @returns {string}
      */
     function getSwaggerResponseType(option, protoName) {
-        return Swagger.getRefName(option.responses[200].schema.$ref).replace(protoName, '');
+        return Swagger.removeProtoName(Swagger.getRefName(option.responses[200].schema.$ref), protoName);
     }
     Swagger.getSwaggerResponseType = getSwaggerResponseType;
     /**
@@ -269,13 +280,16 @@ var Swagger;
      *
      * @param {SwaggerDefinitionMap} definitionMap
      * @param {string} definitionName
+     * @param {number} level, Current loop definitionMap level
+     * @param {number} maxLevel, Max loop definitionMap level count
      * @returns {Array<GatewaySwaggerSchema>}
      */
-    function parseSwaggerDefinitionMap(definitionMap, definitionName) {
+    function parseSwaggerDefinitionMap(definitionMap, definitionName, level = 1, maxLevel = 5) {
         // definitionName not found, return []
         if (!definitionMap.hasOwnProperty(definitionName)) {
             return [];
         }
+        let canDeepSearch = (level++ <= maxLevel);
         let swaggerSchemaList = [];
         let definition = definitionMap[definitionName];
         // key: string => value: SwaggerSchema
@@ -285,12 +299,18 @@ var Swagger;
             let schema = [];
             if (definitionSchema.$ref) {
                 type = 'object';
-                schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref));
+                if (canDeepSearch) {
+                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref), level);
+                }
             }
             else if (definitionSchema.type) {
                 type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
                 if (definitionSchema.type === 'array' && definitionSchema.items.hasOwnProperty('$ref')) {
-                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items['$ref']));
+                    // is repeated field
+                }
+                else if (definitionSchema.type === 'object' && definitionSchema.additionalProperties) {
+                    // is map field field
+                    type = 'array';
                 }
             }
             else {

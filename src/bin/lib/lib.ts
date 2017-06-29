@@ -49,9 +49,10 @@ export interface RpcMethodInfo {
 
 export interface GatewaySwaggerSchema {
     name: string;
-    type: string;           // string, number, array, object, ANY INTERFACE
+    type: string;           // string, number, array, object
     required: boolean;      // required, optional
     schema?: Array<GatewaySwaggerSchema>;
+    refName?: string;
 }
 export interface SwaggerDefinitionMap {
     [definitionsName: string]: SwaggerSchema;
@@ -222,7 +223,7 @@ export namespace Proto {
  * @param {string} swaggerDir
  * @param {string} outputDir
  * @param {Array<string>} excludes, optional param
- * @returns {Promise<Array<SwaggerSpec>}
+ * @returns {Promise<Array<SwaggerSpec>>}
  */
 export const readSwaggerList = async function (swaggerDir: string, outputDir: string, excludes?: Array<string>): Promise<Array<SwaggerSpec>> {
     let files = await recursive(swaggerDir, ['.DS_Store', function (file) {
@@ -261,13 +262,24 @@ export const readSwaggerList = async function (swaggerDir: string, outputDir: st
 export namespace Swagger {
 
     /**
-     * #/definitions/BookModel => BookModel
+     * #/definitions/bookBookModel => bookBookModel
      *
      * @param {string} ref
      * @returns {string}
      */
     export function getRefName(ref: string): string {
         return ref.replace('#/definitions/', '');
+    }
+
+    /**
+     * bookBookModel => BookModel
+     *
+     * @param {string} ref
+     * @param {string} protoName
+     * @returns {string}
+     */
+    export function removeProtoName(ref: string, protoName: string): string {
+        return ref.replace(protoName, '');
     }
 
     /**
@@ -327,7 +339,7 @@ export namespace Swagger {
      * @returns {string}
      */
     export function getSwaggerResponseType(option: SwaggerOperation, protoName: string): string {
-        return Swagger.getRefName(option.responses[200].schema.$ref).replace(protoName, '');
+        return Swagger.removeProtoName(Swagger.getRefName(option.responses[200].schema.$ref), protoName);
     }
 
     /**
@@ -335,13 +347,16 @@ export namespace Swagger {
      *
      * @param {SwaggerDefinitionMap} definitionMap
      * @param {string} definitionName
+     * @param {number} level, Current loop definitionMap level
+     * @param {number} maxLevel, Max loop definitionMap level count
      * @returns {Array<GatewaySwaggerSchema>}
      */
-    export function parseSwaggerDefinitionMap(definitionMap: SwaggerDefinitionMap, definitionName: string): Array<GatewaySwaggerSchema> {
+    export function parseSwaggerDefinitionMap(definitionMap: SwaggerDefinitionMap, definitionName: string, level: number = 1, maxLevel: number = 5): Array<GatewaySwaggerSchema> {
         // definitionName not found, return []
         if (!definitionMap.hasOwnProperty(definitionName)) {
             return [];
         }
+        let canDeepSearch = (level++ <= maxLevel);
 
         let swaggerSchemaList = [] as Array<GatewaySwaggerSchema>;
         let definition = definitionMap[definitionName] as SwaggerSchema;
@@ -352,13 +367,19 @@ export namespace Swagger {
 
             let type: string;
             let schema: Array<GatewaySwaggerSchema> = [];
+
             if (definitionSchema.$ref) {
                 type = 'object';
-                schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref));
+                if (canDeepSearch) {
+                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref), level);
+                }
             } else if (definitionSchema.type) {
                 type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
                 if (definitionSchema.type === 'array' && definitionSchema.items.hasOwnProperty('$ref')) {
-                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items['$ref']));
+                    // is repeated field
+                } else if (definitionSchema.type === 'object' && definitionSchema.additionalProperties) {
+                    // is map field field
+                    type = 'array';
                 }
             } else {
                 type = 'any';
