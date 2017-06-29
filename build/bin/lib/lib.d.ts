@@ -1,4 +1,5 @@
 import * as protobuf from "protobufjs";
+import { Spec as SwaggerSpec } from "swagger-schema-official";
 /**
  * protoDir: /Users/XXX/Projects/projectX/proto
  * outputDir: /output/dir/specified
@@ -37,6 +38,7 @@ export interface RpcMethodInfo {
     protoMsgImportPath: string;
 }
 export declare const readProtoList: (protoDir: string, outputDir: string, excludes?: string[]) => Promise<ProtoFile[]>;
+export declare const readSwaggerSpecList: (swaggerDir: string, outputDir: string, excludes?: string[]) => Promise<SwaggerSpec[]>;
 export declare const parseServicesFromProto: (protoFile: ProtoFile) => Promise<protobuf.Service[]>;
 export declare const mkdir: (path: string) => Promise<string>;
 export declare const lcfirst: (str: any) => string;

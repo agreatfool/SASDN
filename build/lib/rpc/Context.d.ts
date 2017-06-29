@@ -1,4 +1,4 @@
-/// <reference path="../../node_modules/grpc-tsd/src/grpc.d.ts" />
+/// <reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts" />
 import { IServerCall, RpcImplCallback } from "grpc";
 import { Application } from "./App";
 export declare enum GrpcOpType {

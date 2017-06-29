@@ -1,4 +1,4 @@
-/// <reference path="../../node_modules/grpc-tsd/src/grpc.d.ts" />
+/// <reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts" />
 /// <reference types="node" />
 import * as EventEmitter from "events";
 import { IServerCall, RpcImplCallback, Server, ServerCredentials } from "grpc";
