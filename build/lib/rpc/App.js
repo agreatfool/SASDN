@@ -54,7 +54,7 @@ class RpcApplication extends EventEmitter {
     }
     /**
      * Use the given middleware.
-     * @param {Middleware} middleware
+     * @param {RpcMiddleware} middleware
      * @returns {RpcApplication}
      */
     use(middleware) {
@@ -99,7 +99,7 @@ class RpcApplication extends EventEmitter {
     }
     /**
      * Wrap gRPC handler with other middleware.
-     * @param {Middleware} reqHandler
+     * @param {RpcMiddleware} reqHandler
      * @returns {WrappedHandler}
      */
     wrapGrpcHandler(reqHandler) {
@@ -116,4 +116,3 @@ class RpcApplication extends EventEmitter {
     }
 }
 exports.RpcApplication = RpcApplication;
-//# sourceMappingURL=App.js.map

@@ -1,4 +1,4 @@
-import {Middleware as KoaMiddleware, Context as KoaContext, Request as KoaRequest} from "koa";
+import {Context as KoaContext, Middleware as KoaMiddleware, Request as KoaRequest} from "koa";
 import {joi, joiValidate} from "../utility/Joi";
 import {MiddlewareNext} from "../rpc/App";
 
@@ -22,6 +22,7 @@ export interface GatewayApiParams {
 }
 
 export abstract class GatewayApiBase {
+
     public method: string;
     public uri: string;
     public type: string;
@@ -106,4 +107,5 @@ export abstract class GatewayApiBase {
 
         return joiSchemaMap;
     }
+
 }

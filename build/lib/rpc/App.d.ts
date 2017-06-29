@@ -3,13 +3,13 @@
 import * as EventEmitter from "events";
 import { IServerCall, RpcImplCallback, Server, ServerCredentials } from "grpc";
 import { RpcContext } from "./Context";
-export declare type Middleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
+export declare type RpcMiddleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
 export declare type MiddlewareNext = () => Promise<any>;
 export declare type WrappedHandler = (call: IServerCall, callback?: RpcImplCallback) => Promise<any>;
 export declare class RpcApplication extends EventEmitter {
-    private _middleware: Array<Middleware>;
-    private _context: RpcContext;
-    private _server: Server;
+    private _middleware;
+    private _context;
+    private _server;
     constructor();
     /**
      * Get the gRPC Server.
@@ -29,10 +29,10 @@ export declare class RpcApplication extends EventEmitter {
     start(): void;
     /**
      * Use the given middleware.
-     * @param {Middleware} middleware
+     * @param {RpcMiddleware} middleware
      * @returns {RpcApplication}
      */
-    use(middleware: Middleware): this;
+    use(middleware: RpcMiddleware): this;
     /**
      * Create context instance.
      * @param {IServerCall} call
@@ -40,7 +40,7 @@ export declare class RpcApplication extends EventEmitter {
      * @returns {RpcContext}
      * @private
      */
-    private _createContext(call: IServerCall, callback?: RpcImplCallback): RpcContext;
+    private _createContext(call, callback?);
     /**
      * Default RpcApplication error handler.
      * @param {Error} err
@@ -49,8 +49,8 @@ export declare class RpcApplication extends EventEmitter {
     private _onError(err);
     /**
      * Wrap gRPC handler with other middleware.
-     * @param {Middleware} reqHandler
+     * @param {RpcMiddleware} reqHandler
      * @returns {WrappedHandler}
      */
-    wrapGrpcHandler(reqHandler: Middleware): (call: IServerCall, callback?: RpcImplCallback) => Promise<any>;
+    wrapGrpcHandler(reqHandler: RpcMiddleware): (call: IServerCall, callback?: RpcImplCallback) => Promise<void>;
 }

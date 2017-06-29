@@ -292,6 +292,7 @@ export namespace Swagger {
      * @returns {string}
      */
     export function convertSwaggerTypeToJoiType(type: string): string {
+        type = type.toLowerCase();
         switch (type) {
             case 'string':
             case 'boolean':
@@ -328,9 +329,9 @@ export namespace Swagger {
     /**
      * Get swagger response type
      * <pre>
-     *     // getRefName
+     *     1. getRefName
      *     #/definitions/bookBookMap => bookBookMap
-     *     // getSwaggerResponseType
+     *     2. getSwaggerResponseType
      *     bookBookMap => BookMap
      * </pre>
      *

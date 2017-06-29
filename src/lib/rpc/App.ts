@@ -10,13 +10,13 @@ import {RpcContext} from "./Context";
 const deprecate = require('depd')('SASDN');
 const debug = require('debug')('SASDN:application');
 
-export type Middleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
+export type RpcMiddleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
 export type MiddlewareNext = () => Promise<any>;
 export type WrappedHandler = (call: IServerCall, callback?: RpcImplCallback) => Promise<any>;
 
 export class RpcApplication extends EventEmitter {
 
-    private _middleware: Array<Middleware>;
+    private _middleware: Array<RpcMiddleware>;
     private _context: RpcContext;
     private _server: Server;
 
@@ -59,10 +59,10 @@ export class RpcApplication extends EventEmitter {
 
     /**
      * Use the given middleware.
-     * @param {Middleware} middleware
+     * @param {RpcMiddleware} middleware
      * @returns {RpcApplication}
      */
-    use(middleware: Middleware) {
+    use(middleware: RpcMiddleware) {
         if (typeof middleware !== 'function') throw new TypeError('middleware must be a function!');
         if (isGeneratorFunction(middleware)) {
             deprecate('Support for generators will be removed in v3. ' +
@@ -109,10 +109,10 @@ export class RpcApplication extends EventEmitter {
 
     /**
      * Wrap gRPC handler with other middleware.
-     * @param {Middleware} reqHandler
+     * @param {RpcMiddleware} reqHandler
      * @returns {WrappedHandler}
      */
-    public wrapGrpcHandler(reqHandler: Middleware) {
+    public wrapGrpcHandler(reqHandler: RpcMiddleware) {
         let middleware = [...this._middleware, reqHandler];
         let fn = koaCompose(middleware);
 

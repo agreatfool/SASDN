@@ -164,4 +164,3 @@ class GatewayCLI {
 GatewayCLI.instance().run().catch((err) => {
     debug('err: %O', err.message);
 });
-//# sourceMappingURL=sasdn-gateway.js.map

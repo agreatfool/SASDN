@@ -5,4 +5,3 @@ exports.joi = joi;
 const Bluebird = require("Bluebird");
 let joiValidate = Bluebird.promisify(joi.validate);
 exports.joiValidate = joiValidate;
-//# sourceMappingURL=Joi.js.map

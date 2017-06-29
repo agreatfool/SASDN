@@ -1,5 +1,5 @@
+/// <reference types="bluebird" />
 import * as joi from "joi";
 import * as Bluebird from "Bluebird";
-import {ValidationOptions} from "joi";
-
-export declare function joiValidate<T>(value: Object, schema: Object, options: ValidationOptions): Bluebird<T>
+declare let joiValidate: <T>(value: Object, schema: Object, options: joi.ValidationOptions) => Bluebird<T>;
+export { joi, joiValidate };

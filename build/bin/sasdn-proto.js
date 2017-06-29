@@ -141,4 +141,3 @@ class ProtoCLI {
 ProtoCLI.instance().run().catch((err) => {
     debug('err: %O', err.message);
 });
-//# sourceMappingURL=sasdn-proto.js.map

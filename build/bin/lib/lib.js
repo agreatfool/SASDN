@@ -225,6 +225,7 @@ var Swagger;
      * @returns {string}
      */
     function convertSwaggerTypeToJoiType(type) {
+        type = type.toLowerCase();
         switch (type) {
             case 'string':
             case 'boolean':
@@ -261,9 +262,9 @@ var Swagger;
     /**
      * Get swagger response type
      * <pre>
-     *     // getRefName
+     *     1. getRefName
      *     #/definitions/bookBookMap => bookBookMap
-     *     // getSwaggerResponseType
+     *     2. getSwaggerResponseType
      *     bookBookMap => BookMap
      * </pre>
      *
@@ -330,4 +331,3 @@ var Swagger;
     }
     Swagger.parseSwaggerDefinitionMap = parseSwaggerDefinitionMap;
 })(Swagger = exports.Swagger || (exports.Swagger = {}));
-//# sourceMappingURL=lib.js.map

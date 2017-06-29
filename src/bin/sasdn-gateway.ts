@@ -2,10 +2,14 @@ import * as LibFs from "mz/fs";
 import * as program from "commander";
 import * as LibPath from "path";
 import {
-    BodyParameter, Operation, Path, PathParameter, QueryParameter,
+    BodyParameter,
+    Operation,
+    Path,
+    PathParameter,
+    QueryParameter,
     Spec as SwaggerSpec
 } from "swagger-schema-official";
-import {lcfirst, ucfirst, mkdir, readSwaggerList, Swagger, GatewaySwaggerSchema} from "./lib/lib";
+import {GatewaySwaggerSchema, lcfirst, mkdir, readSwaggerList, Swagger, ucfirst} from "./lib/lib";
 import {TplEngine} from "./lib/template";
 
 const pkg = require('../../package.json');
