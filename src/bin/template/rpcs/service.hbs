@@ -1,0 +1,17 @@
+import {{curlyLeft}}{{{callTypeStr}}}{{#if hasCallback}}, RpcImplCallback{{/if}}{{curlyRight}} from "grpc";
+import {{curlyLeft}}RpcContext, Middleware, MiddlewareNext{{curlyRight}} from "sasdn";
+import {{curlyLeft}}{{#eq requestTypeStr responseTypeStr}}{{{requestTypeStr}}}{{else}}{{{requestTypeStr}}}, {{{responseTypeStr}}}{{/eq}}{{curlyRight}} from "{{{protoMsgImportPath}}}";
+
+export const {{{methodName}}}Handler: Middleware = async (ctx: RpcContext, next: MiddlewareNext) => {
+    let call: {{{callTypeStr}}} = ctx.call as {{{callTypeStr}}};
+{{#if hasCallback}}
+    let callback: RpcImplCallback = ctx.callback;
+{{/if}}
+{{#if hasRequest}}
+    let request = call.request as {{{requestTypeStr}}};
+{{/if}}
+
+    await next();
+
+    return Promise.resolve();
+};

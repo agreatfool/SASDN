@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+
+package com.book;
+
+message Book {
+    int64 isbn = 1;
+    string title = 2;
+    string author = 3;
+    //BookCategory category = 4;
+}
+
+message BookCategory {
+    int64 id = 1;
+    string name = 2;
+    bool isParent = 3;
+    //repeated int64 categoryId = 4;
+}
+
+message BookMap {
+    //repeated Book list = 1;
+}
+
+message GetBookRequest {
+    int64 isbn = 1;
+}
+
+message GetBookViaAuthorRequest {
+    string author = 1;
+}
+
+message UpdateBookRequest {
+    string isbn = 1; // mapped to the URL
+    //Book book = 2;   // mapped to the body
+}
+
+service BookService {
+    rpc GetBook (GetBookRequest) returns (Book) {}
+    rpc GetBooksViaAuthor (GetBookViaAuthorRequest) returns (stream Book) {}
+    rpc GetGreatestBook (stream GetBookRequest) returns (Book) {}
+    rpc GetBooks (stream GetBookRequest) returns (stream Book) {}
+}
+
+// gPRC-getway Test
+service BookApiService {
+    rpc GetBookApi (GetBookRequest) returns (Book) {
+        option (google.api.http) = {
+            post: "/v1/getBook"
+            body: "*"
+        };
+    }
+
+    rpc GetBooksViaAuthorApi (GetBookViaAuthorRequest) returns (BookMap) {
+        option (google.api.http) = {
+            post: "/v1/getBooksViaAuthor"
+            body: "*"
+        };
+    }
+
+    rpc UpdateBooksApi (UpdateBookRequest) returns (Book) {
+        option (google.api.http) = {
+            post: "/v1/updateBook/{isbn}"
+            body: "*"
+        };
+    }
+}

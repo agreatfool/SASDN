@@ -1,0 +1,6 @@
+#!/bin/bash
+
+BASEDIR=$(dirname "$0")
+cd ${BASEDIR}/../
+
+DEBUG_DEPTH=10 DEBUG=SASDN:* node ./build/bin/sasdn.js "$@"
