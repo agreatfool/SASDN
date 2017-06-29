@@ -5,6 +5,7 @@ import * as protobuf from "protobufjs";
 import {Method, Namespace, Service} from "protobufjs";
 import * as bluebird from "bluebird";
 import * as LibMkdirP from "mkdirp";
+import {Operation as SwaggerOperation, Schema as SwaggerSchema, Spec as SwaggerSpec} from "swagger-schema-official";
 
 const mkdirp = bluebird.promisify<string, string>(LibMkdirP);
 
@@ -44,6 +45,17 @@ export interface RpcMethodInfo {
     hasRequest: boolean;
     methodName: string;
     protoMsgImportPath: string;
+}
+
+export interface GatewaySwaggerSchema {
+    name: string;
+    type: string;           // string, number, array, object
+    required: boolean;      // required, optional
+    schema?: Array<GatewaySwaggerSchema>;
+    refName?: string;
+}
+export interface SwaggerDefinitionMap {
+    [definitionsName: string]: SwaggerSchema;
 }
 
 export const readProtoList = async function (protoDir: string, outputDir: string, excludes?: Array<string>): Promise<Array<ProtoFile>> {
@@ -108,6 +120,10 @@ export const mkdir = async function (path: string): Promise<string> {
 
 export const lcfirst = function (str): string {
     return str.charAt(0).toLowerCase() + str.slice(1);
+};
+
+export const ucfirst = function (str): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
 export namespace Proto {
@@ -199,5 +215,190 @@ export namespace Proto {
             lcfirst(method.name) + '.ts'
         );
     };
+}
+
+/**
+ * Read Swagger spec schema from swagger dir
+ *
+ * @param {string} swaggerDir
+ * @param {string} outputDir
+ * @param {Array<string>} excludes, optional param
+ * @returns {Promise<Array<SwaggerSpec>>}
+ */
+export const readSwaggerList = async function (swaggerDir: string, outputDir: string, excludes?: Array<string>): Promise<Array<SwaggerSpec>> {
+    let files = await recursive(swaggerDir, ['.DS_Store', function (file) {
+        let shallIgnore = false;
+        if (!excludes || excludes.length === 0) {
+            return shallIgnore;
+        }
+        excludes.forEach((exclude: string) => {
+            if (file.indexOf(exclude) !== -1) {
+                shallIgnore = true;
+            }
+        });
+        return shallIgnore;
+    }]);
+
+    let swaggerList = files.map((file: string) => {
+        file = file.replace(swaggerDir, ''); // remove base dir
+        if (LibPath.basename(file).match(/.+\.json/) !== null) {
+            let filePath = LibPath.join(swaggerDir, LibPath.dirname(file), LibPath.basename(file));
+            try {
+                return JSON.parse(LibFs.readFileSync(filePath).toString());
+            } catch (e) {
+                console.log("Error:" + e.message);
+                return undefined;
+            }
+        } else {
+            return undefined;
+        }
+    }).filter((value: undefined | SwaggerSpec) => {
+        return value !== undefined;
+    });
+
+    return Promise.resolve(swaggerList);
+};
+
+export namespace Swagger {
+
+    /**
+     * #/definitions/bookBookModel => bookBookModel
+     *
+     * @param {string} ref
+     * @returns {string}
+     */
+    export function getRefName(ref: string): string {
+        return ref.replace('#/definitions/', '');
+    }
+
+    /**
+     * bookBookModel => BookModel
+     *
+     * @param {string} ref
+     * @param {string} protoName
+     * @returns {string}
+     */
+    export function removeProtoName(ref: string, protoName: string): string {
+        return ref.replace(protoName, '');
+    }
+
+    /**
+     * Convert SwaggerType To JoiType
+     * <pre>
+     *   integer => number
+     * </pre>
+     *
+     * @param {string} type
+     * @returns {string}
+     */
+    export function convertSwaggerTypeToJoiType(type: string): string {
+        switch (type) {
+            case 'string':
+            case 'boolean':
+            case 'object':
+            case 'array':
+            case 'number':
+                return type;
+            case 'integer':
+                return 'number';
+            default:
+                return 'any';
+        }
+    }
+
+    /**
+     * Convert Swagger Uri to Koa Uri
+     * <pre>
+     *   /v1/book/{isbn}/{version} => /v1/book/:isbn/:version
+     * </pre>
+     *
+     * @param {string} uri
+     * @returns {string}
+     */
+    export function convertSwaggerUriToKoaUri(uri: string): string {
+        let pathParams = uri.match(/{(.*?)}/igm);
+        if (pathParams != null) {
+            for (let pathParam of pathParams) {
+                uri = uri.replace(pathParam, pathParam.replace('{', ':').replace('}', ''));
+            }
+        }
+        return uri;
+    }
+
+    /**
+     * Get swagger response type
+     * <pre>
+     *     // getRefName
+     *     #/definitions/bookBookMap => bookBookMap
+     *     // getSwaggerResponseType
+     *     bookBookMap => BookMap
+     * </pre>
+     *
+     * @param {SwaggerOperation} option
+     * @param {string} protoName
+     * @returns {string}
+     */
+    export function getSwaggerResponseType(option: SwaggerOperation, protoName: string): string {
+        return Swagger.removeProtoName(Swagger.getRefName(option.responses[200].schema.$ref), protoName);
+    }
+
+    /**
+     * Parse swagger definitions schema to Array<GatewaySwaggerSchema>
+     *
+     * @param {SwaggerDefinitionMap} definitionMap
+     * @param {string} definitionName
+     * @param {number} level, Current loop definitionMap level
+     * @param {number} maxLevel, Max loop definitionMap level count
+     * @returns {Array<GatewaySwaggerSchema>}
+     */
+    export function parseSwaggerDefinitionMap(definitionMap: SwaggerDefinitionMap, definitionName: string, level: number = 1, maxLevel: number = 5): Array<GatewaySwaggerSchema> {
+        // definitionName not found, return []
+        if (!definitionMap.hasOwnProperty(definitionName)) {
+            return [];
+        }
+        let canDeepSearch = (level++ <= maxLevel);
+
+        let swaggerSchemaList = [] as Array<GatewaySwaggerSchema>;
+        let definition = definitionMap[definitionName] as SwaggerSchema;
+
+        // key: string => value: SwaggerSchema
+        for (let propertyName in definition.properties) {
+            let definitionSchema = definition.properties[propertyName] as SwaggerSchema;
+
+            let type: string;
+            let schema: Array<GatewaySwaggerSchema> = [];
+
+            if (definitionSchema.$ref) {
+                type = 'object';
+                if (canDeepSearch) {
+                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref), level);
+                }
+            } else if (definitionSchema.type) {
+                type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
+                if (definitionSchema.type === 'array' && definitionSchema.items.hasOwnProperty('$ref')) {
+                    // is repeated field
+                } else if (definitionSchema.type === 'object' && definitionSchema.additionalProperties) {
+                    // is map field field
+                    type = 'array';
+                }
+            } else {
+                type = 'any';
+            }
+
+            let swaggerSchema: GatewaySwaggerSchema = {
+                name: propertyName,
+                required: (!definition.required == undefined && definition.required.length > 0 && definition.required.indexOf(propertyName) >= 0),
+                type: type,
+            };
+
+            if (schema.length > 0) {
+                swaggerSchema.schema = schema;
+            }
+
+            swaggerSchemaList.push(swaggerSchema);
+        }
+
+        return swaggerSchemaList;
+    }
 
 }

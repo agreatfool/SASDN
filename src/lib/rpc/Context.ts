@@ -1,8 +1,8 @@
-///<reference path="../../node_modules/grpc-tsd/src/grpc.d.ts"/>
+///<reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 import * as assert from "assert";
 import {ICallStatus, IServerCall, Metadata, RpcImplCallback, status as GrpcStatus} from "grpc";
 
-import {Application} from "./App";
+import {RpcApplication} from "./App";
 
 export enum GrpcOpType {
     SEND_INITIAL_METADATA = 0,
@@ -15,9 +15,9 @@ export enum GrpcOpType {
     RECV_CLOSE_ON_SERVER = 7,
 }
 
-export class Context {
+export class RpcContext {
 
-    public app: Application;
+    public app: RpcApplication;
     public call: IServerCall;
     public callback: RpcImplCallback;
 
