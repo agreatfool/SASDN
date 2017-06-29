@@ -18,11 +18,11 @@ const grpc_1 = require("grpc");
 const Context_1 = require("./Context");
 const deprecate = require('depd')('SASDN');
 const debug = require('debug')('SASDN:application');
-class Application extends EventEmitter {
+class RpcApplication extends EventEmitter {
     constructor() {
         super();
         this._middleware = [];
-        this._context = new Context_1.Context();
+        this._context = new Context_1.RpcContext();
         this._server = new grpc_1.Server();
     }
     /**
@@ -36,7 +36,7 @@ class Application extends EventEmitter {
      * Bind the server with a port and a given credential.
      * @param {string} address format: "address:port"
      * @param {ServerCredentials} creds optional
-     * @returns {Application}
+     * @returns {RpcApplication}
      */
     bind(address, creds) {
         if (!creds) {
@@ -47,7 +47,7 @@ class Application extends EventEmitter {
         return this;
     }
     /**
-     * Start the Application server.
+     * Start the RpcApplication server.
      */
     start() {
         this._server.start();
@@ -55,7 +55,7 @@ class Application extends EventEmitter {
     /**
      * Use the given middleware.
      * @param {Middleware} middleware
-     * @returns {Application}
+     * @returns {RpcApplication}
      */
     use(middleware) {
         if (typeof middleware !== 'function')
@@ -74,11 +74,11 @@ class Application extends EventEmitter {
      * Create context instance.
      * @param {IServerCall} call
      * @param {RpcImplCallback} callback optional
-     * @returns {Context}
+     * @returns {RpcContext}
      * @private
      */
     _createContext(call, callback) {
-        let ctx = new Context_1.Context();
+        let ctx = new Context_1.RpcContext();
         ctx.app = this;
         ctx.call = call;
         ctx.callback = callback ? callback : () => {
@@ -86,7 +86,7 @@ class Application extends EventEmitter {
         return ctx;
     }
     /**
-     * Default Application error handler.
+     * Default RpcApplication error handler.
      * @param {Error} err
      * @private
      */
@@ -115,5 +115,5 @@ class Application extends EventEmitter {
         });
     }
 }
-exports.Application = Application;
+exports.RpcApplication = RpcApplication;
 //# sourceMappingURL=App.js.map

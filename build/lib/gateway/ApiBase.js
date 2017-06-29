@@ -86,4 +86,4 @@ class GatewayApiBase {
     }
 }
 exports.GatewayApiBase = GatewayApiBase;
-//# sourceMappingURL=GatewayApiBase.js.map
+//# sourceMappingURL=ApiBase.js.map

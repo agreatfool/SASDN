@@ -5,5 +5,5 @@ function __export(m) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __export(require("./lib/rpc/App"));
 __export(require("./lib/rpc/Context"));
-__export(require("./lib/gateway/GatewayApiBase"));
+__export(require("./lib/gateway/ApiBase"));
 //# sourceMappingURL=index.js.map

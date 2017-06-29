@@ -14,7 +14,7 @@ var GrpcOpType;
     GrpcOpType[GrpcOpType["RECV_STATUS_ON_CLIENT"] = 6] = "RECV_STATUS_ON_CLIENT";
     GrpcOpType[GrpcOpType["RECV_CLOSE_ON_SERVER"] = 7] = "RECV_CLOSE_ON_SERVER";
 })(GrpcOpType = exports.GrpcOpType || (exports.GrpcOpType = {}));
-class Context {
+class RpcContext {
     constructor() {
     }
     /**
@@ -52,5 +52,5 @@ class Context {
         });
     }
 }
-exports.Context = Context;
+exports.RpcContext = RpcContext;
 //# sourceMappingURL=Context.js.map

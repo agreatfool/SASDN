@@ -16,7 +16,7 @@ export interface GatewaySchema {
 export interface GatewaySchemaMap {
     [name: string]: GatewaySchema;
 }
-export interface GatewayParams {
+export interface GatewayApiParams {
     [key: string]: any;
 }
 export declare abstract class GatewayApiBase {
@@ -25,7 +25,7 @@ export declare abstract class GatewayApiBase {
     public type: string;
     public schemaDefObj: GatewaySchemaMap;
 
-    public abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: { [key: string]: any }): Promise<any>;
+    public abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
 
     public register(): Array<string | KoaMiddleware>;
 }

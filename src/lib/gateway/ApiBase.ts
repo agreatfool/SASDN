@@ -17,8 +17,8 @@ export interface GatewayJoiSchema {
 export interface GatewayJoiSchemaMap {
     [name: string]: GatewayJoiSchema;
 }
-export interface GatewayParams {
-    [key: string]: any ;
+export interface GatewayApiParams {
+    [key: string]: any;
 }
 
 export abstract class GatewayApiBase {
@@ -27,7 +27,7 @@ export abstract class GatewayApiBase {
     public type: string;
     public schemaDefObj: GatewayJoiSchemaMap;
 
-    public abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayParams): Promise<any>;
+    public abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
 
     public register(): Array<string | KoaMiddleware> {
         return [this.uri, this._validate(), this._execute()];

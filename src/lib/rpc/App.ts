@@ -5,25 +5,25 @@ import * as koaCompose from "koa-compose";
 import * as koaConvert from "koa-convert";
 import * as isGeneratorFunction from "is-generator-function";
 import {IServerCall, RpcImplCallback, Server, ServerCredentials} from "grpc";
-import {Context} from "./Context";
+import {RpcContext} from "./Context";
 
 const deprecate = require('depd')('SASDN');
 const debug = require('debug')('SASDN:application');
 
-export type Middleware = (ctx: Context, next: MiddlewareNext) => Promise<any>;
+export type Middleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
 export type MiddlewareNext = () => Promise<any>;
 export type WrappedHandler = (call: IServerCall, callback?: RpcImplCallback) => Promise<any>;
 
-export class Application extends EventEmitter {
+export class RpcApplication extends EventEmitter {
 
     private _middleware: Array<Middleware>;
-    private _context: Context;
+    private _context: RpcContext;
     private _server: Server;
 
     constructor() {
         super();
         this._middleware = [];
-        this._context = new Context();
+        this._context = new RpcContext();
         this._server = new Server();
     }
 
@@ -39,9 +39,9 @@ export class Application extends EventEmitter {
      * Bind the server with a port and a given credential.
      * @param {string} address format: "address:port"
      * @param {ServerCredentials} creds optional
-     * @returns {Application}
+     * @returns {RpcApplication}
      */
-    public bind(address: string, creds?: ServerCredentials): Application {
+    public bind(address: string, creds?: ServerCredentials): RpcApplication {
         if (!creds) {
             creds = ServerCredentials.createInsecure();
         }
@@ -51,7 +51,7 @@ export class Application extends EventEmitter {
     }
 
     /**
-     * Start the Application server.
+     * Start the RpcApplication server.
      */
     public start(): void {
         this._server.start();
@@ -60,7 +60,7 @@ export class Application extends EventEmitter {
     /**
      * Use the given middleware.
      * @param {Middleware} middleware
-     * @returns {Application}
+     * @returns {RpcApplication}
      */
     use(middleware: Middleware) {
         if (typeof middleware !== 'function') throw new TypeError('middleware must be a function!');
@@ -79,11 +79,11 @@ export class Application extends EventEmitter {
      * Create context instance.
      * @param {IServerCall} call
      * @param {RpcImplCallback} callback optional
-     * @returns {Context}
+     * @returns {RpcContext}
      * @private
      */
-    private _createContext(call: IServerCall, callback?: RpcImplCallback): Context {
-        let ctx = new Context();
+    private _createContext(call: IServerCall, callback?: RpcImplCallback): RpcContext {
+        let ctx = new RpcContext();
 
         ctx.app = this;
         ctx.call = call;
@@ -94,7 +94,7 @@ export class Application extends EventEmitter {
     }
 
     /**
-     * Default Application error handler.
+     * Default RpcApplication error handler.
      * @param {Error} err
      * @private
      */

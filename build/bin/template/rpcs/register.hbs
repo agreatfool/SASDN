@@ -1,6 +1,6 @@
 ///<reference path="../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 import {IServerCall, RpcImplCallback} from "grpc";
-import {Application, WrappedHandler} from "sasdn";
+import {RpcApplication, WrappedHandler} from "sasdn";
 
 {{#each infos}}
 import {
@@ -19,7 +19,7 @@ import {{curlyLeft}}{{{this.methodName}}}Handler{{curlyRight}} from "./{{#eq ../
     {{/each}}
 {{/each}}
 
-export const registerServices = function (app: Application) {
+export const registerServices = function (app: RpcApplication) {
 {{#each infos}}
     {{#each this.services}}
 
