@@ -77,6 +77,7 @@ class GatewayCLI {
                     gatewayDefinitionSchemaMap[definitionName] = lib_1.Swagger.parseSwaggerDefinitionMap(swaggerSpec.definitions, definitionName);
                 }
                 // Parse proto filename
+                //FIXME: this is not "protoName", actually this is namespace, [Big Bug wait for fixed]
                 let protoName = swaggerSpec.info.title.replace('.proto', '');
                 // Loop paths uri
                 for (let pathName in swaggerSpec.paths) {
@@ -117,6 +118,7 @@ class GatewayCLI {
                                 required: parameter.required,
                                 type: type,
                             };
+                            //FIXME: requestType maybe is include from other proto file, this way only include in current proto, need fixed! [Small Bug]
                             if (refName) {
                                 swaggerSchema.refName = refName;
                                 if (refName != responseTypeStr && requestTypeStr.indexOf(refName) < 0) {
@@ -164,3 +166,4 @@ class GatewayCLI {
 GatewayCLI.instance().run().catch((err) => {
     debug('err: %O', err.message);
 });
+//# sourceMappingURL=sasdn-gateway.js.map

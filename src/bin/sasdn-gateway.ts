@@ -100,6 +100,7 @@ class GatewayCLI {
             }
 
             // Parse proto filename
+            //FIXME: this is not "protoName", actually this is namespace, [Big Bug wait for fixed]
             let protoName = swaggerSpec.info.title.replace('.proto', '');
 
             // Loop paths uri
@@ -148,6 +149,7 @@ class GatewayCLI {
                             type: type,
                         };
 
+                        //FIXME: requestType maybe is include from other proto file, this way only include in current proto, need fixed! [Small Bug]
                         if (refName) {
                             swaggerSchema.refName = refName;
                             if (refName != responseTypeStr && requestTypeStr.indexOf(refName) < 0) {

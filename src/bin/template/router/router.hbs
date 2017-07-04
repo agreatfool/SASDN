@@ -1,4 +1,5 @@
 import * as Router from "koa-router";
+import {GatewayApiBase} from "sasdn";
 
 const API_PATHS = [
     {{#each infos}}
@@ -48,7 +49,7 @@ export default class RouteLoader {
 
     private async _createRouter(path: string): Promise<void> {
         try {
-            let api = require(path).default;
+            let api = require(path).api as GatewayApiBase;
             this._router[api.method].apply(this._router, api.register());
         } catch (err) {
             console.error(err.toString());
