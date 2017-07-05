@@ -38,6 +38,7 @@ export interface ProtoInfo {
 
 export interface ProtoMsgImportInfo {
     msgType: string;
+    namespace: string;
     protoFile: ProtoFile;
 }
 
@@ -72,7 +73,6 @@ export interface GatewaySwaggerSchema {
     type: string;           // string, number, array, object
     required: boolean;      // required, optional
     schema?: Array<GatewaySwaggerSchema>;
-    refName?: string;
 }
 export interface SwaggerDefinitionMap {
     [definitionsName: string]: SwaggerSchema;
@@ -139,14 +139,15 @@ export const parseServicesFromProto = async function (proto: IParserResult): Pro
     return Promise.resolve(services);
 };
 
-export const parseMsgNamesFromProto = async function (proto: IParserResult, protoFile: ProtoFile): Promise<ProtoMsgImportInfos> {
+export const parseMsgNamesFromProto = async function (proto: IParserResult, protoFile: ProtoFile, symlink: string = "."): Promise<ProtoMsgImportInfos> {
     let pkgRoot = proto.root.lookup(proto.package) as Namespace;
     let msgImportInfos = {} as ProtoMsgImportInfos;
     let nestedKeys = Object.keys(pkgRoot.nested);
     nestedKeys.forEach((nestedKey) => {
-        let msgTypeStr = pkgRoot.name + '.' + nestedKey;
+        let msgTypeStr = pkgRoot.name + symlink + nestedKey;
         msgImportInfos[msgTypeStr] = {
             msgType: nestedKey,
+            namespace: pkgRoot.name,
             protoFile: protoFile
         } as ProtoMsgImportInfo;
     });
@@ -217,7 +218,7 @@ export namespace Proto {
      * @returns {string}
      */
     export function getPathToRoot(filePath: string) {
-        const depth = filePath.split("/").length;
+        const depth = filePath.replace(/\\/g, '/').split("/").length;
         return depth === 1 ? "./" : new Array(depth).join("../");
     }
 
@@ -297,6 +298,20 @@ export namespace Proto {
             lcfirst(method.name) + '.ts'
         );
     };
+
+    /**
+     * Generate full service stub code output dir.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
+    export const genFullOutputServiceDir = function (protoFile: ProtoFile) {
+        return LibPath.join(
+            protoFile.outputPath,
+            'services',
+            protoFile.relativePath,
+            protoFile.svcNamespace
+        );
+    };
 }
 
 /**
@@ -354,17 +369,6 @@ export namespace Swagger {
     }
 
     /**
-     * bookBookModel => BookModel
-     *
-     * @param {string} ref
-     * @param {string} protoName
-     * @returns {string}
-     */
-    export function removeProtoName(ref: string, protoName: string): string {
-        return ref.replace(protoName, '');
-    }
-
-    /**
      * Convert SwaggerType To JoiType
      * <pre>
      *   integer => number
@@ -406,23 +410,6 @@ export namespace Swagger {
             }
         }
         return uri;
-    }
-
-    /**
-     * Get swagger response type
-     * <pre>
-     *     1. getRefName
-     *     #/definitions/bookBookMap => bookBookMap
-     *     2. getSwaggerResponseType
-     *     bookBookMap => BookMap
-     * </pre>
-     *
-     * @param {SwaggerOperation} option
-     * @param {string} protoName
-     * @returns {string}
-     */
-    export function getSwaggerResponseType(option: SwaggerOperation, protoName: string): string {
-        return Swagger.removeProtoName(Swagger.getRefName(option.responses[200].schema.$ref), protoName);
     }
 
     /**

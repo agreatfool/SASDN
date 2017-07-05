@@ -76,15 +76,16 @@ exports.parseServicesFromProto = function (proto) {
         return Promise.resolve(services);
     });
 };
-exports.parseMsgNamesFromProto = function (proto, protoFile) {
+exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = ".") {
     return __awaiter(this, void 0, void 0, function* () {
         let pkgRoot = proto.root.lookup(proto.package);
         let msgImportInfos = {};
         let nestedKeys = Object.keys(pkgRoot.nested);
         nestedKeys.forEach((nestedKey) => {
-            let msgTypeStr = pkgRoot.name + '.' + nestedKey;
+            let msgTypeStr = pkgRoot.name + symlink + nestedKey;
             msgImportInfos[msgTypeStr] = {
                 msgType: nestedKey,
+                namespace: pkgRoot.name,
                 protoFile: protoFile
             };
         });
@@ -145,7 +146,7 @@ var Proto;
      * @returns {string}
      */
     function getPathToRoot(filePath) {
-        const depth = filePath.split("/").length;
+        const depth = filePath.replace(/\\/g, '/').split("/").length;
         return depth === 1 ? "./" : new Array(depth).join("../");
     }
     Proto.getPathToRoot = getPathToRoot;
@@ -204,6 +205,14 @@ var Proto;
     Proto.genFullOutputServicePath = function (protoFile, service, method) {
         return LibPath.join(protoFile.outputPath, 'services', protoFile.relativePath, protoFile.svcNamespace, service.name, exports.lcfirst(method.name) + '.ts');
     };
+    /**
+     * Generate full service stub code output dir.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
+    Proto.genFullOutputServiceDir = function (protoFile) {
+        return LibPath.join(protoFile.outputPath, 'services', protoFile.relativePath, protoFile.svcNamespace);
+    };
 })(Proto = exports.Proto || (exports.Proto = {}));
 /**
  * Read Swagger spec schema from swagger dir
@@ -261,17 +270,6 @@ var Swagger;
     }
     Swagger.getRefName = getRefName;
     /**
-     * bookBookModel => BookModel
-     *
-     * @param {string} ref
-     * @param {string} protoName
-     * @returns {string}
-     */
-    function removeProtoName(ref, protoName) {
-        return ref.replace(protoName, '');
-    }
-    Swagger.removeProtoName = removeProtoName;
-    /**
      * Convert SwaggerType To JoiType
      * <pre>
      *   integer => number
@@ -315,23 +313,6 @@ var Swagger;
         return uri;
     }
     Swagger.convertSwaggerUriToKoaUri = convertSwaggerUriToKoaUri;
-    /**
-     * Get swagger response type
-     * <pre>
-     *     1. getRefName
-     *     #/definitions/bookBookMap => bookBookMap
-     *     2. getSwaggerResponseType
-     *     bookBookMap => BookMap
-     * </pre>
-     *
-     * @param {SwaggerOperation} option
-     * @param {string} protoName
-     * @returns {string}
-     */
-    function getSwaggerResponseType(option, protoName) {
-        return Swagger.removeProtoName(Swagger.getRefName(option.responses[200].schema.$ref), protoName);
-    }
-    Swagger.getSwaggerResponseType = getSwaggerResponseType;
     /**
      * Parse swagger definitions schema to Array<GatewaySwaggerSchema>
      *

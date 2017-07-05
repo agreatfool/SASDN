@@ -30,6 +30,7 @@ export interface ProtoInfo {
 
 export interface ProtoMsgImportInfo {
     msgType: string;
+    namespace: string;
     protoFile: ProtoFile;
 }
 
@@ -63,7 +64,6 @@ export interface GatewaySwaggerSchema {
     type: string;
     required: boolean;
     schema?: Array<GatewaySwaggerSchema>;
-    refName?: string;
 }
 export interface SwaggerDefinitionMap {
     [definitionsName: string]: SwaggerSchema;
@@ -71,7 +71,7 @@ export interface SwaggerDefinitionMap {
 export declare const readProtoList: (protoDir: string, outputDir: string, excludes?: string[]) => Promise<ProtoFile[]>;
 export declare const parseProto: (protoFile: ProtoFile) => Promise<protobuf.IParserResult>;
 export declare const parseServicesFromProto: (proto: protobuf.IParserResult) => Promise<Array<protobuf.Service>>;
-export declare const parseMsgNamesFromProto: (proto: protobuf.IParserResult, protoFile: ProtoFile) => Promise<ProtoMsgImportInfos>;
+export declare const parseMsgNamesFromProto: (proto: protobuf.IParserResult, protoFile: ProtoFile, symlink: string) => Promise<ProtoMsgImportInfos>;
 export declare const genRpcMethodInfo: (protoFile: ProtoFile, method: protobuf.Method, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos) => RpcMethodInfo;
 export declare const parseImportPathInfos: (importPathInfos: RpcMethodImportPathInfo, type: string, importPath: string) => RpcMethodImportPathInfo;
 export declare const mkdir: (path: string) => Promise<string>;
@@ -127,6 +127,12 @@ export declare namespace Proto {
      * @returns {string}
      */
     const genFullOutputServicePath: (protoFile: ProtoFile, service: protobuf.Service, method: protobuf.Method) => string;
+    /**
+     * Generate full service stub code output dir.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
+    const genFullOutputServiceDir: (protoFile: ProtoFile) => string;
 }
 /**
  * Read Swagger spec schema from swagger dir
@@ -145,14 +151,6 @@ export declare namespace Swagger {
      * @returns {string}
      */
     function getRefName(ref: string): string;
-    /**
-     * bookBookModel => BookModel
-     *
-     * @param {string} ref
-     * @param {string} protoName
-     * @returns {string}
-     */
-    function removeProtoName(ref: string, protoName: string): string;
     /**
      * Convert SwaggerType To JoiType
      * <pre>
@@ -173,20 +171,6 @@ export declare namespace Swagger {
      * @returns {string}
      */
     function convertSwaggerUriToKoaUri(uri: string): string;
-    /**
-     * Get swagger response type
-     * <pre>
-     *     1. getRefName
-     *     #/definitions/bookBookMap => bookBookMap
-     *     2. getSwaggerResponseType
-     *     bookBookMap => BookMap
-     * </pre>
-     *
-     * @param {SwaggerOperation} option
-     * @param {string} protoName
-     * @returns {string}
-     */
-    function getSwaggerResponseType(option: SwaggerOperation, protoName: string): string;
     /**
      * Parse swagger definitions schema to Array<GatewaySwaggerSchema>
      *

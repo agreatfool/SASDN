@@ -1,10 +1,12 @@
 import {GatewayApiBase, GatewayContext, MiddlewareNext} from "sasdn";
-import {{{curlyLeft}}}{{info.responseTypeStr}}{{#eq info.requestTypeStr false}}{{else}}{{#each info.requestTypeStr}}, {{this}}{{/each}}{{/eq}}{{{curlyRight}}} from "{{info.protoMsgImportPath}}";
+{{#each info.protoMsgImportPath}}
+import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from "{{{@key}}}";
+{{/each}}
 
 interface RequestParams {
 {{#each info.parameters}}
 {{#eq this.type "object"}}
-    {{this.name}}{{#eq this.required false}}?{{/eq}}: {{this.refName}}.AsObject
+    {{this.name}}{{#eq this.required false}}?{{/eq}}: {{../info.requestTypeStr}}.AsObject;
 {{else}}
     {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}};
 {{/eq}}

@@ -11,7 +11,8 @@ import {
 } from "swagger-schema-official";
 import {
     lcfirst, ucfirst, mkdir, readSwaggerList, readProtoList,
-    GatewaySwaggerSchema, ProtoFile, Swagger
+    GatewaySwaggerSchema, ProtoFile, Swagger, ProtoMsgImportInfos, ProtoInfo, parseProto, parseMsgNamesFromProto, Proto,
+    RpcMethodImportPathInfo, parseImportPathInfos
 } from "./lib/lib";
 import {TplEngine} from "./lib/template";
 
@@ -25,9 +26,9 @@ interface GatewayInfo {
     method: string;
     uri: string;
     parameters: Array<GatewaySwaggerSchema>;
-    protoMsgImportPath: string;
+    protoMsgImportPath: RpcMethodImportPathInfo;
     responseTypeStr: string;
-    requestTypeStr: Array<string> | boolean;
+    requestTypeStr: string | boolean;
 }
 
 interface GatewayDefinitionSchemaMap {
@@ -48,6 +49,7 @@ const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patc
 class GatewayCLI {
     private _protoFiles: Array<ProtoFile> = [];
     private _swaggerList: Array<SwaggerSpec> = [];
+    private _protoMsgImportInfos: ProtoMsgImportInfos = {};
 
     static instance() {
         return new GatewayCLI();
@@ -113,123 +115,146 @@ class GatewayCLI {
     private async _genSpecs() {
         debug('GatewayCLI generate router api codes.');
 
+
+        let protoInfos = [] as Array<ProtoInfo>;
         for (let i = 0; i < this._protoFiles.length; i++) {
             let protoFile = this._protoFiles[i];
             if (!protoFile) {
                 continue;
             }
-            console.log(protoFile);
+            let protoInfo = {} as ProtoInfo;
+            protoInfo.proto = await parseProto(protoFile);
+            protoInfo.protoFile = protoFile;
+            protoInfos.push(protoInfo);
+
+            let msgImportInfos = await parseMsgNamesFromProto(protoInfo.proto, protoFile, '');
+            for (let msgTypeStr in msgImportInfos) {
+                this._protoMsgImportInfos[msgTypeStr] = msgImportInfos[msgTypeStr];
+            }
         }
 
-        // let gatewayInfoList = [] as Array<GatewayInfo>;
-        //
-        // for (let swaggerSpec of this._swaggerList) {
-        //     debug(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
-        //
-        //     // Parse swagger definitions schema to ${Array<GatewaySwaggerSchema>}
-        //     let gatewayDefinitionSchemaMap = {} as GatewayDefinitionSchemaMap;
-        //     for (let definitionName in swaggerSpec.definitions) {
-        //         gatewayDefinitionSchemaMap[definitionName] = Swagger.parseSwaggerDefinitionMap(swaggerSpec.definitions, definitionName);
-        //     }
-        //
-        //     // Parse proto filename
-        //     //FIXME: this is not "protoName", actually this is namespace, [Big Bug wait for fixed]
-        //     let protoName = swaggerSpec.info.title.replace('.proto', '');
-        //
-        //     // Loop paths uri
-        //     for (let pathName in swaggerSpec.paths) {
-        //         let swaggerPath = swaggerSpec.paths[pathName] as Path;
-        //
-        //         // method: GET, PUT, POST, DELETE, OPTIONS, HEAD, PATCH
-        //         for (let method in swaggerPath) {
-        //             // not a method operation
-        //             if (METHOD_OPTIONS.indexOf(method) < 0) {
-        //                 continue;
-        //             }
-        //
-        //             // read method operation
-        //             let methodOperation = swaggerPath[method] as Operation;
-        //             let responseTypeStr = Swagger.getSwaggerResponseType(methodOperation, protoName);
-        //             let requestTypeStr = [] as Array<string>;
-        //
-        //             // loop method parameters
-        //             let swaggerSchemaList = [] as Array<GatewaySwaggerSchema>;
-        //             for (let parameter of methodOperation.parameters) {
-        //
-        //                 let type: string;
-        //                 let schema: Array<GatewaySwaggerSchema> = [];
-        //                 let refName: string;
-        //
-        //                 switch (parameter.in) {
-        //                     case 'body':
-        //                         let definitionName = Swagger.getRefName((parameter as BodyParameter).schema.$ref);
-        //                         type = 'object';
-        //                         schema = gatewayDefinitionSchemaMap[definitionName];
-        //                         refName = Swagger.removeProtoName(definitionName, protoName);
-        //                         break;
-        //                     case 'query':
-        //                     case 'path':
-        //                         type = (parameter as QueryParameter | PathParameter).type;
-        //                         break;
-        //                     default:
-        //                         type = 'any'; // headParameter, formDataParameter
-        //                         break;
-        //                 }
-        //
-        //                 let swaggerSchema: GatewaySwaggerSchema = {
-        //                     name: parameter.name,
-        //                     required: parameter.required,
-        //                     type: type,
-        //                 };
-        //
-        //                 //FIXME: requestType maybe is include from other proto file, this way only include in current proto, need fixed! [Small Bug]
-        //                 if (refName) {
-        //                     swaggerSchema.refName = refName;
-        //                     if (refName != responseTypeStr && requestTypeStr.indexOf(refName) < 0) {
-        //                         requestTypeStr.push(refName);
-        //                     }
-        //                 }
-        //
-        //                 if (schema.length > 0) {
-        //                     swaggerSchema.schema = schema;
-        //                 }
-        //
-        //                 swaggerSchemaList.push(swaggerSchema);
-        //             }
-        //
-        //             gatewayInfoList.push({
-        //                 apiName: ucfirst(method) + methodOperation.operationId,
-        //                 serviceName: methodOperation.tags[0],
-        //                 fileName: lcfirst(method) + methodOperation.operationId,
-        //                 method: method,
-        //                 uri: Swagger.convertSwaggerUriToKoaUri(pathName),
-        //                 protoMsgImportPath: LibPath.join('..', '..', 'proto', protoName + '_pb').replace(/\\/g, '/'),
-        //                 parameters: swaggerSchemaList,
-        //                 responseTypeStr: responseTypeStr,
-        //                 requestTypeStr: requestTypeStr.length > 0 ? requestTypeStr : false,
-        //             });
-        //         }
-        //     }
-        //
-        //     // make router dir in OUTPUT_DIR
-        //     await mkdir(LibPath.join(OUTPUT_DIR, 'router'));
-        //
-        //     // write file Router.ts in OUTPUT_DIR/router/
-        //     TplEngine.registerHelper('lcfirst', lcfirst);
-        //     let routerContent = TplEngine.render('router/router', {
-        //         infos: gatewayInfoList,
-        //     });
-        //     await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'Router.ts'), routerContent);
-        //
-        //     // write file ${gatewayApiName}.ts in OUTPUT_DIR/router/${gatewayApiService}/
-        //     for (let gatewayInfo of gatewayInfoList) {
-        //         await mkdir(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName));
-        //         let apiContent = TplEngine.render('router/api', {
-        //             info: gatewayInfo,
-        //         });
-        //         await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName, gatewayInfo.fileName + '.ts'), apiContent);
-        //     }
-        // }
+        let gatewayInfoList = [] as Array<GatewayInfo>;
+
+        for (let swaggerSpec of this._swaggerList) {
+            debug(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
+
+            // Parse swagger definitions schema to ${Array<GatewaySwaggerSchema>}
+            let gatewayDefinitionSchemaMap = {} as GatewayDefinitionSchemaMap;
+            for (let definitionName in swaggerSpec.definitions) {
+                gatewayDefinitionSchemaMap[definitionName] = Swagger.parseSwaggerDefinitionMap(swaggerSpec.definitions, definitionName);
+            }
+
+
+            // Loop paths uri
+            for (let pathName in swaggerSpec.paths) {
+                let swaggerPath = swaggerSpec.paths[pathName] as Path;
+
+                // method: GET, PUT, POST, DELETE, OPTIONS, HEAD, PATCH
+                for (let method in swaggerPath) {
+
+                    // not a method operation
+                    if (METHOD_OPTIONS.indexOf(method) < 0) {
+                        continue;
+                    }
+
+                    // read method operation
+                    let methodOperation = swaggerPath[method] as Operation;
+                    let protoMsgImportPaths = {} as RpcMethodImportPathInfo;
+
+                    // loop method parameters
+                    let swaggerSchemaList = [] as Array<GatewaySwaggerSchema>;
+
+                    // responseType handler
+                    let responseType = Swagger.getRefName(methodOperation.responses[200].schema.$ref);
+                    if (this._protoMsgImportInfos.hasOwnProperty(responseType)) {
+                        let protoMsgImportInfo = this._protoMsgImportInfos[responseType];
+                        responseType = protoMsgImportInfo.msgType;
+                        protoMsgImportPaths = parseImportPathInfos(
+                            protoMsgImportPaths,
+                            responseType,
+                            Proto.genProtoMsgImportPath(protoMsgImportInfo.protoFile, Proto.genFullOutputServiceDir(protoMsgImportInfo.protoFile)).replace(/\\/g, '/')
+                        );
+                    }
+
+                    let requestType: string | boolean = false;
+
+                    for (let parameter of methodOperation.parameters) {
+
+                        let type: string;
+                        let schema: Array<GatewaySwaggerSchema> = [];
+
+                        switch (parameter.in) {
+                            case 'body':
+                                let definitionsName = Swagger.getRefName((parameter as BodyParameter).schema.$ref);
+                                type = 'object';
+                                schema = gatewayDefinitionSchemaMap[definitionsName];
+
+                                if (this._protoMsgImportInfos.hasOwnProperty(definitionsName)) {
+                                    let protoMsgImportInfo = this._protoMsgImportInfos[definitionsName];
+                                    requestType = protoMsgImportInfo.msgType;
+                                    protoMsgImportPaths = parseImportPathInfos(
+                                        protoMsgImportPaths,
+                                        requestType,
+                                        Proto.genProtoMsgImportPath(protoMsgImportInfo.protoFile, Proto.genFullOutputServiceDir(protoMsgImportInfo.protoFile)).replace(/\\/g, '/')
+                                    );
+                                }
+
+                                break;
+                            case 'query':
+                            case 'path':
+                                type = (parameter as QueryParameter | PathParameter).type;
+                                break;
+                            default:
+                                type = 'any'; // headParameter, formDataParameter
+                                break;
+                        }
+
+                        let swaggerSchema: GatewaySwaggerSchema = {
+                            name: parameter.name,
+                            required: parameter.required,
+                            type: type,
+                        };
+
+                        if (schema.length > 0) {
+                            swaggerSchema.schema = schema;
+                        }
+
+                        swaggerSchemaList.push(swaggerSchema);
+                    }
+                    
+                    gatewayInfoList.push({
+                        apiName: ucfirst(method) + methodOperation.operationId,
+                        serviceName: methodOperation.tags[0],
+                        fileName: lcfirst(method) + methodOperation.operationId,
+                        method: method,
+                        uri: Swagger.convertSwaggerUriToKoaUri(pathName),
+                        parameters: swaggerSchemaList,
+                        protoMsgImportPath: protoMsgImportPaths,
+                        responseTypeStr: responseType,
+                        requestTypeStr: requestType
+                    });
+                }
+            }
+
+            // make router dir in OUTPUT_DIR
+            await mkdir(LibPath.join(OUTPUT_DIR, 'router'));
+
+            // write file Router.ts in OUTPUT_DIR/router/
+            TplEngine.registerHelper('lcfirst', lcfirst);
+            let routerContent = TplEngine.render('router/router', {
+                infos: gatewayInfoList,
+            });
+            await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'Router.ts'), routerContent);
+
+            // write file ${gatewayApiName}.ts in OUTPUT_DIR/router/${gatewayApiService}/
+            for (let gatewayInfo of gatewayInfoList) {
+                await mkdir(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName));
+                let apiContent = TplEngine.render('router/api', {
+                    info: gatewayInfo,
+                });
+                await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName, gatewayInfo.fileName + '.ts'), apiContent);
+            }
+        }
     }
 }
 
