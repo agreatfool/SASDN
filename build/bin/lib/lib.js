@@ -33,6 +33,8 @@ exports.readProtoList = function (protoDir, outputDir, excludes) {
         let protoFiles = files.map((file) => {
             let protoFile = {};
             file = file.replace(protoDir, ''); // remove base dir
+            if (file.substr(0, 1) == '/')
+                file = file.substr(1);
             protoFile.protoPath = protoDir;
             protoFile.outputPath = outputDir;
             protoFile.relativePath = LibPath.dirname(file);
@@ -52,10 +54,15 @@ exports.readProtoList = function (protoDir, outputDir, excludes) {
         return Promise.resolve(protoFiles);
     });
 };
-exports.parseServicesFromProto = function (protoFile) {
+exports.parseProto = function (protoFile) {
     return __awaiter(this, void 0, void 0, function* () {
         let content = yield LibFs.readFile(Proto.genFullProtoFilePath(protoFile));
         let proto = protobuf.parse(content.toString());
+        return Promise.resolve(proto);
+    });
+};
+exports.parseServicesFromProto = function (proto) {
+    return __awaiter(this, void 0, void 0, function* () {
         let pkgRoot = proto.root.lookup(proto.package);
         let services = [];
         let nestedKeys = Object.keys(pkgRoot.nested);
@@ -68,6 +75,55 @@ exports.parseServicesFromProto = function (protoFile) {
         });
         return Promise.resolve(services);
     });
+};
+exports.parseMsgNamesFromProto = function (proto, protoFile) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let pkgRoot = proto.root.lookup(proto.package);
+        let msgImportInfos = {};
+        let nestedKeys = Object.keys(pkgRoot.nested);
+        nestedKeys.forEach((nestedKey) => {
+            let msgTypeStr = pkgRoot.name + '.' + nestedKey;
+            msgImportInfos[msgTypeStr] = {
+                msgType: nestedKey,
+                protoFile: protoFile
+            };
+        });
+        return Promise.resolve(msgImportInfos);
+    });
+};
+exports.genRpcMethodInfo = function (protoFile, method, outputPath, protoMsgImportInfos) {
+    let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath);
+    let protoMsgImportPaths = {};
+    let requestType = method.requestType;
+    let requestTypeImportPath = defaultImportPath;
+    if (protoMsgImportInfos.hasOwnProperty(method.requestType)) {
+        requestType = protoMsgImportInfos[method.requestType].msgType;
+        requestTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
+    }
+    protoMsgImportPaths = exports.parseImportPathInfos(protoMsgImportPaths, requestType, requestTypeImportPath);
+    let responseType = method.responseType;
+    let responseTypeImportPath = defaultImportPath;
+    if (protoMsgImportInfos.hasOwnProperty(method.responseType)) {
+        responseType = protoMsgImportInfos[method.requestType].msgType;
+        responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
+    }
+    protoMsgImportPaths = exports.parseImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
+    return {
+        callTypeStr: '',
+        requestTypeStr: requestType,
+        responseTypeStr: responseType,
+        hasCallback: false,
+        hasRequest: false,
+        methodName: exports.lcfirst(method.name),
+        protoMsgImportPath: protoMsgImportPaths
+    };
+};
+exports.parseImportPathInfos = function (importPathInfos, type, importPath) {
+    if (!importPathInfos.hasOwnProperty(importPath)) {
+        importPathInfos[importPath] = [];
+    }
+    importPathInfos[importPath].push(type);
+    return importPathInfos;
 };
 exports.mkdir = function (path) {
     return __awaiter(this, void 0, void 0, function* () {

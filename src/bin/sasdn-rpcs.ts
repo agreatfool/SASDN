@@ -4,12 +4,14 @@ import * as LibPath from "path";
 import {
     lcfirst,
     mkdir,
+    parseProto,
     parseServicesFromProto,
     Proto,
     ProtoFile,
     readProtoList,
     RpcMethodInfo,
-    RpcProtoServicesInfo
+    RpcProtoServicesInfo,
+    ProtoInfo, parseMsgNamesFromProto, ProtoMsgImportInfos, genRpcMethodInfo
 } from "./lib/lib";
 import {TplEngine} from "./lib/template";
 import {Method, Service} from "protobufjs";
@@ -28,6 +30,7 @@ const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.n
 class ServiceCLI {
 
     private _protoFiles: Array<ProtoFile> = [];
+    private _protoMsgImportInfos: ProtoMsgImportInfos = {};
 
     static instance() {
         return new ServiceCLI();
@@ -74,12 +77,27 @@ class ServiceCLI {
 
         let protoServicesInfos = [] as Array<RpcProtoServicesInfo>;
 
+        let protoInfos = [] as Array<ProtoInfo>;
         for (let i = 0; i < this._protoFiles.length; i++) {
             let protoFile = this._protoFiles[i];
             if (!protoFile) {
                 continue;
             }
-            let services = await parseServicesFromProto(protoFile);
+            let protoInfo = {} as ProtoInfo;
+            protoInfo.proto = await parseProto(protoFile);
+            protoInfo.protoFile = protoFile;
+            protoInfos.push(protoInfo);
+
+            let msgImportInfos = await parseMsgNamesFromProto(protoInfo.proto, protoFile);
+            for (let msgTypeStr in msgImportInfos) {
+                this._protoMsgImportInfos[msgTypeStr] = msgImportInfos[msgTypeStr];
+            }
+        }
+
+        for (let i = 0; i < protoInfos.length; i++) {
+            let protoInfo = protoInfos[i] as ProtoInfo;
+
+            let services = await parseServicesFromProto(protoInfo.proto);
             if (services.length === 0) {
                 continue;
             }
@@ -87,12 +105,12 @@ class ServiceCLI {
             await mkdir(LibPath.join(OUTPUT_DIR, 'services'));
 
             let protoServicesInfo = {
-                protoFile: protoFile,
-                protoServiceImportPath: Proto.genProtoServiceImportPath(protoFile),
+                protoFile: protoInfo.protoFile,
+                protoServiceImportPath: Proto.genProtoServiceImportPath(protoInfo.protoFile),
                 services: {} as { [serviceName: string]: Array<RpcMethodInfo> },
             } as RpcProtoServicesInfo;
             for (let i = 0; i < services.length; i++) {
-                protoServicesInfo.services[services[i].name] = await this._genService(protoFile, services[i]);
+                protoServicesInfo.services[services[i].name] = await this._genService(protoInfo.protoFile, services[i]);
             }
             protoServicesInfos.push(protoServicesInfo);
         }
@@ -133,15 +151,7 @@ class ServiceCLI {
         let outputPath = Proto.genFullOutputServicePath(protoFile, service, method);
         await mkdir(LibPath.dirname(outputPath));
 
-        let methodInfo = {
-            callTypeStr: '',
-            requestTypeStr: method.requestType,
-            responseTypeStr: method.responseType,
-            hasCallback: false,
-            hasRequest: false,
-            methodName: lcfirst(method.name),
-            protoMsgImportPath: Proto.genProtoMsgImportPath(protoFile, outputPath),
-        } as RpcMethodInfo;
+        let methodInfo = genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
 
         if (!method.requestStream && !method.responseStream) {
             methodInfo.callTypeStr = 'ServerUnaryCall';

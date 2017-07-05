@@ -1,5 +1,6 @@
 import * as protobuf from "protobufjs";
 import { Operation as SwaggerOperation, Schema as SwaggerSchema, Spec as SwaggerSpec } from "swagger-schema-official";
+
 /**
  * protoDir: /Users/XXX/Projects/projectX/proto
  * outputDir: /output/dir/specified
@@ -21,6 +22,21 @@ export interface ProtoFile {
     msgNamespace: string;
     svcNamespace: string;
 }
+
+export interface ProtoInfo {
+    proto: protobuf.IParserResult;
+    protoFile: ProtoFile;
+}
+
+export interface ProtoMsgImportInfo {
+    msgType: string;
+    protoFile: ProtoFile;
+}
+
+export interface ProtoMsgImportInfos {
+    [msgTypeStr: string]: ProtoMsgImportInfo;
+}
+
 export interface RpcProtoServicesInfo {
     protoFile: ProtoFile;
     protoServiceImportPath: string;
@@ -35,8 +51,13 @@ export interface RpcMethodInfo {
     hasCallback: boolean;
     hasRequest: boolean;
     methodName: string;
-    protoMsgImportPath: string;
+    protoMsgImportPath: RpcMethodImportPathInfo;
 }
+
+export interface RpcMethodImportPathInfo {
+    [importPath: string]: Array<string>;
+}
+
 export interface GatewaySwaggerSchema {
     name: string;
     type: string;
@@ -48,7 +69,11 @@ export interface SwaggerDefinitionMap {
     [definitionsName: string]: SwaggerSchema;
 }
 export declare const readProtoList: (protoDir: string, outputDir: string, excludes?: string[]) => Promise<ProtoFile[]>;
-export declare const parseServicesFromProto: (protoFile: ProtoFile) => Promise<protobuf.Service[]>;
+export declare const parseProto: (protoFile: ProtoFile) => Promise<protobuf.IParserResult>;
+export declare const parseServicesFromProto: (proto: protobuf.IParserResult) => Promise<Array<protobuf.Service>>;
+export declare const parseMsgNamesFromProto: (proto: protobuf.IParserResult, protoFile: ProtoFile) => Promise<ProtoMsgImportInfos>;
+export declare const genRpcMethodInfo: (protoFile: ProtoFile, method: protobuf.Method, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos) => RpcMethodInfo;
+export declare const parseImportPathInfos: (importPathInfos: RpcMethodImportPathInfo, type: string, importPath: string) => RpcMethodImportPathInfo;
 export declare const mkdir: (path: string) => Promise<string>;
 export declare const lcfirst: (str: any) => string;
 export declare const ucfirst: (str: any) => string;
