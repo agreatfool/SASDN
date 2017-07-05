@@ -185,12 +185,12 @@ class GatewayCLI {
 
                         switch (parameter.in) {
                             case 'body':
-                                let definitionsName = Swagger.getRefName((parameter as BodyParameter).schema.$ref);
+                                let definitionName = Swagger.getRefName((parameter as BodyParameter).schema.$ref);
                                 type = 'object';
-                                schema = gatewayDefinitionSchemaMap[definitionsName];
+                                schema = gatewayDefinitionSchemaMap[definitionName];
 
-                                if (this._protoMsgImportInfos.hasOwnProperty(definitionsName)) {
-                                    let protoMsgImportInfo = this._protoMsgImportInfos[definitionsName];
+                                if (this._protoMsgImportInfos.hasOwnProperty(definitionName)) {
+                                    let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
                                     requestType = protoMsgImportInfo.msgType;
                                     protoMsgImportPaths = parseImportPathInfos(
                                         protoMsgImportPaths,
