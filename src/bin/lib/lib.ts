@@ -2,7 +2,7 @@ import * as LibPath from "path";
 import * as LibFs from "mz/fs";
 import * as recursive from "recursive-readdir";
 import * as protobuf from "protobufjs";
-import {Method, Namespace, Service} from "protobufjs";
+import {IParserResult, Method, Namespace, Service} from "protobufjs";
 import * as bluebird from "bluebird";
 import * as LibMkdirP from "mkdirp";
 import {Operation as SwaggerOperation, Schema as SwaggerSchema, Spec as SwaggerSpec} from "swagger-schema-official";
@@ -31,10 +31,27 @@ export interface ProtoFile {
     svcNamespace: string;
 }
 
+export interface ProtoInfo {
+    proto: IParserResult;
+    protoFile: ProtoFile;
+}
+
+export interface ProtoMsgImportInfo {
+    msgType: string;
+    namespace: string;
+    protoFile: ProtoFile;
+}
+
+export interface ProtoMsgImportInfos {
+    [msgTypeStr: string]: ProtoMsgImportInfo;
+}
+
 export interface RpcProtoServicesInfo {
     protoFile: ProtoFile;
     protoServiceImportPath: string;
-    services: { [serviceName: string]: Array<RpcMethodInfo> };
+    services: {
+        [serviceName: string]: Array<RpcMethodInfo>;
+    };
 }
 
 export interface RpcMethodInfo {
@@ -44,7 +61,11 @@ export interface RpcMethodInfo {
     hasCallback: boolean;
     hasRequest: boolean;
     methodName: string;
-    protoMsgImportPath: string;
+    protoMsgImportPath: RpcMethodImportPathInfo;
+}
+
+export interface RpcMethodImportPathInfo {
+    [importPath: string]: Array<string>;
 }
 
 export interface GatewaySwaggerSchema {
@@ -52,7 +73,6 @@ export interface GatewaySwaggerSchema {
     type: string;           // string, number, array, object
     required: boolean;      // required, optional
     schema?: Array<GatewaySwaggerSchema>;
-    refName?: string;
 }
 export interface SwaggerDefinitionMap {
     [definitionsName: string]: SwaggerSchema;
@@ -76,6 +96,7 @@ export const readProtoList = async function (protoDir: string, outputDir: string
         let protoFile = {} as ProtoFile;
 
         file = file.replace(protoDir, ''); // remove base dir
+        if (file.substr(0, 1) == '/') file = file.substr(1);
         protoFile.protoPath = protoDir;
         protoFile.outputPath = outputDir;
         protoFile.relativePath = LibPath.dirname(file);
@@ -96,11 +117,15 @@ export const readProtoList = async function (protoDir: string, outputDir: string
     return Promise.resolve(protoFiles);
 };
 
-export const parseServicesFromProto = async function (protoFile: ProtoFile): Promise<Array<Service>> {
+export const parseProto = async function (protoFile: ProtoFile): Promise<IParserResult> {
     let content = await LibFs.readFile(Proto.genFullProtoFilePath(protoFile));
     let proto = protobuf.parse(content.toString());
-    let pkgRoot = proto.root.lookup(proto.package) as Namespace;
 
+    return Promise.resolve(proto);
+};
+
+export const parseServicesFromProto = async function (proto: IParserResult): Promise<Array<Service>> {
+    let pkgRoot = proto.root.lookup(proto.package) as Namespace;
     let services = [] as Array<Service>;
     let nestedKeys = Object.keys(pkgRoot.nested);
     nestedKeys.forEach((nestedKey) => {
@@ -112,6 +137,64 @@ export const parseServicesFromProto = async function (protoFile: ProtoFile): Pro
     });
 
     return Promise.resolve(services);
+};
+
+export const parseMsgNamesFromProto = async function (proto: IParserResult, protoFile: ProtoFile, symlink: string = "."): Promise<ProtoMsgImportInfos> {
+    let pkgRoot = proto.root.lookup(proto.package) as Namespace;
+    let msgImportInfos = {} as ProtoMsgImportInfos;
+    let nestedKeys = Object.keys(pkgRoot.nested);
+    nestedKeys.forEach((nestedKey) => {
+        let msgTypeStr = pkgRoot.name + symlink + nestedKey;
+        msgImportInfos[msgTypeStr] = {
+            msgType: nestedKey,
+            namespace: pkgRoot.name,
+            protoFile: protoFile
+        } as ProtoMsgImportInfo;
+    });
+
+    return Promise.resolve(msgImportInfos);
+};
+
+export const genRpcMethodInfo = function(protoFile: ProtoFile, method: Method, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos) : RpcMethodInfo {
+
+    let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath);
+    let protoMsgImportPaths = {} as RpcMethodImportPathInfo;
+
+    let requestType = method.requestType;
+    let requestTypeImportPath = defaultImportPath;
+    if (protoMsgImportInfos.hasOwnProperty(method.requestType)) {
+        requestType = protoMsgImportInfos[method.requestType].msgType;
+        requestTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
+    }
+    protoMsgImportPaths = parseImportPathInfos(protoMsgImportPaths, requestType, requestTypeImportPath);
+
+    let responseType = method.responseType;
+    let responseTypeImportPath = defaultImportPath;
+    if (protoMsgImportInfos.hasOwnProperty(method.responseType)) {
+        responseType = protoMsgImportInfos[method.requestType].msgType;
+        responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
+    }
+    protoMsgImportPaths = parseImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
+
+    return {
+        callTypeStr: '',
+        requestTypeStr: requestType,
+        responseTypeStr: responseType,
+        hasCallback: false,
+        hasRequest: false,
+        methodName: lcfirst(method.name),
+        protoMsgImportPath: protoMsgImportPaths
+    } as RpcMethodInfo;
+};
+
+export const parseImportPathInfos = function (importPathInfos: RpcMethodImportPathInfo, type: string, importPath: string) : RpcMethodImportPathInfo {
+    if (!importPathInfos.hasOwnProperty(importPath)) {
+        importPathInfos[importPath] = [];
+    }
+
+    importPathInfos[importPath].push(type);
+
+    return importPathInfos;
 };
 
 export const mkdir = async function (path: string): Promise<string> {
@@ -135,7 +218,7 @@ export namespace Proto {
      * @returns {string}
      */
     export function getPathToRoot(filePath: string) {
-        const depth = filePath.split("/").length;
+        const depth = filePath.replace(/\\/g, '/').split("/").length;
         return depth === 1 ? "./" : new Array(depth).join("../");
     }
 
@@ -215,6 +298,20 @@ export namespace Proto {
             lcfirst(method.name) + '.ts'
         );
     };
+
+    /**
+     * Generate full service stub code output dir.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
+    export const genFullOutputServiceDir = function (protoFile: ProtoFile) {
+        return LibPath.join(
+            protoFile.outputPath,
+            'services',
+            protoFile.relativePath,
+            protoFile.svcNamespace
+        );
+    };
 }
 
 /**
@@ -272,17 +369,6 @@ export namespace Swagger {
     }
 
     /**
-     * bookBookModel => BookModel
-     *
-     * @param {string} ref
-     * @param {string} protoName
-     * @returns {string}
-     */
-    export function removeProtoName(ref: string, protoName: string): string {
-        return ref.replace(protoName, '');
-    }
-
-    /**
      * Convert SwaggerType To JoiType
      * <pre>
      *   integer => number
@@ -324,23 +410,6 @@ export namespace Swagger {
             }
         }
         return uri;
-    }
-
-    /**
-     * Get swagger response type
-     * <pre>
-     *     1. getRefName
-     *     #/definitions/bookBookMap => bookBookMap
-     *     2. getSwaggerResponseType
-     *     bookBookMap => BookMap
-     * </pre>
-     *
-     * @param {SwaggerOperation} option
-     * @param {string} protoName
-     * @returns {string}
-     */
-    export function getSwaggerResponseType(option: SwaggerOperation, protoName: string): string {
-        return Swagger.removeProtoName(Swagger.getRefName(option.responses[200].schema.$ref), protoName);
     }
 
     /**

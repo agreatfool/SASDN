@@ -24,6 +24,7 @@ const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(
 class ServiceCLI {
     constructor() {
         this._protoFiles = [];
+        this._protoMsgImportInfos = {};
     }
     static instance() {
         return new ServiceCLI();
@@ -68,23 +69,35 @@ class ServiceCLI {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI generate services.');
             let protoServicesInfos = [];
+            let protoInfos = [];
             for (let i = 0; i < this._protoFiles.length; i++) {
                 let protoFile = this._protoFiles[i];
                 if (!protoFile) {
                     continue;
                 }
-                let services = yield lib_1.parseServicesFromProto(protoFile);
+                let protoInfo = {};
+                protoInfo.proto = yield lib_1.parseProto(protoFile);
+                protoInfo.protoFile = protoFile;
+                protoInfos.push(protoInfo);
+                let msgImportInfos = yield lib_1.parseMsgNamesFromProto(protoInfo.proto, protoFile);
+                for (let msgTypeStr in msgImportInfos) {
+                    this._protoMsgImportInfos[msgTypeStr] = msgImportInfos[msgTypeStr];
+                }
+            }
+            for (let i = 0; i < protoInfos.length; i++) {
+                let protoInfo = protoInfos[i];
+                let services = yield lib_1.parseServicesFromProto(protoInfo.proto);
                 if (services.length === 0) {
                     continue;
                 }
                 yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'services'));
                 let protoServicesInfo = {
-                    protoFile: protoFile,
-                    protoServiceImportPath: lib_1.Proto.genProtoServiceImportPath(protoFile),
+                    protoFile: protoInfo.protoFile,
+                    protoServiceImportPath: lib_1.Proto.genProtoServiceImportPath(protoInfo.protoFile),
                     services: {},
                 };
                 for (let i = 0; i < services.length; i++) {
-                    protoServicesInfo.services[services[i].name] = yield this._genService(protoFile, services[i]);
+                    protoServicesInfo.services[services[i].name] = yield this._genService(protoInfo.protoFile, services[i]);
                 }
                 protoServicesInfos.push(protoServicesInfo);
             }
@@ -120,15 +133,7 @@ class ServiceCLI {
             debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
             let outputPath = lib_1.Proto.genFullOutputServicePath(protoFile, service, method);
             yield lib_1.mkdir(LibPath.dirname(outputPath));
-            let methodInfo = {
-                callTypeStr: '',
-                requestTypeStr: method.requestType,
-                responseTypeStr: method.responseType,
-                hasCallback: false,
-                hasRequest: false,
-                methodName: lib_1.lcfirst(method.name),
-                protoMsgImportPath: lib_1.Proto.genProtoMsgImportPath(protoFile, outputPath),
-            };
+            let methodInfo = lib_1.genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
             if (!method.requestStream && !method.responseStream) {
                 methodInfo.callTypeStr = 'ServerUnaryCall';
                 methodInfo.hasCallback = true;
@@ -162,3 +167,4 @@ class ServiceCLI {
 ServiceCLI.instance().run().catch((err) => {
     debug('err: %O', err.message);
 });
+//# sourceMappingURL=sasdn-rpcs.js.map

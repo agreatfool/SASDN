@@ -38,4 +38,6 @@ jspm_packages
 
 .idea
 
+bin/sasdn-cli.bat
+
 test

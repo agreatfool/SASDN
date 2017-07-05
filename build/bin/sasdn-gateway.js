@@ -16,15 +16,19 @@ const template_1 = require("./lib/template");
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:Gateway');
 program.version(pkg.version)
+    .option('-p, --proto <dir>', 'directory of proto files')
     .option('-s, --swagger <dir>', 'directory of swagger spec files')
     .option('-o, --output <dir>', 'directory to output service codes')
     .parse(process.argv);
+const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const SWAGGER_DIR = program.swagger === undefined ? undefined : LibPath.normalize(program.swagger);
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
 const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 class GatewayCLI {
     constructor() {
+        this._protoFiles = [];
         this._swaggerList = [];
+        this._protoMsgImportInfos = {};
     }
     static instance() {
         return new GatewayCLI();
@@ -33,6 +37,7 @@ class GatewayCLI {
         return __awaiter(this, void 0, void 0, function* () {
             debug('GatewayCLI start.');
             yield this._validate();
+            yield this._loadProtos();
             yield this._loadSpecs();
             yield this._genSpecs();
         });
@@ -40,11 +45,18 @@ class GatewayCLI {
     _validate() {
         return __awaiter(this, void 0, void 0, function* () {
             debug('GatewayCLI validate.');
+            if (!PROTO_DIR) {
+                throw new Error('--proto is required');
+            }
             if (!SWAGGER_DIR) {
                 throw new Error('--swagger is required');
             }
             if (!OUTPUT_DIR) {
                 throw new Error('--output is required');
+            }
+            let protoStat = yield LibFs.stat(PROTO_DIR);
+            if (!protoStat.isDirectory()) {
+                throw new Error('--proto is not a directory');
             }
             let swaggerStat = yield LibFs.stat(SWAGGER_DIR);
             if (!swaggerStat.isDirectory()) {
@@ -53,6 +65,15 @@ class GatewayCLI {
             let outputStat = yield LibFs.stat(OUTPUT_DIR);
             if (!outputStat.isDirectory()) {
                 throw new Error('--output is not a directory');
+            }
+        });
+    }
+    _loadProtos() {
+        return __awaiter(this, void 0, void 0, function* () {
+            debug('ServiceCLI load proto files.');
+            this._protoFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR);
+            if (this._protoFiles.length === 0) {
+                throw new Error('no proto files found');
             }
         });
     }
@@ -68,6 +89,21 @@ class GatewayCLI {
     _genSpecs() {
         return __awaiter(this, void 0, void 0, function* () {
             debug('GatewayCLI generate router api codes.');
+            let protoInfos = [];
+            for (let i = 0; i < this._protoFiles.length; i++) {
+                let protoFile = this._protoFiles[i];
+                if (!protoFile) {
+                    continue;
+                }
+                let protoInfo = {};
+                protoInfo.proto = yield lib_1.parseProto(protoFile);
+                protoInfo.protoFile = protoFile;
+                protoInfos.push(protoInfo);
+                let msgImportInfos = yield lib_1.parseMsgNamesFromProto(protoInfo.proto, protoFile, '');
+                for (let msgTypeStr in msgImportInfos) {
+                    this._protoMsgImportInfos[msgTypeStr] = msgImportInfos[msgTypeStr];
+                }
+            }
             let gatewayInfoList = [];
             for (let swaggerSpec of this._swaggerList) {
                 debug(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
@@ -76,8 +112,6 @@ class GatewayCLI {
                 for (let definitionName in swaggerSpec.definitions) {
                     gatewayDefinitionSchemaMap[definitionName] = lib_1.Swagger.parseSwaggerDefinitionMap(swaggerSpec.definitions, definitionName);
                 }
-                // Parse proto filename
-                let protoName = swaggerSpec.info.title.replace('.proto', '');
                 // Loop paths uri
                 for (let pathName in swaggerSpec.paths) {
                     let swaggerPath = swaggerSpec.paths[pathName];
@@ -89,20 +123,30 @@ class GatewayCLI {
                         }
                         // read method operation
                         let methodOperation = swaggerPath[method];
-                        let responseTypeStr = lib_1.Swagger.getSwaggerResponseType(methodOperation, protoName);
-                        let requestTypeStr = [];
+                        let protoMsgImportPaths = {};
                         // loop method parameters
                         let swaggerSchemaList = [];
+                        // responseType handler
+                        let responseType = lib_1.Swagger.getRefName(methodOperation.responses[200].schema.$ref);
+                        if (this._protoMsgImportInfos.hasOwnProperty(responseType)) {
+                            let protoMsgImportInfo = this._protoMsgImportInfos[responseType];
+                            responseType = protoMsgImportInfo.msgType;
+                            protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, responseType, lib_1.Proto.genProtoMsgImportPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputServiceDir(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
+                        }
+                        let requestType = false;
                         for (let parameter of methodOperation.parameters) {
                             let type;
                             let schema = [];
-                            let refName;
                             switch (parameter.in) {
                                 case 'body':
                                     let definitionName = lib_1.Swagger.getRefName(parameter.schema.$ref);
                                     type = 'object';
                                     schema = gatewayDefinitionSchemaMap[definitionName];
-                                    refName = lib_1.Swagger.removeProtoName(definitionName, protoName);
+                                    if (this._protoMsgImportInfos.hasOwnProperty(definitionName)) {
+                                        let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
+                                        requestType = protoMsgImportInfo.msgType;
+                                        protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, requestType, lib_1.Proto.genProtoMsgImportPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputServiceDir(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
+                                    }
                                     break;
                                 case 'query':
                                 case 'path':
@@ -117,12 +161,6 @@ class GatewayCLI {
                                 required: parameter.required,
                                 type: type,
                             };
-                            if (refName) {
-                                swaggerSchema.refName = refName;
-                                if (refName != responseTypeStr && requestTypeStr.indexOf(refName) < 0) {
-                                    requestTypeStr.push(refName);
-                                }
-                            }
                             if (schema.length > 0) {
                                 swaggerSchema.schema = schema;
                             }
@@ -134,10 +172,10 @@ class GatewayCLI {
                             fileName: lib_1.lcfirst(method) + methodOperation.operationId,
                             method: method,
                             uri: lib_1.Swagger.convertSwaggerUriToKoaUri(pathName),
-                            protoMsgImportPath: LibPath.join('..', '..', 'proto', protoName + '_pb').replace(/\\/g, '/'),
                             parameters: swaggerSchemaList,
-                            responseTypeStr: responseTypeStr,
-                            requestTypeStr: requestTypeStr.length > 0 ? requestTypeStr : false,
+                            protoMsgImportPath: protoMsgImportPaths,
+                            responseTypeStr: responseType,
+                            requestTypeStr: requestType
                         });
                     }
                 }
@@ -164,3 +202,4 @@ class GatewayCLI {
 GatewayCLI.instance().run().catch((err) => {
     debug('err: %O', err.message);
 });
+//# sourceMappingURL=sasdn-gateway.js.map
