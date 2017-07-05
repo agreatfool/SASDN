@@ -1,0 +1,1 @@
+set DEBUG=SASDN:* & node ./build/bin/sasdn.js gateway -p ../SASDN-Sample/proto -s ../SASDN-Sample/src/proto -o ../SASDN-Sample/src

@@ -6,7 +6,7 @@ import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from "{{{@ke
 interface RequestParams {
 {{#each info.parameters}}
 {{#eq this.type "object"}}
-    {{this.name}}{{#eq this.required false}}?{{/eq}}: {{../info.requestTypeStr}}.AsObject;
+    {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq ../info.requestTypeStr false}}any{{else}}{{../info.requestTypeStr}}.AsObject{{/eq}};
 {{else}}
     {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}};
 {{/eq}}
