@@ -1,7 +1,10 @@
 SASDN
 =====
 
-Name: **S**table, **A**vailable, **S**calable, **D**istributed, **N**odeJs
+NodeJs microservice ecosystem.
+
+## Ecosystem
+Please read [Architecture doc](./doc/Architecture.md) to get the detail. It's recommended to read arch doc to get the whole picture of SASDN ecosystem.
 
 ## Install
 ```bash
