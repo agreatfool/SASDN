@@ -11,7 +11,7 @@ Generate:
 
 from proto files.
 
-```bash
+```
 sasdn proto [options]
 
   Options:
@@ -31,7 +31,7 @@ sasdn proto [options]
 # Command: Rpcs
 Generate rpc server service stubs from proto files.
 
-```bash
+```
 sasdn rpcs [options]
 
   Options:
@@ -45,7 +45,7 @@ sasdn rpcs [options]
 # Command: Gateway
 Generate gateway koa api stubs from swagger spec files.
 
-```bash
+```
 sasdn gateway [options]
 
   Options:
