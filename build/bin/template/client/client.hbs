@@ -3,7 +3,7 @@ export interface SasdnAPIOptions {
     dataType?: string;
     data?: any;
     url?: string;
-    timeout?: number
+    timeout?: number;
 }
 
 export interface SasdnAPIParams {
@@ -127,7 +127,7 @@ export default class SasdnAPI {
             try {
                 const data = this._handleParams(uri, params, aggParams, requiredParams);
 
-                if (params.length == 2 && typeof params[1] === 'object') {
+                if (method == 'patch' && params.length == 2 && typeof params[1] === 'object') {
                     data.data = params[1];
                 }
 
