@@ -9,3 +9,4 @@ program.version(pkg.version)
     .command('gateway [options]', 'generate gateway api files from swagger spec files')
     .command('scaffold [options]', 'create a new scaffold project')
     .parse(process.argv);
+//# sourceMappingURL=sasdn.js.map
