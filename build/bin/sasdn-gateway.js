@@ -19,10 +19,12 @@ program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-s, --swagger <dir>', 'directory of swagger spec files')
     .option('-o, --output <dir>', 'directory to output service codes')
+    .option('-c, --client', 'add -c to output API Gateway client codes')
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const SWAGGER_DIR = program.swagger === undefined ? undefined : LibPath.normalize(program.swagger);
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
+const API_GATEWAY_CLIENT = program.client !== undefined;
 const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 class GatewayCLI {
     constructor() {
@@ -134,6 +136,9 @@ class GatewayCLI {
                             protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, responseType, lib_1.Proto.genProtoMsgImportPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputServiceDir(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                         }
                         let requestType = false;
+                        let funcParamsStr = '';
+                        let aggParamsStr = '';
+                        let requiredParamsStr = '';
                         for (let parameter of methodOperation.parameters) {
                             let type;
                             let schema = [];
@@ -165,6 +170,11 @@ class GatewayCLI {
                                 swaggerSchema.schema = schema;
                             }
                             swaggerSchemaList.push(swaggerSchema);
+                            funcParamsStr += (funcParamsStr == '') ? parameter.name : `, ${parameter.name}`;
+                            aggParamsStr += (aggParamsStr == '') ? `'${parameter.name}'` : `, '${parameter.name}'`;
+                            if (parameter.required) {
+                                requiredParamsStr += (requiredParamsStr == '') ? `'${parameter.name}'` : `, '${parameter.name}'`;
+                            }
                         }
                         gatewayInfoList.push({
                             apiName: lib_1.ucfirst(method) + methodOperation.operationId,
@@ -175,7 +185,10 @@ class GatewayCLI {
                             parameters: swaggerSchemaList,
                             protoMsgImportPath: protoMsgImportPaths,
                             responseTypeStr: responseType,
-                            requestTypeStr: requestType
+                            requestTypeStr: requestType,
+                            funcParamsStr: funcParamsStr,
+                            aggParamsStr: aggParamsStr,
+                            requiredParamsStr: requiredParamsStr,
                         });
                     }
                 }
@@ -194,6 +207,16 @@ class GatewayCLI {
                         info: gatewayInfo,
                     });
                     yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName, gatewayInfo.fileName + '.ts'), apiContent);
+                }
+                // make client dir in OUTPUT_DIR
+                if (API_GATEWAY_CLIENT) {
+                    yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'client'));
+                    // write file Router.ts in OUTPUT_DIR/router/
+                    template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
+                    let clientContent = template_1.TplEngine.render('client/client', {
+                        infos: gatewayInfoList,
+                    });
+                    yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'client', 'sasdnAPI.ts'), clientContent);
                 }
             }
         });
