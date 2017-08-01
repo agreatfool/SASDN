@@ -74,6 +74,7 @@ export interface GatewaySwaggerSchema {
     required: boolean;      // required, optional
     schema?: Array<GatewaySwaggerSchema>;
 }
+
 export interface SwaggerDefinitionMap {
     [definitionsName: string]: SwaggerSchema;
 }
@@ -155,7 +156,7 @@ export const parseMsgNamesFromProto = async function (proto: IParserResult, prot
     return Promise.resolve(msgImportInfos);
 };
 
-export const genRpcMethodInfo = function(protoFile: ProtoFile, method: Method, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos) : RpcMethodInfo {
+export const genRpcMethodInfo = function (protoFile: ProtoFile, method: Method, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos): RpcMethodInfo {
 
     let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath);
     let protoMsgImportPaths = {} as RpcMethodImportPathInfo;
@@ -187,7 +188,7 @@ export const genRpcMethodInfo = function(protoFile: ProtoFile, method: Method, o
     } as RpcMethodInfo;
 };
 
-export const parseImportPathInfos = function (importPathInfos: RpcMethodImportPathInfo, type: string, importPath: string) : RpcMethodImportPathInfo {
+export const parseImportPathInfos = function (importPathInfos: RpcMethodImportPathInfo, type: string, importPath: string): RpcMethodImportPathInfo {
     if (!importPathInfos.hasOwnProperty(importPath)) {
         importPathInfos[importPath] = [];
     }
