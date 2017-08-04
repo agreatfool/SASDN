@@ -42,12 +42,16 @@ program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-s, --swagger <dir>', 'directory of swagger spec files')
     .option('-o, --output <dir>', 'directory to output service codes')
+    .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
+        return val.split(',');
+    })
     .option('-c, --client', 'add -c to output API Gateway client codes')
     .parse(process.argv);
 
 const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.normalize((program as any).proto);
 const SWAGGER_DIR = (program as any).swagger === undefined ? undefined : LibPath.normalize((program as any).swagger);
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
+const IMPORTS = (program as any).import === undefined ? [] : (program as any).import;
 const API_GATEWAY_CLIENT = (program as any).client !== undefined;
 const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
@@ -103,6 +107,11 @@ class GatewayCLI {
         debug('ServiceCLI load proto files.');
 
         this._protoFiles = await readProtoList(PROTO_DIR, OUTPUT_DIR);
+        if (IMPORTS.length > 0) {
+            for (let i = 0; i < IMPORTS.length; i++) {
+                this._protoFiles = this._protoFiles.concat(await readProtoList(LibPath.normalize(IMPORTS[i]), OUTPUT_DIR));
+            }
+        }
         if (this._protoFiles.length === 0) {
             throw new Error('no proto files found');
         }
@@ -177,7 +186,10 @@ class GatewayCLI {
                         protoMsgImportPaths = parseImportPathInfos(
                             protoMsgImportPaths,
                             responseType,
-                            Proto.genProtoMsgImportPath(protoMsgImportInfo.protoFile, Proto.genFullOutputServiceDir(protoMsgImportInfo.protoFile)).replace(/\\/g, '/')
+                            Proto.genProtoMsgImportPathViaRouterPath(
+                                protoMsgImportInfo.protoFile,
+                                Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)
+                            ).replace(/\\/g, '/')
                         );
                     }
 
@@ -203,7 +215,10 @@ class GatewayCLI {
                                     protoMsgImportPaths = parseImportPathInfos(
                                         protoMsgImportPaths,
                                         requestType,
-                                        Proto.genProtoMsgImportPath(protoMsgImportInfo.protoFile, Proto.genFullOutputServiceDir(protoMsgImportInfo.protoFile)).replace(/\\/g, '/')
+                                        Proto.genProtoMsgImportPathViaRouterPath(
+                                            protoMsgImportInfo.protoFile,
+                                            Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)
+                                        ).replace(/\\/g, '/')
                                     );
                                 }
 

@@ -172,8 +172,8 @@ export const genRpcMethodInfo = function (protoFile: ProtoFile, method: Method, 
     let responseType = method.responseType;
     let responseTypeImportPath = defaultImportPath;
     if (protoMsgImportInfos.hasOwnProperty(method.responseType)) {
-        responseType = protoMsgImportInfos[method.requestType].msgType;
-        responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
+        responseType = protoMsgImportInfos[method.responseType].msgType;
+        responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.responseType].protoFile, outputPath);
     }
     protoMsgImportPaths = parseImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
 
@@ -283,6 +283,23 @@ export namespace Proto {
     };
 
     /**
+     * Generate message proto js file (e.g *_pb.js) import path.
+     * Source code path is generated with {@link genFullOutputServicePath},
+     * message proto js import path is relative to it.
+     * @param {ProtoFile} protoFile
+     * @param {string} routerDirPath
+     * @returns {string}
+     */
+    export const genProtoMsgImportPathViaRouterPath = function (protoFile: ProtoFile, routerDirPath: string): string {
+        return LibPath.join(
+            getPathToRoot(routerDirPath.substr(routerDirPath.indexOf('router'))),
+            'proto',
+            protoFile.relativePath,
+            protoFile.msgNamespace
+        );
+    };
+
+    /**
      * Generate full service stub code output path.
      * @param {ProtoFile} protoFile
      * @param {Service} service
@@ -303,14 +320,16 @@ export namespace Proto {
     /**
      * Generate full service stub code output dir.
      * @param {ProtoFile} protoFile
+     * @param {string} serviceName
+     * @param {string} apiName
      * @returns {string}
      */
-    export const genFullOutputServiceDir = function (protoFile: ProtoFile) {
+    export const genFullOutputRouterApiPath = function (protoFile: ProtoFile, serviceName: string = 'default', apiName: string = 'default') {
         return LibPath.join(
             protoFile.outputPath,
-            'services',
-            protoFile.relativePath,
-            protoFile.svcNamespace
+            'router',
+            serviceName,
+            apiName
         );
     };
 }
@@ -330,7 +349,7 @@ export const readSwaggerList = async function (swaggerDir: string, outputDir: st
             return shallIgnore;
         }
         excludes.forEach((exclude: string) => {
-            if (file.indexOf(exclude) !== -1) {
+            if (file.indexOf(LibPath.normalize(exclude)) !== -1) {
                 shallIgnore = true;
             }
         });

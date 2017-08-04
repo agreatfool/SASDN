@@ -22,10 +22,14 @@ const debug = require('debug')('SASDN:CLI:RpcServices');
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-o, --output <dir>', 'directory to output service codes')
+    .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
+        return val.split(',');
+    })
     .parse(process.argv);
 
 const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.normalize((program as any).proto);
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
+const IMPORTS = (program as any).import === undefined ? [] : (program as any).import;
 
 class ServiceCLI {
 
@@ -67,6 +71,11 @@ class ServiceCLI {
         debug('ServiceCLI load proto files.');
 
         this._protoFiles = await readProtoList(PROTO_DIR, OUTPUT_DIR);
+        if (IMPORTS.length > 0) {
+            for (let i = 0; i < IMPORTS.length; i++) {
+                this._protoFiles = this._protoFiles.concat(await readProtoList(LibPath.normalize(IMPORTS[i]), OUTPUT_DIR));
+            }
+        }
         if (this._protoFiles.length === 0) {
             throw new Error('no proto files found');
         }

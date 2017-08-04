@@ -19,11 +19,15 @@ program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-s, --swagger <dir>', 'directory of swagger spec files')
     .option('-o, --output <dir>', 'directory to output service codes')
+    .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
+    return val.split(',');
+})
     .option('-c, --client', 'add -c to output API Gateway client codes')
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const SWAGGER_DIR = program.swagger === undefined ? undefined : LibPath.normalize(program.swagger);
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
+const IMPORTS = program.import === undefined ? [] : program.import;
 const API_GATEWAY_CLIENT = program.client !== undefined;
 const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 class GatewayCLI {
@@ -74,6 +78,11 @@ class GatewayCLI {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI load proto files.');
             this._protoFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR);
+            if (IMPORTS.length > 0) {
+                for (let i = 0; i < IMPORTS.length; i++) {
+                    this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(LibPath.normalize(IMPORTS[i]), OUTPUT_DIR));
+                }
+            }
             if (this._protoFiles.length === 0) {
                 throw new Error('no proto files found');
             }
@@ -133,7 +142,7 @@ class GatewayCLI {
                         if (this._protoMsgImportInfos.hasOwnProperty(responseType)) {
                             let protoMsgImportInfo = this._protoMsgImportInfos[responseType];
                             responseType = protoMsgImportInfo.msgType;
-                            protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, responseType, lib_1.Proto.genProtoMsgImportPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputServiceDir(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
+                            protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, responseType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                         }
                         let requestType = false;
                         let funcParamsStr = '';
@@ -150,7 +159,7 @@ class GatewayCLI {
                                     if (this._protoMsgImportInfos.hasOwnProperty(definitionName)) {
                                         let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
                                         requestType = protoMsgImportInfo.msgType;
-                                        protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, requestType, lib_1.Proto.genProtoMsgImportPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputServiceDir(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
+                                        protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, requestType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                                     }
                                     break;
                                 case 'query':
