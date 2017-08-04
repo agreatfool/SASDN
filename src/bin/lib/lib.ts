@@ -86,7 +86,7 @@ export const readProtoList = async function (protoDir: string, outputDir: string
             return shallIgnore;
         }
         excludes.forEach((exclude: string) => {
-            if (file.indexOf(exclude) !== -1) {
+            if (file.indexOf(LibPath.normalize(exclude)) !== -1) {
                 shallIgnore = true;
             }
         });

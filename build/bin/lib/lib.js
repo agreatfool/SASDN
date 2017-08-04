@@ -24,7 +24,7 @@ exports.readProtoList = function (protoDir, outputDir, excludes) {
                     return shallIgnore;
                 }
                 excludes.forEach((exclude) => {
-                    if (file.indexOf(exclude) !== -1) {
+                    if (file.indexOf(LibPath.normalize(exclude)) !== -1) {
                         shallIgnore = true;
                     }
                 });

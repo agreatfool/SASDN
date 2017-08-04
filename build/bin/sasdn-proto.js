@@ -77,7 +77,7 @@ class ProtoCLI {
             this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR, EXCLUDES));
             if (ALL && IMPORTS.length > 0) {
                 for (let i = 0; i < IMPORTS.length; i++) {
-                    this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(IMPORTS[i], OUTPUT_DIR, EXCLUDES));
+                    this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(LibPath.normalize(IMPORTS[i]), OUTPUT_DIR, EXCLUDES));
                 }
             }
             if (this._protoFiles.length === 0) {
@@ -88,6 +88,8 @@ class ProtoCLI {
     _genProtos() {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ProtoCLI generate proto codes.');
+            const outputDir = LibPath.join(OUTPUT_DIR, 'proto');
+            yield lib_1.mkdir(outputDir);
             for (let i = 0; i < this._protoFiles.length; i++) {
                 let protoFile = this._protoFiles[i];
                 debug(`ProtoCLI generate proto: ${protoFile.fileName}`);
@@ -99,8 +101,8 @@ class ProtoCLI {
                 if (JS) {
                     let cmd = '';
                     cmd += 'grpc_tools_node_protoc';
-                    cmd += ` --js_out=import_style=commonjs,binary:${OUTPUT_DIR}`;
-                    cmd += ` --grpc_out=${OUTPUT_DIR}`;
+                    cmd += ` --js_out=import_style=commonjs,binary:${outputDir}`;
+                    cmd += ` --grpc_out=${outputDir}`;
                     cmd += ' --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin`';
                     cmd += ` --proto_path ${PROTO_DIR}`;
                     cmd += imports;
@@ -111,7 +113,7 @@ class ProtoCLI {
                     let cmd = '';
                     cmd += 'protoc';
                     cmd += ' --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts';
-                    cmd += ` --ts_out=:${OUTPUT_DIR}`;
+                    cmd += ` --ts_out=:${outputDir}`;
                     cmd += ` --proto_path ${PROTO_DIR}`;
                     cmd += imports;
                     cmd += ` ${lib_1.Proto.genFullProtoFilePath(protoFile)}`;
@@ -120,7 +122,7 @@ class ProtoCLI {
                 if (SWAGGER) {
                     let cmd = '';
                     cmd += 'protoc';
-                    cmd += ` --swagger_out=:${OUTPUT_DIR}`;
+                    cmd += ` --swagger_out=:${outputDir}`;
                     cmd += ` --proto_path ${PROTO_DIR}`;
                     cmd += imports;
                     cmd += ` ${lib_1.Proto.genFullProtoFilePath(protoFile)}`;
