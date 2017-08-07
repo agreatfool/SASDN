@@ -7,15 +7,15 @@ import {mkdir} from './lib/lib';
 const debug = require('debug')('SASDN:CLI');
 
 interface PromptInput {
-    name: string,
-    version: string,
-    description: string
+    name: string;
+    version: string;
+    description: string;
 }
 
 interface PackageConfigSchema {
-    name: string,
-    version: string,
-    description: string
+    name: string;
+    version: string;
+    description: string;
 }
 
 prompt.start();

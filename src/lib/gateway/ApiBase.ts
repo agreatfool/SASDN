@@ -6,17 +6,21 @@ export interface GatewayContext extends KoaContext {
     params: any;
     request: GatewayRequest;
 }
+
 export interface GatewayRequest extends KoaRequest {
     body?: any;
 }
+
 export interface GatewayJoiSchema {
     type: string;
     required: boolean;
     schema?: GatewayJoiSchemaMap;
 }
+
 export interface GatewayJoiSchemaMap {
     [name: string]: GatewayJoiSchema;
 }
+
 export interface GatewayApiParams {
     [key: string]: any;
 }
@@ -46,7 +50,7 @@ export abstract class GatewayApiBase {
             } catch (err) {
                 ctx.body = err.toString();
             }
-        }
+        };
     }
 
     protected _execute(): KoaMiddleware {
@@ -55,7 +59,7 @@ export abstract class GatewayApiBase {
             let aggregatedParams = _this._parseParams(ctx);
             ctx.body = await _this.handle(ctx, next, aggregatedParams);
             await next();
-        }
+        };
     }
 
     protected _parseParams(ctx: GatewayContext): { [key: string]: any } {
