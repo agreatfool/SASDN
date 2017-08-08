@@ -5,7 +5,7 @@ import * as protobuf from "protobufjs";
 import {IParserResult, Method, Namespace, Service} from "protobufjs";
 import * as bluebird from "bluebird";
 import * as LibMkdirP from "mkdirp";
-import {Operation as SwaggerOperation, Schema as SwaggerSchema, Spec as SwaggerSpec} from "swagger-schema-official";
+import {Schema as SwaggerSchema, Spec as SwaggerSpec} from "swagger-schema-official";
 
 const mkdirp = bluebird.promisify<string, string>(LibMkdirP);
 

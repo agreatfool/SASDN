@@ -25,11 +25,15 @@ program.version(pkg.version)
     .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
         return val.split(',');
     })
+    .option('-e, --exclude <items>', 'files or paths in -p shall be excluded: e.g file1,path1,path2,file2', function list(val) {
+        return val.split(',');
+    })
     .parse(process.argv);
 
 const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.normalize((program as any).proto);
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
 const IMPORTS = (program as any).import === undefined ? [] : (program as any).import;
+const EXCLUDES = (program as any).exclude === undefined ? [] : (program as any).exclude;
 
 class ServiceCLI {
 
@@ -103,6 +107,8 @@ class ServiceCLI {
             }
         }
 
+        await mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+
         for (let i = 0; i < protoInfos.length; i++) {
             let protoInfo = protoInfos[i] as ProtoInfo;
 
@@ -111,7 +117,16 @@ class ServiceCLI {
                 continue;
             }
 
-            await mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+            // handle excludes
+            let protoFilePath = LibPath.join(protoInfo.protoFile.protoPath, protoInfo.protoFile.relativePath, protoInfo.protoFile.fileName);
+            let shallIgnore = false;
+            if (EXCLUDES.length > 0) {
+                EXCLUDES.forEach((exclude: string) => {
+                    if (protoFilePath.indexOf(LibPath.normalize(exclude)) !== -1) {
+                        shallIgnore = true;
+                    }
+                });
+            }
 
             let protoServicesInfo = {
                 protoFile: protoInfo.protoFile,
@@ -119,11 +134,13 @@ class ServiceCLI {
                 services: {} as { [serviceName: string]: Array<RpcMethodInfo> },
             } as RpcProtoServicesInfo;
             for (let i = 0; i < services.length; i++) {
-                protoServicesInfo.services[services[i].name] = await this._genService(protoInfo.protoFile, services[i]);
+                let methodInfos = await this._genService(protoInfo.protoFile, services[i], shallIgnore);
+                if (!shallIgnore) {
+                    protoServicesInfo.services[services[i].name] = methodInfos;
+                }
             }
             protoServicesInfos.push(protoServicesInfo);
         }
-
         if (protoServicesInfos.length === 0) {
             return;
         }
@@ -136,7 +153,7 @@ class ServiceCLI {
         await LibFs.writeFile(outputPath, content);
     }
 
-    private async _genService(protoFile: ProtoFile, service: Service): Promise<Array<RpcMethodInfo>> {
+    private async _genService(protoFile: ProtoFile, service: Service, shallIgnore: boolean = false): Promise<Array<RpcMethodInfo>> {
         debug('ServiceCLI generate service: %s', service.name);
 
         let methodKeys = Object.keys(service.methods);
@@ -148,18 +165,16 @@ class ServiceCLI {
         for (let i = 0; i < methodKeys.length; i++) {
             let methodKey = methodKeys[i];
             let method = service.methods[methodKey];
-            methodInfos.push(await this._genServiceMethod(protoFile, service, method));
+            methodInfos.push(await this._genServiceMethod(protoFile, service, method, shallIgnore));
         }
 
         return Promise.resolve(methodInfos);
     }
 
-    private async _genServiceMethod(protoFile: ProtoFile, service: Service, method: Method): Promise<RpcMethodInfo> {
+    private async _genServiceMethod(protoFile: ProtoFile, service: Service, method: Method, shallIgnore: boolean = false): Promise<RpcMethodInfo> {
         debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
 
         let outputPath = Proto.genFullOutputServicePath(protoFile, service, method);
-        await mkdir(LibPath.dirname(outputPath));
-
         let methodInfo = genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
 
         if (!method.requestStream && !method.responseStream) {
@@ -176,17 +191,21 @@ class ServiceCLI {
             methodInfo.callTypeStr = 'ServerDuplexStream';
         }
 
-        let content = TplEngine.render('rpcs/service', {
-            callTypeStr: methodInfo.callTypeStr,
-            requestTypeStr: methodInfo.requestTypeStr,
-            responseTypeStr: methodInfo.responseTypeStr,
-            hasCallback: methodInfo.hasCallback,
-            hasRequest: methodInfo.hasRequest,
-            methodName: methodInfo.methodName,
-            protoMsgImportPath: methodInfo.protoMsgImportPath,
-        });
+        // write files
+        if (!shallIgnore) {
+            await mkdir(LibPath.dirname(outputPath));
+            let content = TplEngine.render('rpcs/service', {
+                callTypeStr: methodInfo.callTypeStr,
+                requestTypeStr: methodInfo.requestTypeStr,
+                responseTypeStr: methodInfo.responseTypeStr,
+                hasCallback: methodInfo.hasCallback,
+                hasRequest: methodInfo.hasRequest,
+                methodName: methodInfo.methodName,
+                protoMsgImportPath: methodInfo.protoMsgImportPath,
+            });
 
-        await LibFs.writeFile(outputPath, content);
+            await LibFs.writeFile(outputPath, content);
+        }
 
         return Promise.resolve(methodInfo);
     }

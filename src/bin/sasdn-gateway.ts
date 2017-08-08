@@ -129,7 +129,6 @@ class GatewayCLI {
     private async _genSpecs() {
         debug('GatewayCLI generate router api codes.');
 
-
         let protoInfos = [] as Array<ProtoInfo>;
         for (let i = 0; i < this._protoFiles.length; i++) {
             let protoFile = this._protoFiles[i];
