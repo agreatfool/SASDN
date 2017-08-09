@@ -15,7 +15,7 @@ const lib_1 = require("./lib/lib");
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:Services');
 program.version(pkg.version)
-    .option('-p, --proto <dir>', 'directory of proto files')
+    .option('-p, --result <dir>', 'directory of result files')
     .option('-o, --output <dir>', 'directory to output service codes')
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
@@ -39,14 +39,14 @@ class ServiceCLI {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI validate.');
             if (!PROTO_DIR) {
-                throw new Error('--proto is required');
+                throw new Error('--result is required');
             }
             if (!OUTPUT_DIR) {
                 throw new Error('--output is required');
             }
             let protoStat = yield LibFs.stat(PROTO_DIR);
             if (!protoStat.isDirectory()) {
-                throw new Error('--proto is not a directory');
+                throw new Error('--result is not a directory');
             }
             let outputStat = yield LibFs.stat(OUTPUT_DIR);
             if (!outputStat.isDirectory()) {
@@ -56,10 +56,10 @@ class ServiceCLI {
     }
     _loadProtos() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ServiceCLI load proto files.');
+            debug('ServiceCLI load result files.');
             this._protoFiles = yield lib_1.readProtoList(PROTO_DIR);
             if (this._protoFiles.length === 0) {
-                throw new Error('no proto files found');
+                throw new Error('no result files found');
             }
         });
     }

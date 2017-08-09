@@ -71,7 +71,7 @@ class RouterCLI {
             for (let i = 0; i < this._swaggerSpecList.length; i++) {
                 let swaggerSpec = this._swaggerSpecList[i];
                 debug(`RouterCLI generate swagger spec: ${swaggerSpec.info.title}`);
-                let protoName = swaggerSpec.info.title.split('.proto')[0];
+                let protoName = swaggerSpec.info.title.split('.result')[0];
                 // 处理整个Definition的数据模型
                 let definitionsSchema = {};
                 for (let definitionName in swaggerSpec.definitions) {
@@ -88,7 +88,7 @@ class RouterCLI {
                         routerApiInfo.fileName = lib_1.lcfirst(method) + methodOptions.operationId;
                         routerApiInfo.method = method;
                         routerApiInfo.parameters = [];
-                        routerApiInfo.protoMsgImportPath = LibPath.join('..', '..', 'proto', protoName + '_pb').replace(/\\/g, '/');
+                        routerApiInfo.protoMsgImportPath = LibPath.join('..', '..', 'result', protoName + '_pb').replace(/\\/g, '/');
                         // 处理uri
                         let pathParams = uri.match(/{(.*?)}/igm);
                         if (pathParams == null) {

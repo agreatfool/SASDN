@@ -2,22 +2,28 @@ import * as LibPath from "path";
 import * as LibFs from "mz/fs";
 import * as recursive from "recursive-readdir";
 import * as protobuf from "protobufjs";
-import {Method, Namespace, Service} from "protobufjs";
+import {
+    IParserResult as ProtobufIParserResult,
+    Method as ProtobufMethod,
+    Namespace as ProtobufNamespace,
+    Service as ProtobufService
+} from "protobufjs";
 import * as bluebird from "bluebird";
 import * as LibMkdirP from "mkdirp";
-import {Operation as SwaggerOperation, Schema as SwaggerSchema, Spec as SwaggerSpec} from "swagger-schema-official";
+import {Schema as SwaggerSchema, Spec as SwaggerSpec} from "swagger-schema-official";
+import Bluebird = require("bluebird");
 
-const mkdirp = bluebird.promisify<string, string>(LibMkdirP);
+const mkdirp: (arg1: string) => Bluebird<string> = bluebird.promisify<string, string>(LibMkdirP);
 
 /**
- * protoDir: /Users/XXX/Projects/projectX/proto
+ * protoDir: /Users/XXX/Projects/projectX/result
  * outputDir: /output/dir/specified
- * file: /Users/XXX/Projects/projectX/proto/dummy/your.proto
- *     => dummy/your.proto
- * protoFile.protoPath = /Users/XXX/Projects/projectX/proto
+ * file: /Users/XXX/Projects/projectX/result/dummy/your.result
+ *     => dummy/your.result
+ * protoFile.protoPath = /Users/XXX/Projects/projectX/result
  * protoFile.relativePath = dummy
- * protoFile.fileName = your.proto
- * protoFile.filePath = dummy/your.proto
+ * protoFile.fileName = your.result
+ * protoFile.filePath = dummy/your.result
  * protoFile.msgNamespace = your_pb
  * protoFile.svcNamespace = your_grpc_pb
  */
@@ -31,12 +37,26 @@ export interface ProtoFile {
     svcNamespace: string;
 }
 
+export interface ProtoParseResult {
+    result: ProtobufIParserResult;
+    protoFile: ProtoFile;
+}
+export interface ProtoMsgImportInfo {
+    msgType: string;
+    namespace: string;
+    protoFile: ProtoFile;
+}
+export interface ProtoMsgImportInfos {
+    [msgTypeStr: string]: ProtoMsgImportInfo;
+}
+
 export interface RpcProtoServicesInfo {
     protoFile: ProtoFile;
     protoServiceImportPath: string;
-    services: { [serviceName: string]: Array<RpcMethodInfo> };
+    services: {
+        [serviceName: string]: Array<RpcMethodInfo>;
+    };
 }
-
 export interface RpcMethodInfo {
     callTypeStr: string;
     requestTypeStr: string;
@@ -44,7 +64,21 @@ export interface RpcMethodInfo {
     hasCallback: boolean;
     hasRequest: boolean;
     methodName: string;
-    protoMsgImportPath: string;
+    protoMsgImportPath: RpcMethodImportPathInfo;
+}
+/**
+ * Used: Command rpcs, generating services stubs.
+ * When handling proto to generate services files, it's necessary to know
+ * the imported messages in third party codes.
+ *
+ * e.g
+ * {
+ *   // imported third party code files: [ imported third party messages ]
+ *   '../../proto/user_pb': [ 'User', 'GetUserRequest' ]
+ * }
+ */
+export interface RpcMethodImportPathInfo {
+    [importPath: string]: Array<string>;
 }
 
 export interface GatewaySwaggerSchema {
@@ -52,8 +86,8 @@ export interface GatewaySwaggerSchema {
     type: string;           // string, number, array, object
     required: boolean;      // required, optional
     schema?: Array<GatewaySwaggerSchema>;
-    refName?: string;
 }
+
 export interface SwaggerDefinitionMap {
     [definitionsName: string]: SwaggerSchema;
 }
@@ -65,7 +99,7 @@ export const readProtoList = async function (protoDir: string, outputDir: string
             return shallIgnore;
         }
         excludes.forEach((exclude: string) => {
-            if (file.indexOf(exclude) !== -1) {
+            if (file.indexOf(LibPath.normalize(exclude)) !== -1) {
                 shallIgnore = true;
             }
         });
@@ -76,6 +110,9 @@ export const readProtoList = async function (protoDir: string, outputDir: string
         let protoFile = {} as ProtoFile;
 
         file = file.replace(protoDir, ''); // remove base dir
+        if (file.substr(0, 1) === '/') { // remove first '/'
+            file = file.substr(1);
+        }
         protoFile.protoPath = protoDir;
         protoFile.outputPath = outputDir;
         protoFile.relativePath = LibPath.dirname(file);
@@ -96,26 +133,88 @@ export const readProtoList = async function (protoDir: string, outputDir: string
     return Promise.resolve(protoFiles);
 };
 
-export const parseServicesFromProto = async function (protoFile: ProtoFile): Promise<Array<Service>> {
+export const parseProto = async function (protoFile: ProtoFile): Promise<ProtobufIParserResult> {
     let content = await LibFs.readFile(Proto.genFullProtoFilePath(protoFile));
     let proto = protobuf.parse(content.toString());
-    let pkgRoot = proto.root.lookup(proto.package) as Namespace;
 
-    let services = [] as Array<Service>;
+    return Promise.resolve(proto);
+};
+
+export const parseServicesFromProto = function (proto: ProtobufIParserResult): Array<ProtobufService> {
+    let pkgRoot = proto.root.lookup(proto.package) as ProtobufNamespace;
+    let services = [] as Array<ProtobufService>;
     let nestedKeys = Object.keys(pkgRoot.nested);
     nestedKeys.forEach((nestedKey) => {
         let nestedInstance = pkgRoot.nested[nestedKey];
-        if (!(nestedInstance instanceof Service)) {
+        if (!(nestedInstance instanceof ProtobufService)) {
             return;
         }
-        services.push(nestedInstance as Service);
+        services.push(nestedInstance as ProtobufService);
     });
 
-    return Promise.resolve(services);
+    return services;
+};
+
+export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, protoFile: ProtoFile, symlink: string = "."): ProtoMsgImportInfos {
+    let pkgRoot = proto.root.lookup(proto.package) as ProtobufNamespace;
+    let msgImportInfos = {} as ProtoMsgImportInfos;
+    let nestedKeys = Object.keys(pkgRoot.nested);
+    nestedKeys.forEach((nestedKey) => {
+        // packageName: 'user' + symlink: '.' + nestedKey: 'UserService' = 'user.UserService'
+        let msgTypeStr = pkgRoot.name + symlink + nestedKey;
+        msgImportInfos[msgTypeStr] = {
+            msgType: nestedKey,
+            namespace: pkgRoot.name,
+            protoFile: protoFile
+        } as ProtoMsgImportInfo;
+    });
+
+    return msgImportInfos;
+};
+
+export const genRpcMethodInfo = function (protoFile: ProtoFile, method: ProtobufMethod, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos): RpcMethodInfo {
+    let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath);
+    let protoMsgImportPaths = {} as RpcMethodImportPathInfo;
+
+    let requestType = method.requestType;
+    let requestTypeImportPath = defaultImportPath;
+    if (protoMsgImportInfos.hasOwnProperty(method.requestType)) {
+        requestType = protoMsgImportInfos[method.requestType].msgType;
+        requestTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
+    }
+    protoMsgImportPaths = parseImportPathInfos(protoMsgImportPaths, requestType, requestTypeImportPath);
+
+    let responseType = method.responseType;
+    let responseTypeImportPath = defaultImportPath;
+    if (protoMsgImportInfos.hasOwnProperty(method.responseType)) {
+        responseType = protoMsgImportInfos[method.responseType].msgType;
+        responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.responseType].protoFile, outputPath);
+    }
+    protoMsgImportPaths = parseImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
+
+    return {
+        callTypeStr: '',
+        requestTypeStr: requestType,
+        responseTypeStr: responseType,
+        hasCallback: false,
+        hasRequest: false,
+        methodName: lcfirst(method.name),
+        protoMsgImportPath: protoMsgImportPaths
+    } as RpcMethodInfo;
+};
+
+export const parseImportPathInfos = function (importPathInfos: RpcMethodImportPathInfo, type: string, importPath: string): RpcMethodImportPathInfo {
+    if (!importPathInfos.hasOwnProperty(importPath)) {
+        importPathInfos[importPath] = [];
+    }
+
+    importPathInfos[importPath].push(type);
+
+    return importPathInfos;
 };
 
 export const mkdir = async function (path: string): Promise<string> {
-    return mkdirp(path);
+    return mkdirp(path) as any; // Bulebird<string> => Promise<string>
 };
 
 export const lcfirst = function (str): string {
@@ -135,7 +234,7 @@ export namespace Proto {
      * @returns {string}
      */
     export function getPathToRoot(filePath: string) {
-        const depth = filePath.split("/").length;
+        const depth = filePath.replace(/\\/g, '/').split("/").length;
         return depth === 1 ? "./" : new Array(depth).join("../");
     }
 
@@ -199,13 +298,30 @@ export namespace Proto {
     };
 
     /**
+     * Generate message result js file (e.g *_pb.js) import path.
+     * Source code path is generated with {@link genFullOutputServicePath},
+     * message result js import path is relative to it.
+     * @param {ProtoFile} protoFile
+     * @param {string} routerDirPath
+     * @returns {string}
+     */
+    export const genProtoMsgImportPathViaRouterPath = function (protoFile: ProtoFile, routerDirPath: string): string {
+        return LibPath.join(
+            getPathToRoot(routerDirPath.substr(routerDirPath.indexOf('router'))),
+            'proto',
+            protoFile.relativePath,
+            protoFile.msgNamespace
+        );
+    };
+
+    /**
      * Generate full service stub code output path.
      * @param {ProtoFile} protoFile
      * @param {Service} service
      * @param {Method} method
      * @returns {string}
      */
-    export const genFullOutputServicePath = function (protoFile: ProtoFile, service: Service, method: Method) {
+    export const genFullOutputServicePath = function (protoFile: ProtoFile, service: ProtobufService, method: ProtobufMethod) {
         return LibPath.join(
             protoFile.outputPath,
             'services',
@@ -213,6 +329,22 @@ export namespace Proto {
             protoFile.svcNamespace,
             service.name,
             lcfirst(method.name) + '.ts'
+        );
+    };
+
+    /**
+     * Generate full service stub code output dir.
+     * @param {ProtoFile} protoFile
+     * @param {string} serviceName
+     * @param {string} apiName
+     * @returns {string}
+     */
+    export const genFullOutputRouterApiPath = function (protoFile: ProtoFile, serviceName: string = 'default', apiName: string = 'default') {
+        return LibPath.join(
+            protoFile.outputPath,
+            'router',
+            serviceName,
+            apiName
         );
     };
 }
@@ -232,7 +364,7 @@ export const readSwaggerList = async function (swaggerDir: string, outputDir: st
             return shallIgnore;
         }
         excludes.forEach((exclude: string) => {
-            if (file.indexOf(exclude) !== -1) {
+            if (file.indexOf(LibPath.normalize(exclude)) !== -1) {
                 shallIgnore = true;
             }
         });
@@ -246,7 +378,7 @@ export const readSwaggerList = async function (swaggerDir: string, outputDir: st
             try {
                 return JSON.parse(LibFs.readFileSync(filePath).toString());
             } catch (e) {
-                console.log("Error:" + e.message);
+                console.log(`Error: ${e.message}`);
                 return undefined;
             }
         } else {
@@ -269,17 +401,6 @@ export namespace Swagger {
      */
     export function getRefName(ref: string): string {
         return ref.replace('#/definitions/', '');
-    }
-
-    /**
-     * bookBookModel => BookModel
-     *
-     * @param {string} ref
-     * @param {string} protoName
-     * @returns {string}
-     */
-    export function removeProtoName(ref: string, protoName: string): string {
-        return ref.replace(protoName, '');
     }
 
     /**
@@ -324,23 +445,6 @@ export namespace Swagger {
             }
         }
         return uri;
-    }
-
-    /**
-     * Get swagger response type
-     * <pre>
-     *     1. getRefName
-     *     #/definitions/bookBookMap => bookBookMap
-     *     2. getSwaggerResponseType
-     *     bookBookMap => BookMap
-     * </pre>
-     *
-     * @param {SwaggerOperation} option
-     * @param {string} protoName
-     * @returns {string}
-     */
-    export function getSwaggerResponseType(option: SwaggerOperation, protoName: string): string {
-        return Swagger.removeProtoName(Swagger.getRefName(option.responses[200].schema.$ref), protoName);
     }
 
     /**

@@ -7,7 +7,7 @@ export interface GatewayContext extends KoaContext {
     request: GatewayRequest;
 }
 export interface GatewayRequest extends KoaRequest {
-    body?: any;
+    body: any;
 }
 export interface GatewayJoiSchema {
     type: string;

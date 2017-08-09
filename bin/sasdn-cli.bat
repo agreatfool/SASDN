@@ -1,1 +1,0 @@
-set DEBUG=SASDN:* & node ./build/bin/sasdn.js

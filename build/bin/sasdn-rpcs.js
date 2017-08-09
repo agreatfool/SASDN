@@ -18,12 +18,21 @@ const debug = require('debug')('SASDN:CLI:RpcServices');
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-o, --output <dir>', 'directory to output service codes')
+    .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
+    return val.split(',');
+})
+    .option('-e, --exclude <items>', 'files or paths in -p shall be excluded: e.g file1,path1,path2,file2', function list(val) {
+    return val.split(',');
+})
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
+const IMPORTS = program.import === undefined ? [] : program.import;
+const EXCLUDES = program.exclude === undefined ? [] : program.exclude;
 class ServiceCLI {
     constructor() {
         this._protoFiles = [];
+        this._protoMsgImportInfos = {};
     }
     static instance() {
         return new ServiceCLI();
@@ -59,6 +68,11 @@ class ServiceCLI {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI load proto files.');
             this._protoFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR);
+            if (IMPORTS.length > 0) {
+                for (let i = 0; i < IMPORTS.length; i++) {
+                    this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(LibPath.normalize(IMPORTS[i]), OUTPUT_DIR));
+                }
+            }
             if (this._protoFiles.length === 0) {
                 throw new Error('no proto files found');
             }
@@ -68,23 +82,48 @@ class ServiceCLI {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI generate services.');
             let protoServicesInfos = [];
+            let parseResults = [];
             for (let i = 0; i < this._protoFiles.length; i++) {
                 let protoFile = this._protoFiles[i];
                 if (!protoFile) {
                     continue;
                 }
-                let services = yield lib_1.parseServicesFromProto(protoFile);
+                let parseResult = {};
+                parseResult.result = yield lib_1.parseProto(protoFile);
+                parseResult.protoFile = protoFile;
+                parseResults.push(parseResult);
+                let msgImportInfos = lib_1.parseMsgNamesFromProto(parseResult.result, protoFile);
+                for (let msgTypeStr in msgImportInfos) {
+                    this._protoMsgImportInfos[msgTypeStr] = msgImportInfos[msgTypeStr];
+                }
+            }
+            yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+            for (let i = 0; i < parseResults.length; i++) {
+                let protoInfo = parseResults[i];
+                let services = lib_1.parseServicesFromProto(protoInfo.result);
                 if (services.length === 0) {
                     continue;
                 }
-                yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+                // handle excludes
+                let protoFilePath = LibPath.join(protoInfo.protoFile.protoPath, protoInfo.protoFile.relativePath, protoInfo.protoFile.fileName);
+                let shallIgnore = false;
+                if (EXCLUDES.length > 0) {
+                    EXCLUDES.forEach((exclude) => {
+                        if (protoFilePath.indexOf(LibPath.normalize(exclude)) !== -1) {
+                            shallIgnore = true;
+                        }
+                    });
+                }
                 let protoServicesInfo = {
-                    protoFile: protoFile,
-                    protoServiceImportPath: lib_1.Proto.genProtoServiceImportPath(protoFile),
+                    protoFile: protoInfo.protoFile,
+                    protoServiceImportPath: lib_1.Proto.genProtoServiceImportPath(protoInfo.protoFile),
                     services: {},
                 };
                 for (let i = 0; i < services.length; i++) {
-                    protoServicesInfo.services[services[i].name] = yield this._genService(protoFile, services[i]);
+                    let methodInfos = yield this._genService(protoInfo.protoFile, services[i], shallIgnore);
+                    if (!shallIgnore) {
+                        protoServicesInfo.services[services[i].name] = methodInfos;
+                    }
                 }
                 protoServicesInfos.push(protoServicesInfo);
             }
@@ -99,7 +138,7 @@ class ServiceCLI {
             yield LibFs.writeFile(outputPath, content);
         });
     }
-    _genService(protoFile, service) {
+    _genService(protoFile, service, shallIgnore = false) {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI generate service: %s', service.name);
             let methodKeys = Object.keys(service.methods);
@@ -110,25 +149,16 @@ class ServiceCLI {
             for (let i = 0; i < methodKeys.length; i++) {
                 let methodKey = methodKeys[i];
                 let method = service.methods[methodKey];
-                methodInfos.push(yield this._genServiceMethod(protoFile, service, method));
+                methodInfos.push(yield this._genServiceMethod(protoFile, service, method, shallIgnore));
             }
             return Promise.resolve(methodInfos);
         });
     }
-    _genServiceMethod(protoFile, service, method) {
+    _genServiceMethod(protoFile, service, method, shallIgnore = false) {
         return __awaiter(this, void 0, void 0, function* () {
             debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
             let outputPath = lib_1.Proto.genFullOutputServicePath(protoFile, service, method);
-            yield lib_1.mkdir(LibPath.dirname(outputPath));
-            let methodInfo = {
-                callTypeStr: '',
-                requestTypeStr: method.requestType,
-                responseTypeStr: method.responseType,
-                hasCallback: false,
-                hasRequest: false,
-                methodName: lib_1.lcfirst(method.name),
-                protoMsgImportPath: lib_1.Proto.genProtoMsgImportPath(protoFile, outputPath),
-            };
+            let methodInfo = lib_1.genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
             if (!method.requestStream && !method.responseStream) {
                 methodInfo.callTypeStr = 'ServerUnaryCall';
                 methodInfo.hasCallback = true;
@@ -145,16 +175,20 @@ class ServiceCLI {
             else if (method.requestStream && method.responseStream) {
                 methodInfo.callTypeStr = 'ServerDuplexStream';
             }
-            let content = template_1.TplEngine.render('rpcs/service', {
-                callTypeStr: methodInfo.callTypeStr,
-                requestTypeStr: methodInfo.requestTypeStr,
-                responseTypeStr: methodInfo.responseTypeStr,
-                hasCallback: methodInfo.hasCallback,
-                hasRequest: methodInfo.hasRequest,
-                methodName: methodInfo.methodName,
-                protoMsgImportPath: methodInfo.protoMsgImportPath,
-            });
-            yield LibFs.writeFile(outputPath, content);
+            // write files
+            if (!shallIgnore) {
+                yield lib_1.mkdir(LibPath.dirname(outputPath));
+                let content = template_1.TplEngine.render('rpcs/service', {
+                    callTypeStr: methodInfo.callTypeStr,
+                    requestTypeStr: methodInfo.requestTypeStr,
+                    responseTypeStr: methodInfo.responseTypeStr,
+                    hasCallback: methodInfo.hasCallback,
+                    hasRequest: methodInfo.hasRequest,
+                    methodName: methodInfo.methodName,
+                    protoMsgImportPath: methodInfo.protoMsgImportPath,
+                });
+                yield LibFs.writeFile(outputPath, content);
+            }
             return Promise.resolve(methodInfo);
         });
     }
@@ -162,3 +196,4 @@ class ServiceCLI {
 ServiceCLI.instance().run().catch((err) => {
     debug('err: %O', err.message);
 });
+//# sourceMappingURL=sasdn-rpcs.js.map

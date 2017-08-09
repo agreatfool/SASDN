@@ -2,17 +2,22 @@ import * as LibFs from "mz/fs";
 import * as program from "commander";
 import * as LibPath from "path";
 import {
+    genRpcMethodInfo,
     lcfirst,
     mkdir,
+    parseMsgNamesFromProto,
+    parseProto,
     parseServicesFromProto,
     Proto,
     ProtoFile,
+    ProtoParseResult,
+    ProtoMsgImportInfos,
     readProtoList,
     RpcMethodInfo,
     RpcProtoServicesInfo
 } from "./lib/lib";
 import {TplEngine} from "./lib/template";
-import {Method, Service} from "protobufjs";
+import {Method as ProtobufMethod, Service as ProtobufService} from "protobufjs";
 
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:RpcServices');
@@ -20,14 +25,23 @@ const debug = require('debug')('SASDN:CLI:RpcServices');
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-o, --output <dir>', 'directory to output service codes')
+    .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
+        return val.split(',');
+    })
+    .option('-e, --exclude <items>', 'files or paths in -p shall be excluded: e.g file1,path1,path2,file2', function list(val) {
+        return val.split(',');
+    })
     .parse(process.argv);
 
 const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.normalize((program as any).proto);
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
+const IMPORTS = (program as any).import === undefined ? [] : (program as any).import;
+const EXCLUDES = (program as any).exclude === undefined ? [] : (program as any).exclude;
 
 class ServiceCLI {
 
     private _protoFiles: Array<ProtoFile> = [];
+    private _protoMsgImportInfos: ProtoMsgImportInfos = {};
 
     static instance() {
         return new ServiceCLI();
@@ -64,6 +78,11 @@ class ServiceCLI {
         debug('ServiceCLI load proto files.');
 
         this._protoFiles = await readProtoList(PROTO_DIR, OUTPUT_DIR);
+        if (IMPORTS.length > 0) {
+            for (let i = 0; i < IMPORTS.length; i++) {
+                this._protoFiles = this._protoFiles.concat(await readProtoList(LibPath.normalize(IMPORTS[i]), OUTPUT_DIR));
+            }
+        }
         if (this._protoFiles.length === 0) {
             throw new Error('no proto files found');
         }
@@ -74,29 +93,57 @@ class ServiceCLI {
 
         let protoServicesInfos = [] as Array<RpcProtoServicesInfo>;
 
+        let parseResults = [] as Array<ProtoParseResult>;
         for (let i = 0; i < this._protoFiles.length; i++) {
             let protoFile = this._protoFiles[i];
             if (!protoFile) {
                 continue;
             }
-            let services = await parseServicesFromProto(protoFile);
+            let parseResult = {} as ProtoParseResult;
+            parseResult.result = await parseProto(protoFile);
+            parseResult.protoFile = protoFile;
+            parseResults.push(parseResult);
+
+            let msgImportInfos = parseMsgNamesFromProto(parseResult.result, protoFile);
+            for (let msgTypeStr in msgImportInfos) {
+                this._protoMsgImportInfos[msgTypeStr] = msgImportInfos[msgTypeStr];
+            }
+        }
+
+        await mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+
+        for (let i = 0; i < parseResults.length; i++) {
+            let protoInfo = parseResults[i] as ProtoParseResult;
+
+            let services = parseServicesFromProto(protoInfo.result);
             if (services.length === 0) {
                 continue;
             }
 
-            await mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+            // handle excludes
+            let protoFilePath = LibPath.join(protoInfo.protoFile.protoPath, protoInfo.protoFile.relativePath, protoInfo.protoFile.fileName);
+            let shallIgnore = false;
+            if (EXCLUDES.length > 0) {
+                EXCLUDES.forEach((exclude: string) => {
+                    if (protoFilePath.indexOf(LibPath.normalize(exclude)) !== -1) {
+                        shallIgnore = true;
+                    }
+                });
+            }
 
             let protoServicesInfo = {
-                protoFile: protoFile,
-                protoServiceImportPath: Proto.genProtoServiceImportPath(protoFile),
+                protoFile: protoInfo.protoFile,
+                protoServiceImportPath: Proto.genProtoServiceImportPath(protoInfo.protoFile),
                 services: {} as { [serviceName: string]: Array<RpcMethodInfo> },
             } as RpcProtoServicesInfo;
             for (let i = 0; i < services.length; i++) {
-                protoServicesInfo.services[services[i].name] = await this._genService(protoFile, services[i]);
+                let methodInfos = await this._genService(protoInfo.protoFile, services[i], shallIgnore);
+                if (!shallIgnore) {
+                    protoServicesInfo.services[services[i].name] = methodInfos;
+                }
             }
             protoServicesInfos.push(protoServicesInfo);
         }
-
         if (protoServicesInfos.length === 0) {
             return;
         }
@@ -109,7 +156,7 @@ class ServiceCLI {
         await LibFs.writeFile(outputPath, content);
     }
 
-    private async _genService(protoFile: ProtoFile, service: Service): Promise<Array<RpcMethodInfo>> {
+    private async _genService(protoFile: ProtoFile, service: ProtobufService, shallIgnore: boolean = false): Promise<Array<RpcMethodInfo>> {
         debug('ServiceCLI generate service: %s', service.name);
 
         let methodKeys = Object.keys(service.methods);
@@ -121,27 +168,17 @@ class ServiceCLI {
         for (let i = 0; i < methodKeys.length; i++) {
             let methodKey = methodKeys[i];
             let method = service.methods[methodKey];
-            methodInfos.push(await this._genServiceMethod(protoFile, service, method));
+            methodInfos.push(await this._genServiceMethod(protoFile, service, method, shallIgnore));
         }
 
         return Promise.resolve(methodInfos);
     }
 
-    private async _genServiceMethod(protoFile: ProtoFile, service: Service, method: Method): Promise<RpcMethodInfo> {
+    private async _genServiceMethod(protoFile: ProtoFile, service: ProtobufService, method: ProtobufMethod, shallIgnore: boolean = false): Promise<RpcMethodInfo> {
         debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
 
         let outputPath = Proto.genFullOutputServicePath(protoFile, service, method);
-        await mkdir(LibPath.dirname(outputPath));
-
-        let methodInfo = {
-            callTypeStr: '',
-            requestTypeStr: method.requestType,
-            responseTypeStr: method.responseType,
-            hasCallback: false,
-            hasRequest: false,
-            methodName: lcfirst(method.name),
-            protoMsgImportPath: Proto.genProtoMsgImportPath(protoFile, outputPath),
-        } as RpcMethodInfo;
+        let methodInfo = genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
 
         if (!method.requestStream && !method.responseStream) {
             methodInfo.callTypeStr = 'ServerUnaryCall';
@@ -157,17 +194,21 @@ class ServiceCLI {
             methodInfo.callTypeStr = 'ServerDuplexStream';
         }
 
-        let content = TplEngine.render('rpcs/service', {
-            callTypeStr: methodInfo.callTypeStr,
-            requestTypeStr: methodInfo.requestTypeStr,
-            responseTypeStr: methodInfo.responseTypeStr,
-            hasCallback: methodInfo.hasCallback,
-            hasRequest: methodInfo.hasRequest,
-            methodName: methodInfo.methodName,
-            protoMsgImportPath: methodInfo.protoMsgImportPath,
-        });
+        // write files
+        if (!shallIgnore) {
+            await mkdir(LibPath.dirname(outputPath));
+            let content = TplEngine.render('rpcs/service', {
+                callTypeStr: methodInfo.callTypeStr,
+                requestTypeStr: methodInfo.requestTypeStr,
+                responseTypeStr: methodInfo.responseTypeStr,
+                hasCallback: methodInfo.hasCallback,
+                hasRequest: methodInfo.hasRequest,
+                methodName: methodInfo.methodName,
+                protoMsgImportPath: methodInfo.protoMsgImportPath,
+            });
 
-        await LibFs.writeFile(outputPath, content);
+            await LibFs.writeFile(outputPath, content);
+        }
 
         return Promise.resolve(methodInfo);
     }

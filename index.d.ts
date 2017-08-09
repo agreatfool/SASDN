@@ -1,9 +1,42 @@
 import * as EventEmitter from "events";
 import {IServerCall, RpcImplCallback, Server, ServerCredentials} from "grpc";
 import {Context as KoaContext, Middleware as KoaMiddleware, Request as KoaRequest} from "koa";
+import * as joi from "joi";
+import * as bluebird from "bluebird";
+
+export interface GatewayContext extends KoaContext {
+    params: any;
+    request: GatewayRequest;
+}
+export interface GatewayRequest extends KoaRequest {
+    body: any;
+}
+export interface GatewayJoiSchema {
+    type: string;
+    required: boolean;
+    schema?: GatewayJoiSchemaMap;
+}
+export interface GatewayJoiSchemaMap {
+    [name: string]: GatewayJoiSchema;
+}
+export interface GatewayApiParams {
+    [key: string]: any;
+}
+export declare abstract class GatewayApiBase {
+    method: string;
+    uri: string;
+    type: string;
+    schemaDefObj: GatewayJoiSchemaMap;
+
+    abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
+
+    register(): Array<string | KoaMiddleware>;
+}
+
 export declare type RpcMiddleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
 export declare type MiddlewareNext = () => Promise<any>;
 export declare type WrappedHandler = (call: IServerCall, callback?: RpcImplCallback) => Promise<any>;
+
 export declare class RpcApplication extends EventEmitter {
     constructor();
 
@@ -40,6 +73,7 @@ export declare class RpcApplication extends EventEmitter {
      */
     wrapGrpcHandler(reqHandler: RpcMiddleware): (call: IServerCall, callback?: RpcImplCallback) => Promise<void>;
 }
+
 export declare enum GrpcOpType {
     SEND_INITIAL_METADATA = 0,
     SEND_MESSAGE = 1,
@@ -50,6 +84,7 @@ export declare enum GrpcOpType {
     RECV_STATUS_ON_CLIENT = 6,
     RECV_CLOSE_ON_SERVER = 7,
 }
+
 export declare class RpcContext {
     app: RpcApplication;
     call: IServerCall;
@@ -64,31 +99,6 @@ export declare class RpcContext {
      */
     onError(err: Error): void;
 }
-export interface GatewayContext extends KoaContext {
-    params: any;
-    request: GatewayRequest;
-}
-export interface GatewayRequest extends KoaRequest {
-    body?: any;
-}
-export interface GatewayJoiSchema {
-    type: string;
-    required: boolean;
-    schema?: GatewayJoiSchemaMap;
-}
-export interface GatewayJoiSchemaMap {
-    [name: string]: GatewayJoiSchema;
-}
-export interface GatewayApiParams {
-    [key: string]: any;
-}
-export declare abstract class GatewayApiBase {
-    method: string;
-    uri: string;
-    type: string;
-    schemaDefObj: GatewayJoiSchemaMap;
 
-    abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
-
-    register(): Array<string | KoaMiddleware>;
-}
+declare let joiValidate: <T>(value: Object, schema: Object, options: joi.ValidationOptions) => bluebird<T>;
+export { joi, joiValidate };

@@ -1,6 +1,8 @@
 import {{curlyLeft}}{{{callTypeStr}}}{{#if hasCallback}}, RpcImplCallback{{/if}}{{curlyRight}} from "grpc";
 import {{curlyLeft}}RpcContext, RpcMiddleware, MiddlewareNext{{curlyRight}} from "sasdn";
-import {{curlyLeft}}{{#eq requestTypeStr responseTypeStr}}{{{requestTypeStr}}}{{else}}{{{requestTypeStr}}}, {{{responseTypeStr}}}{{/eq}}{{curlyRight}} from "{{{protoMsgImportPath}}}";
+{{#each protoMsgImportPath}}
+import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from "{{{@key}}}";
+{{/each}}
 
 export const {{{methodName}}}Handler: RpcMiddleware = async (ctx: RpcContext, next: MiddlewareNext) => {
     let call: {{{callTypeStr}}} = ctx.call as {{{callTypeStr}}};
