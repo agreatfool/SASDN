@@ -44,11 +44,12 @@ export abstract class GatewayApiBase {
             let aggregatedParams = _this._parseParams(ctx);
             let joiSchemaMap = _this._convertSchemaDefToJoiSchema(_this.schemaDefObj);
 
-            try {
-                await joiValidate(aggregatedParams, joiSchemaMap, {allowUnknown: true});
+            const {error} = joi.validate(aggregatedParams, joiSchemaMap, {allowUnknown: true});
+            if (error == null) {
+                // await joiValidate(aggregatedParams, joiSchemaMap, {allowUnknown: true});
                 await next();
-            } catch (err) {
-                ctx.body = err.toString();
+            } else {
+                ctx.body = error.toString();
             }
         };
     }

@@ -20,12 +20,13 @@ class GatewayApiBase {
             return __awaiter(this, void 0, void 0, function* () {
                 let aggregatedParams = _this._parseParams(ctx);
                 let joiSchemaMap = _this._convertSchemaDefToJoiSchema(_this.schemaDefObj);
-                try {
-                    yield Joi_1.joiValidate(aggregatedParams, joiSchemaMap, { allowUnknown: true });
+                const { error } = Joi_1.joi.validate(aggregatedParams, joiSchemaMap, { allowUnknown: true });
+                if (error == null) {
+                    // await joiValidate(aggregatedParams, joiSchemaMap, {allowUnknown: true});
                     yield next();
                 }
-                catch (err) {
-                    ctx.body = err.toString();
+                else {
+                    ctx.body = error.toString();
                 }
             });
         };
