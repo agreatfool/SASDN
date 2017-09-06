@@ -30,9 +30,9 @@ class TracerHandler {
                     }),
                     sampler: new zipkin.sampler.CountingSampler(1),
                 });
-                this._serviceName = options.name;
-                this._port = options.port;
             }
+            this._serviceName = options.name;
+            this._port = options.port;
             this._initialized = true;
             resolve();
         });

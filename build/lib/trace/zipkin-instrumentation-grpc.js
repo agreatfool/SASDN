@@ -60,7 +60,6 @@ class GrpcInstrumentation {
                 }
             }
             const traceId = tracer.id;
-            console.log(reqId, ">> traceId", traceId.traceId);
             tracer.scoped(() => {
                 tracer.setId(traceId);
                 tracer.recordServiceName(serviceName);
@@ -79,7 +78,6 @@ class GrpcInstrumentation {
             ctx['reqId'] = reqId;
             ctx['traceId'] = traceId;
             yield next();
-            console.log(reqId, "<< traceId", traceId.traceId);
             tracer.scoped(() => {
                 tracer.setId(traceId);
                 tracer.recordAnnotation(new zipkin.Annotation.ServerSend());
@@ -104,7 +102,6 @@ class GrpcInstrumentation {
                     // create SpanId
                     tracer.setId(tracer.createChildId());
                     const traceId = tracer.id;
-                    console.log(ctx["reqId"], "traceId", traceId.traceId);
                     const metadata = GrpcInstrumentation._makeMetadata(traceId);
                     const argus = GrpcInstrumentation._replaceArguments(arguments, metadata, (callback) => {
                         return (err, res) => {

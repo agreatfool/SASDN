@@ -10,8 +10,8 @@ export class KoaInstrumentation {
     public static middleware({tracer, serviceName = 'unknown', port = 0}: TraceInfo): KoaMiddleware {
 
         if (tracer === false) {
-            return async () => {
-                // do nothing
+            return async (ctx: GatewayContext, next: MiddlewareNext) => {
+                await next()
             };
         }
 

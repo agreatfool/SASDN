@@ -14,8 +14,8 @@ const url = require("url");
 class KoaInstrumentation {
     static middleware({ tracer, serviceName = 'unknown', port = 0 }) {
         if (tracer === false) {
-            return () => __awaiter(this, void 0, void 0, function* () {
-                // do nothing
+            return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
+                yield next();
             });
         }
         return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
@@ -66,7 +66,6 @@ class KoaInstrumentation {
                 }
             }
             const traceId = tracer.id;
-            console.log(reqId, ">> traceId", traceId.traceId);
             tracer.scoped(() => {
                 tracer.setId(traceId);
                 tracer.recordServiceName(serviceName);
@@ -81,7 +80,6 @@ class KoaInstrumentation {
             ctx['reqId'] = reqId;
             ctx['traceId'] = traceId;
             yield next();
-            console.log(reqId, "<< traceId", traceId.traceId);
             tracer.scoped(() => {
                 tracer.setId(traceId);
                 tracer.recordBinary('http.status_code', res.status.toString());

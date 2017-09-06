@@ -15,30 +15,24 @@ class GatewayApiBase {
     }
     ;
     _validate() {
-        let _this = this;
-        return function (ctx, next) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let aggregatedParams = _this._parseParams(ctx);
-                let joiSchemaMap = _this._convertSchemaDefToJoiSchema(_this.schemaDefObj);
-                try {
-                    yield Joi_1.joiValidate(aggregatedParams, joiSchemaMap, { allowUnknown: true });
-                    yield next();
-                }
-                catch (e) {
-                    ctx.body = e.toString();
-                }
-            });
-        };
+        return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
+            let aggregatedParams = this._parseParams(ctx);
+            let joiSchemaMap = this._convertSchemaDefToJoiSchema(this.schemaDefObj);
+            try {
+                yield Joi_1.joiValidate(aggregatedParams, joiSchemaMap, { allowUnknown: true });
+                yield next();
+            }
+            catch (e) {
+                ctx.body = e.toString();
+            }
+        });
     }
     _execute() {
-        let _this = this;
-        return function (ctx, next) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let aggregatedParams = _this._parseParams(ctx);
-                ctx.body = yield _this.handle(ctx, next, aggregatedParams);
-                yield next();
-            });
-        };
+        return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
+            let aggregatedParams = this._parseParams(ctx);
+            ctx.body = yield this.handle(ctx, next, aggregatedParams);
+            yield next();
+        });
     }
     _parseParams(ctx) {
         return Object.assign({}, ctx.params, ctx.query, { body: ctx.request.body }); // bodyParse required
