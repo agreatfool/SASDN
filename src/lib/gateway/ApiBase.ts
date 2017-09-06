@@ -39,25 +39,23 @@ export abstract class GatewayApiBase {
     };
 
     protected _validate(): KoaMiddleware {
-        let _this: GatewayApiBase = this;
-        return async function (ctx: GatewayContext, next: MiddlewareNext): Promise<void> {
-            let aggregatedParams = _this._parseParams(ctx);
-            let joiSchemaMap = _this._convertSchemaDefToJoiSchema(_this.schemaDefObj);
+        return async (ctx: GatewayContext, next: MiddlewareNext): Promise<void> => {
+            let aggregatedParams = this._parseParams(ctx);
+            let joiSchemaMap = this._convertSchemaDefToJoiSchema(this.schemaDefObj);
 
             try {
                 await joiValidate(aggregatedParams, joiSchemaMap, {allowUnknown: true});
                 await next();
-            } catch (err) {
-                ctx.body = err.toString();
+            } catch (e) {
+                ctx.body = e.toString();
             }
         };
     }
 
     protected _execute(): KoaMiddleware {
-        let _this: GatewayApiBase = this;
-        return async function (ctx: GatewayContext, next: MiddlewareNext): Promise<void> {
-            let aggregatedParams = _this._parseParams(ctx);
-            ctx.body = await _this.handle(ctx, next, aggregatedParams);
+        return async (ctx: GatewayContext, next: MiddlewareNext): Promise<void> => {
+            let aggregatedParams = this._parseParams(ctx);
+            ctx.body = await this.handle(ctx, next, aggregatedParams);
             await next();
         };
     }

@@ -1,4 +1,5 @@
 import * as EventEmitter from "events";
+import * as zipkin from "zipkin";
 import {IServerCall, RpcImplCallback, Server, ServerCredentials} from "grpc";
 import {Context as KoaContext, Middleware as KoaMiddleware, Request as KoaRequest} from "koa";
 import * as joi from "joi";
@@ -8,20 +9,25 @@ export interface GatewayContext extends KoaContext {
     params: any;
     request: GatewayRequest;
 }
+
 export interface GatewayRequest extends KoaRequest {
     body: any;
 }
+
 export interface GatewayJoiSchema {
     type: string;
     required: boolean;
     schema?: GatewayJoiSchemaMap;
 }
+
 export interface GatewayJoiSchemaMap {
     [name: string]: GatewayJoiSchema;
 }
+
 export interface GatewayApiParams {
     [key: string]: any;
 }
+
 export declare abstract class GatewayApiBase {
     method: string;
     uri: string;
@@ -100,5 +106,68 @@ export declare class RpcContext {
     onError(err: Error): void;
 }
 
-declare let joiValidate: <T>(value: Object, schema: Object, options: joi.ValidationOptions) => bluebird<T>;
-export { joi, joiValidate };
+declare const joiValidate: <T>(value: Object, schema: Object, options: joi.ValidationOptions) => bluebird<T>;
+export {joi, joiValidate};
+
+export interface ConfigOptions {
+    name: string;
+    host: string;
+    port: number;
+    tracer?: boolean | TracerOptions;
+}
+
+export interface TracerOptions {
+    host: string;
+    port: number;
+}
+
+export declare class ConfigHandler {
+    private static _instance: ConfigHandler;
+
+    private _initialized: boolean;
+    private _configs: ConfigOptions;
+
+    public static instance(): ConfigHandler ;
+
+    private constructor();
+
+    public init(configPath: string): Promise<void>;
+
+    public getOption(): ConfigOptions;
+
+    public static mergerObject(object: { [key: string]: any }, newObject: { [key: string]: any }): { [key: string]: any };
+}
+
+export interface TraceInfo {
+    tracer: zipkin.Tracer;
+    serviceName?: string;
+    port?: number;
+    remoteServiceName?: string;
+}
+
+export declare class TracerHandler {
+    private static _instance: TracerHandler;
+
+    private _initialized: boolean;
+    private _tracer: zipkin.Tracer;
+    private _serviceName: string;
+    private _port: number;
+
+    public static instance(): TracerHandler;
+
+    private constructor();
+
+    public init(): Promise<void>;
+
+    public getTraceInfo(isRequest?: boolean, childServiceName?: string): TraceInfo;
+}
+
+export declare class KoaInstrumentation {
+    public static middleware(options: TraceInfo): KoaMiddleware;
+}
+
+export declare class GrpcInstrumentation {
+    public static middleware(options: TraceInfo): RpcMiddleware;
+
+    public static proxyClient<T>(client: T, ctx: GatewayContext | RpcContext, options: TraceInfo): T;
+}
