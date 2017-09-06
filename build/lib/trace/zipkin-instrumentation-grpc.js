@@ -8,9 +8,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const libCrypto = require("crypto");
 const zipkin = require("zipkin");
 const grpc = require("grpc");
-const TracerHandler_1 = require("../handler/TracerHandler");
 class GrpcInstrumentation {
     static middleware({ tracer, serviceName = 'unknown', port = 0, remoteServiceName }) {
         if (tracer === false) {
@@ -19,6 +19,7 @@ class GrpcInstrumentation {
             });
         }
         return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
+            const reqId = libCrypto.randomBytes(12).toString('base64');
             const metadata = ctx.call.metadata;
             function readMetadata(headerName) {
                 const val = metadata.get(headerName.toLowerCase())[0];
@@ -59,7 +60,7 @@ class GrpcInstrumentation {
                 }
             }
             const traceId = tracer.id;
-            console.log("traceId1", traceId.traceId);
+            console.log(reqId, ">> traceId", traceId.traceId);
             tracer.scoped(() => {
                 tracer.setId(traceId);
                 tracer.recordServiceName(serviceName);
@@ -75,18 +76,22 @@ class GrpcInstrumentation {
                     tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags.toString());
                 }
             });
+            ctx['reqId'] = reqId;
+            ctx['traceId'] = traceId;
             yield next();
-            console.log("traceId2", traceId.traceId);
-            console.log("--------------------------------");
+            console.log(reqId, "<< traceId", traceId.traceId);
             tracer.scoped(() => {
                 tracer.setId(traceId);
                 tracer.recordAnnotation(new zipkin.Annotation.ServerSend());
             });
         });
     }
-    static proxyClient(client, { tracer, serviceName = 'unknown', port = 0 }) {
+    static proxyClient(client, ctx, { tracer, serviceName = 'unknown', port = 0 }) {
         if (tracer === false) {
             return client;
+        }
+        if (ctx['traceId'] instanceof zipkin.TraceId) {
+            tracer.setId(ctx['traceId']);
         }
         Object.getOwnPropertyNames(Object.getPrototypeOf(client)).forEach((property) => {
             const original = client[property];
@@ -98,8 +103,8 @@ class GrpcInstrumentation {
                     }
                     // create SpanId
                     tracer.setId(tracer.createChildId());
-                    console.log("[Child]TraceId", TracerHandler_1.TracerHandler.instance().getTraceInfo().tracer.id.traceId);
                     const traceId = tracer.id;
+                    console.log(ctx["reqId"], "traceId", traceId.traceId);
                     const metadata = GrpcInstrumentation._makeMetadata(traceId);
                     const argus = GrpcInstrumentation._replaceArguments(arguments, metadata, (callback) => {
                         return (err, res) => {

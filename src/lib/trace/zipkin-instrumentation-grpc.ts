@@ -1,8 +1,10 @@
+import * as libCrypto from "crypto";
 import * as zipkin from "zipkin";
 import * as grpc from "grpc";
-import {TracerHandler, TraceInfo} from "../handler/TracerHandler";
+import {TraceInfo} from "../handler/TracerHandler";
 import {RpcMiddleware, MiddlewareNext} from "../rpc/App";
 import {RpcContext} from "../rpc/Context";
+import {GatewayContext} from "../gateway/ApiBase";
 
 export class GrpcInstrumentation {
     public static middleware({tracer, serviceName = 'unknown', port = 0, remoteServiceName}: TraceInfo): RpcMiddleware {
@@ -14,6 +16,7 @@ export class GrpcInstrumentation {
         }
 
         return async (ctx: RpcContext, next: MiddlewareNext) => {
+            const reqId = libCrypto.randomBytes(12).toString('base64');
             const metadata = ctx.call.metadata as grpc.Metadata;
 
             function readMetadata(headerName: string) {
@@ -54,7 +57,6 @@ export class GrpcInstrumentation {
             }
 
             const traceId = tracer.id;
-            console.log("traceId1", traceId.traceId);
 
             tracer.scoped(() => {
                 tracer.setId(traceId);
@@ -73,10 +75,11 @@ export class GrpcInstrumentation {
                 }
             });
 
+            ctx['reqId'] = reqId;
+            ctx['traceId'] = traceId;
+
             await next();
 
-            console.log("traceId2", traceId.traceId);
-            console.log("--------------------------------");
             tracer.scoped(() => {
                 tracer.setId(traceId);
                 tracer.recordAnnotation(new zipkin.Annotation.ServerSend());
@@ -84,10 +87,14 @@ export class GrpcInstrumentation {
         };
     }
 
-    public static proxyClient<T>(client: T, {tracer, serviceName = 'unknown', port = 0}: TraceInfo): T {
+    public static proxyClient<T>(client: T, ctx: GatewayContext | RpcContext, {tracer, serviceName = 'unknown', port = 0}: TraceInfo): T {
 
         if (tracer === false) {
             return client;
+        }
+
+        if (ctx['traceId'] instanceof zipkin.TraceId) {
+            tracer.setId(ctx['traceId']);
         }
 
         Object.getOwnPropertyNames(Object.getPrototypeOf(client)).forEach((property) => {
@@ -102,7 +109,6 @@ export class GrpcInstrumentation {
 
                     // create SpanId
                     tracer.setId(tracer.createChildId());
-                    console.log("[Child]TraceId", TracerHandler.instance().getTraceInfo().tracer.id.traceId);
                     const traceId = tracer.id;
 
                     const metadata = GrpcInstrumentation._makeMetadata(traceId);
@@ -114,7 +120,7 @@ export class GrpcInstrumentation {
                                 tracer.recordAnnotation(new zipkin.Annotation.ClientRecv());
                             });
                             callback(err, res);
-                        }
+                        };
                     });
 
                     tracer.scoped(() => {

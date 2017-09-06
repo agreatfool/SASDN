@@ -142,6 +142,7 @@ export interface TraceInfo {
     tracer: zipkin.Tracer;
     serviceName?: string;
     port?: number;
+    remoteServiceName?: string;
 }
 
 export declare class TracerHandler {
@@ -168,5 +169,5 @@ export declare class KoaInstrumentation {
 export declare class GrpcInstrumentation {
     public static middleware(options: TraceInfo): RpcMiddleware;
 
-    public static proxyClient<T>(client: T, options: TraceInfo): T;
+    public static proxyClient<T>(client: T, ctx: GatewayContext | RpcContext, options: TraceInfo): T;
 }

@@ -4,6 +4,7 @@ export interface TraceInfo {
     tracer: zipkin.Tracer;
     serviceName?: string;
     port?: number;
+    remoteServiceName?: string;
 }
 
 export declare class TracerHandler {

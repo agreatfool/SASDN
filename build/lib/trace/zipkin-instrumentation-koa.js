@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const libCrypto = require("crypto");
 const zipkin = require("zipkin");
 const url = require("url");
 class KoaInstrumentation {
@@ -18,6 +19,7 @@ class KoaInstrumentation {
             });
         }
         return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
+            const reqId = libCrypto.randomBytes(12).toString('base64');
             const req = ctx.request;
             const res = ctx.response;
             ctx.response.set('Access-Control-Allow-Origin', '*');
@@ -64,7 +66,7 @@ class KoaInstrumentation {
                 }
             }
             const traceId = tracer.id;
-            console.log("traceId1", traceId.traceId);
+            console.log(reqId, ">> traceId", traceId.traceId);
             tracer.scoped(() => {
                 tracer.setId(traceId);
                 tracer.recordServiceName(serviceName);
@@ -76,9 +78,10 @@ class KoaInstrumentation {
                     tracer.recordBinary(zipkin.HttpHeaders.Flags, traceId.flags.toString());
                 }
             });
+            ctx['reqId'] = reqId;
+            ctx['traceId'] = traceId;
             yield next();
-            console.log("traceId2", traceId.traceId);
-            console.log("--------------------------------");
+            console.log(reqId, "<< traceId", traceId.traceId);
             tracer.scoped(() => {
                 tracer.setId(traceId);
                 tracer.recordBinary('http.status_code', res.status.toString());
