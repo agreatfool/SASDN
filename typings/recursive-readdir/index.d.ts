@@ -5,7 +5,6 @@
 
 /// <reference types="node" />
 
-
 import * as fs from "fs";
 declare namespace RecursiveReaddir {
     interface readdir {
