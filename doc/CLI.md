@@ -55,3 +55,10 @@ sasdn gateway [options]
     -s, --swagger <dir>  directory of swagger spec files
     -o, --output <dir>   directory to output service codes
 ```
+
+# Command: Scaffold
+Generate demo Micro Service from scaffold files.
+
+```
+sasdn scaffold
+```

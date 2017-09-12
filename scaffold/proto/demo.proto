@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+
+package demo;
+
+message Demo {
+    int64 id = 1;
+    string name = 2;
+    bool flag = 3;
+}
+
+message GetDemoRequest {
+    int64 id = 1;
+}
+
+service OrderService {
+    rpc GetOrder (GetDemoRequest) returns (Demo) {}
+}
+
+// gPRC-getway Test
+service OrderApiService {
+    rpc GetOrderApi (GetDemoRequest) returns (Demo) {
+        option (google.api.http) = {
+            post: "/v1/getDemo"
+            body: "*"
+        };
+    }
+}

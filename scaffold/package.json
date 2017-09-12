@@ -4,33 +4,71 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npm install && npm "
+    "test": "jest",
+    "start": "better-npm-run start",
+    "dev": "better-npm-run dev"
+  },
+  "betterScripts": {
+    "start": {
+      "command": "node index.js",
+      "env": {
+        "NODE_ENV": "production",
+        "DEBUG": "SASDN:*"
+      }
+    },
+    "dev": {
+      "command": "node index.js",
+      "env": {
+        "NODE_ENV": "development",
+        "DEBUG": "SASDN:*"
+      }
+    }
   },
   "license": "MIT",
   "dependencies": {
-    "sasdn": "0.0.13"
+    "sasdn": "0.0.14"
   },
   "devDependencies": {
     "@types/google-protobuf": "^3.2.5",
     "@types/handlebars": "^4.0.32",
+    "@types/jest": "^20.0.8",
     "@types/koa": "^2.0.39",
     "@types/koa-bodyparser": "^3.0.23",
     "@types/koa-router": "^7.0.22",
     "@types/mz": "0.0.31",
     "@types/node": "^7.0.22",
+    "@types/supertest": "^2.0.3",
     "grpc-tsd": "^1.0.8",
     "grpc_tools_node_protoc_ts": "^1.0.10",
     "gulp": "^3.9.1",
     "gulp-copy": "^1.0.0",
     "gulp-shell": "^0.6.3",
     "gulp-typescript": "^3.1.7",
+    "jest": "^21.0.1",
     "koa": "^2.3.0",
     "koa-bodyparser": "^4.2.0",
     "koa-router": "^7.2.1",
-    "mz": "^2.6.0",
     "merge2": "^1.0.3",
+    "mz": "^2.6.0",
     "protobufjs": "^6.7.3",
-    "typescript": "^2.3.4"
+    "ts-jest": "^21.0.0",
+    "typescript": "^2.3.4",
+    "zipkin": "^0.7.3",
+    "zipkin-context-cls": "^0.6.1",
+    "zipkin-instrumentation-grpcjs": "0.0.3",
+    "zipkin-instrumentation-koa": "0.0.1",
+    "zipkin-transport-http": "^0.7.3"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "transform": {
+      "^.+\\.(ts|tsx)?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ]
   }
 }
