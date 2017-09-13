@@ -1,4 +1,4 @@
-import HttpServer from "./httpServer";
+import HttpServer from "./demoGatewayServer";
 
 const httpServer = new HttpServer();
 httpServer.init(process.env.NODE_ENV == 'development')

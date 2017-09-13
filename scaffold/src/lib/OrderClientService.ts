@@ -1,6 +1,6 @@
 import {GatewayContext, MiddlewareNext} from "sasdn";
 import {Order, GetOrderRequest,} from "../proto/order/order_pb";
-import GrpcClientOrder from "../grpcClientOrder";
+import GrpcClientOrder from "../demoMicorClient";
 
 interface RequestParams {
     body: GetOrderRequest.AsObject;

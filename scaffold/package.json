@@ -10,14 +10,14 @@
   },
   "betterScripts": {
     "start": {
-      "command": "node index.js",
+      "command": "gulp typescript & gulp protoc-copy & node index.js",
       "env": {
         "NODE_ENV": "production",
         "DEBUG": "SASDN:*"
       }
     },
     "dev": {
-      "command": "node index.js",
+      "command": "gulp typescript & gulp protoc-copy & node index.js",
       "env": {
         "NODE_ENV": "development",
         "DEBUG": "SASDN:*"

@@ -1,22 +1,14 @@
 const gulp = require('gulp');
 const ts = require('gulp-typescript');
 const merge = require('merge2');
-const shell = require('gulp-shell');
 const copy = require('gulp-copy');
 
 const tsProject = ts.createProject('tsconfig.json', {
   // declaration: true
 });
 
-gulp.task('protoc', function () {
-  return gulp.src('gulpfile.js', {read: false}) // dummy src
-    .pipe(shell([
-      './bash/grpc_compile.sh'
-    ]));
-});
-
-gulp.task('protoc-copy', ['protoc'], function () {
-  return gulp.src('src/result/**/*').pipe(copy('build', {prefix: 1}));
+gulp.task('protoc-copy', function () {
+  return gulp.src('src/proto/**/*').pipe(copy('build', {prefix: 1}));
 });
 
 gulp.task('typescript', function () {
