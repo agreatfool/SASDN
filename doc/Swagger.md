@@ -138,7 +138,7 @@ message Message {
 
 #### 2.1.3 Alias
 
-可以通过在 options 中增加 additional_bindings 参数来绑定多个 HTTP REST APIs。
+可以通过在 options 中增加 additional_bindings 参数来绑定多个 HTTP REST APIs。    
 e.g 可以通过在 options 中增加 additional_bindings 来进行多个URL定义访问同一个请求：
 ```protobuf
 service Messaging {
