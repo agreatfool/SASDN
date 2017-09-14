@@ -2,10 +2,15 @@
 
 ============
 
-## 1 名词解释
-* 请求参数：
-    * GET，在 http 请求中，通过 url 中携带的字段，eg：?column1=value1&column2=value2。
-    * POST，在 http 请求中，通过 x-www-form-urlencoded 的 body 中携带的字段。
+## 1. 相关说明
+### 1.1 文档说明
+该文档是用来描述如何使用第三方插件，将添加了部分第三方定义的protobuf定义文件转换为swagger配置文件，以及这种转换过程中的一些规则。
+
+### 1.2 参数说明 
+请求参数：
+
+* GET：在 http 请求中，通过 url 中携带字段，eg：?column1=value1&column2=value2。
+* POST：在 http 请求中，通过 x-www-form-urlencoded 的 body 中携带的字段。
 
 ## 2 结构定义
 
