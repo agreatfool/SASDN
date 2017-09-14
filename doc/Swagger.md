@@ -2,17 +2,15 @@
 
 ============
 
-## 名词解释
+## 1 名词解释
 * 查询参数分两种：
     * GET，在 http 请求中，通过 url 中携带的字段，eg：?column1=value1&column2=value2。
     * POST，在 http 请求中，通过 x-www-form-urlencoded 的 body 中携带的字段。
 
-## 结构定义
+## 2 结构定义
 
-### message 结构体
+### 2.1 message 结构体
 通过在 proto 文件中定义 message 结构体来定义查询参数。
-
-> 定义解释：请求中携带 id 字段，类型为 int64。
 
 ~~~
 message MessageRequest {
@@ -20,10 +18,10 @@ message MessageRequest {
 }
 ~~~
 
-### service 结构体
-通过在 proto 文件中定义 service 结构体，并使用 option(google.api.http) = {} 语法来定义路由接口，该定义决定 proto 定义到 HTTP REST APIs 的映射。
+> 定义解释：请求中携带 id 字段，类型为 int64。
 
-> 定义解释：允许通过 post 请求 /v1/demo 路由。
+### 2.2 service 结构体
+通过在 proto 文件中定义 service 结构体，并使用 option(google.api.http) = {} 语法来定义路由接口，该定义决定 proto 定义到 HTTP REST APIs 的映射。
 
 ~~~
 import "google/api/annotations.proto";
@@ -38,7 +36,9 @@ service demoService {
 }
 ~~~
 
-### 举例
+> 定义解释：允许通过 post 请求 /v1/demo 路由。
+
+### 2.3 举例
 创建一个名为 demo.proto 的完整例子
 
 > 定义解释：允许通过 post 请求 /v1/demo 路由，请求中提交的 body 数据包含 id 字段，类型为 int64, 请求的 url 中包含 flag 字段，类型为 int64
@@ -69,92 +69,13 @@ service demoService {
 }
 ~~~
 
-### swagger.json
-通过 sasdn proto -p ./demo.proto -i ./google -s 解析 demo.proto 文件，可以生成 swagger 的接口定义文件，文件类型是 json，范例如下：
+## 3 映射规则
 
-~~~
-{
-  "swagger": "2.0",
-  "info": {
-    "title": "demo.proto",
-    "version": "version not set"
-  },
-  "schemes": [
-    "http",
-    "https"
-  ],
-  "consumes": [
-    "application/json"
-  ],
-  "produces": [
-    "application/json"
-  ],
-  "paths": {
-    "/v1/demo": {
-      "post": {
-        "operationId": "demo",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/demoResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "flag",
-            "in": "path",
-            "required": true,
-            "type": "string",
-            "format": "int64"
-          },
-          {
-            "name": "body",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/demoMessageRequest"
-            }
-          }
-        ],
-        "tags": [
-          "demoService"
-        ]
-      }
-    }
-  },
-  "definitions": {
-    "demoMessageRequest": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "int64"
-        }
-      }
-    },
-    "demoResponse": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        }
-      }
-    }
-  }
-}
-~~~
+### 3.1 GET 方法
 
-## 映射规则
+#### 3.1.1 GET Path 参数映射
 
-### GET 方法
-
-通过 GET Path 定义 http => rpc 映射关系：
-* HTTP: `GET /v1/messages/123456/foo`
-* RPC: `GetMessage(message_id: "123456" sub: SubMessage(subfield: "foo"))`
-
-根据上述映射关系，定义的 proto 文件如下：
+绑定 GET 请求中的 url path 的参数与 rpc message 的字段的映射关系，范例如下：
 
 ~~~
 service Messaging {
@@ -176,12 +97,15 @@ message Message {
 }
 ~~~
 
+通过上面的范例，我们可以得到如下的结果
+* HTTP: `GET /v1/messages/123456/foo`
+* RPC: `GetMessage(message_id: "123456" sub: SubMessage(subfield: "foo"))`
 
-通过 GET Path Query 定义 http => rpc 映射关系：
-* HTTP: `GET /v1/messages/123456?revision=2&sub.subfield=foo`
-* RPC: `GetMessage(message_id: "123456" revision: 2 sub: SubMessage(subfield: "foo"))`
+#### 3.1.2 GET PATH Query 参数映射
 
-根据上述映射关系，定义的 proto 文件如下：
+GET 请求中绑定了 url path 的参数与 rpc message 的字段的映射关系，但如果 url path 中缺少 message 的字段，则可以通过 url path query 获得。
+
+如下例，根据 3.1.1，在 message 结构体 GetMessageRequest 中增加了字段 revision。
 
 ~~~
 service Messaging {
@@ -204,16 +128,13 @@ message Message {
 }
 ~~~
 
+通过上面的范例，我们可以得到如下的 url 参数的映射结果：
+* HTTP: `GET /v1/messages/123456/foo?revision=2`
+* RPC: `GetMessage(message_id: "123456" revision: 2 sub: SubMessage(subfield: "foo"))`
 
-通过 additional_bindings 参数追加 http => rpc 映射关系：
+#### 3.1.3 additional_bindings 追加绑定
 
-* HTTP: `POST /v1/messages/123456`
-* RPC: `GetMessage(message_id: "123456")`
-
-* HTTP: `POST /v1/users/me/messages/123456`
-* RPC: `GetMessage(user_id: "me" message_id: "123456")`
-
-根据上述映射关系，定义的 proto 文件如下：
+通过 additional_bindings 参数追加映射关系：
 
 ~~~
 service Messaging {
@@ -235,13 +156,18 @@ message Message {
 }
 ~~~
 
-### POST 方法
+通过上面的范例，我们可以得到如下的结果
+* HTTP: `POST /v1/messages/123456`
+* RPC: `GetMessage(message_id: "123456")`
 
-通过 POST body 字段定义 http => rpc 映射关系：
-* HTTP: `POST /v1/messages/123456 { "text": "Hi!" }`
-* RPC: `UpdateMessage(message_id: "123456" message { text: "Hi!" })`
+* HTTP: `POST /v1/users/me/messages/123456`
+* RPC: `GetMessage(user_id: "me" message_id: "123456")`
 
-根据上述映射关系，定义的 proto 文件如下：
+### 3.2 POST 方法
+
+#### 3.2.1 POST body 参数映射
+
+绑定 POST 请求中 body 数据中的字段与 rpc message 的字段的映射关系，范例如下：
 
 ~~~
 service Messaging {
@@ -262,12 +188,13 @@ message Message {
 }
 ~~~
 
-
-通过 POST body: "*" 字段定义 http => rpc 映射关系：
+通过上面的范例，我们可以得到如下的结果
 * HTTP: `POST /v1/messages/123456 { "text": "Hi!" }`
-* RPC: `UpdateMessage(message_id: "123456", text: "Hi!")`
+* RPC: `UpdateMessage(message_id: "123456" message { text: "Hi!" })`
 
-根据上述映射关系，定义的 proto 文件如下：
+#### 3.2.2 POST body: "*" 参数映射
+
+绑定 POST 请求中 body 数据字段为“*”时，与 rpc message 的字段的映射关系，范例如下：
 
 ~~~
 service Messaging {
@@ -286,3 +213,7 @@ message UpdateMessageRequest {
     string text = 2;
 }
 ~~~
+
+通过上面的范例，我们可以得到如下的结果
+* HTTP: `POST /v1/messages/123456 { "text": "Hi!" }`
+* RPC: `UpdateMessage(message_id: "123456", text: "Hi!")`
