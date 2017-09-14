@@ -235,7 +235,8 @@ message Message {
 * P.S：输入参数`hidden_column`由于在 UpdateMessageRequest 中不存在，所以在服务端获得的参数中也不存在
 
 ## 3. optional | required
-protobuf v3版本后，废弃了 message 字段中使用 optional 和 required 关键字设定字段是否可选项，而是默认全部字段都是可选。如果在正常业务中，需要将字段设定为必选，可以在 proto 文件转译成 swagger.json 后，可以手动在字段设定中添加`required`字段，并且值为`true`
+protobuf v3版本后，废弃了optional和required关键字，即无法使用这两个关键字设定message中的字段可选或必须，所有字段默认都是可选。
+如果在正常业务中，遇到需要将某些字段设为必选的情况，可以在在转换出来的swagger配置文件中手动添加`required`字段，并且值为`true`。
 
 e.g：
 ```
