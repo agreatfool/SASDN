@@ -9,8 +9,8 @@
 
 ## 2 结构定义
 
-### 2.1 message 结构体
-通过在 proto 文件中定义 message 结构体，message 结构体是一种数据模型。
+### 2.1 message
+通过在 proto 文件中定义 message ，message 是一种数据模型。
 
 范例如下：
 ~~~
@@ -21,9 +21,9 @@ message MessageRequest {
 
 > 范例解释：请求中携带 id 字段，类型为 int64。
 
-### 2.2 service 结构体
-通过在 proto 文件中定义 service 结构体，service 结构体中通过 rpc method 创建 rpc 接口。
-一个最简单的 rpc 接口需要接受一个`请求模型`，并返回一个`结果模型`，`请求模型`与`结果模型`都是 message 结构体。
+### 2.2 service
+通过在 proto 文件中定义 service ，service 中通过 rpc method 创建 rpc 接口。
+一个最简单的 rpc 接口需要接受一个`请求模型`，并返回一个`结果模型`，`请求模型`与`结果模型`都是 message 。
 
 范例如下：
 ~~~
@@ -34,10 +34,10 @@ service demoService {
 
 > 范例解释：MessageRequest 为`请求模型`，Response 为`结果模型`
 
-### 2.3 http service 结构体
-定义一个 HTTP REST APIs 的 service 结构体，需要将 google.api.http 引入到 proto 文件内。并在创建的 service 结构体内，使用 option 方法，将 google.api.http 插件加载进来。
+### 2.3 http service
+定义一个 HTTP REST APIs 的 service ，需要`import "google/api/annotations.proto";`。并在创建的 service 内，使用 option 方法，将 google.api.http 插件加载进来。
 
-允许通过设置 option(google.api.http) 的属性，来确定是使用 GET 方法或者 POST 方法访问 HTTP REST APIs，目前支持 GET, POST, PUT, DELETE, PATCH 这五种方法访问 HTTP REST APIs
+通过设置 option(google.api.http) 的属性确定是使用 GET 或 POST 或 PUT 或 DELETE 或 PATCH 方法访问 HTTP REST APIs。
 
 > 注: 虽然 http service 使用的不是 rpc 接口，而是 http 接口，但该定义依然是 rpc method。
 
@@ -75,7 +75,7 @@ message Response {
     string name = 1;
 }
 
-// gPRC-getway Test
+// gRPC gateway
 service demoService {
     rpc demo (MessageRequest) returns (Response) {
         option (google.api.http) = {
@@ -88,6 +88,8 @@ service demoService {
 
 ## 3 HTTP RULE
 `HTTP RULE` 将 rpc method 映射为一个或多个 HTTP REST APIs，映射决定了 rpc method 的`请求模型`中哪些部分来自请求消息中的 path，query parameters 或者 POST 请求中的 body。
+
+> 注：下面所有例子，都是由客户端通过 HTTP 请求访问 HTTP REST API。
 
 ### 3.1 GET 方法
 
@@ -115,14 +117,15 @@ message Message {
 ~~~
 
 通过上面的范例，我们可以得到如下结果：
-* HTTP: `GET /v1/messages/123456/foo`
-* RPC: `GetMessage(GetMessageRequest(message_id: "123456" sub: SubMessage(subfield: "foo")))`
+* `GET /v1/messages/{message_id}/{sub.subfield}`
+    * HTTP: `GET /v1/messages/123456/foo`
+    * REQUEST: `{"message_id": "123456", "sub": {"subfield": "foo"}}`
 
 #### 3.1.2 GET Query Parameters
 
 如果没有在 path 中找到`请求模型`中的字段，可以通过在 query parameters 中获得。
 
-如下例，根据 3.1.1，在 message 结构体 GetMessageRequest 中增加了字段 revision。
+如下例，根据 3.1.1，在 message 的 GetMessageRequest 中增加了字段 revision。
 
 ~~~
 service Messaging {
@@ -146,8 +149,9 @@ message Message {
 ~~~
 
 通过上面的范例，我们可以得到如下的 url 参数的映射结果：
-* HTTP: `GET /v1/messages/123456/foo?revision=2`
-* RPC: `GetMessage(GetMessageRequest(message_id: "123456" revision: 2 sub: SubMessage(subfield: "foo")))`
+* `GET /v1/messages/{message_id}/{sub.subfield}`
+    * HTTP: `GET /v1/messages/123456/foo?revision=2`
+    * REQUEST: `{"message_id": "123456", "revision": 2, "sub": {"subfield": "foo"}}`
 
 #### 3.1.3 additional_bindings 追加绑定
 
@@ -174,11 +178,14 @@ message Message {
 ~~~
 
 通过上面的范例，我们可以得到如下的结果
-* HTTP: `POST /v1/messages/123456`
-* RPC: `GetMessage(GetMessageRequest(message_id: "123456"))`
 
-* HTTP: `POST /v1/users/me/messages/123456`
-* RPC: `GetMessage(GetMessageRequest(user_id: "me" message_id: "123456"))`
+* `GET /v1/messages/{message_id}/{sub.subfield}`
+    * HTTP: `POST /v1/messages/123456`
+    * REQUEST: `{"message_id": "123456"}`
+
+* `GET /v1/messages/{message_id}/{sub.subfield}`
+    * HTTP: `POST /v1/users/me/messages/123456`
+    * REQUEST: `{"user_id": "me", "message_id": "123456"}`
 
 ### 3.2 POST 方法
 
@@ -192,23 +199,30 @@ service Messaging {
     rpc GetMessage (UpdateMessageRequest) returns (Message) {
         option (google.api.http) = {
             post: "/v1/messages/{message_id}"
-            body: "message"
+            body: "content"
         };
     }
 }
 message UpdateMessageRequest {
     string message_id = 1; // mapped to the URL
-    Message message = 2;   // mapped to the body
+    Content content = 2;   // mapped to the body
     boolean hidden_column = 3;   // hidden column
 }
-message Message {
+message Content {
     string text = 1; // content of the resource
+}
+message Message {
+    string text = 1;
 }
 ~~~
 
-通过上面的范例，我们可以得到如下的结果
-* HTTP: `POST /v1/messages/123456 { "text": "Hi!" }`
-* RPC: `UpdateMessage(UpdateMessageRequest(message_id: "123456" message { text: "Hi!" }))`
+通过上面的范例，我们可以得到如下的结果:
+
+* `POST /v1/messages/{message_id}`
+    * HTTP: `POST /v1/messages/123456 { "text": "Hi!" }`
+    * REQUEST: `{"message_id": "123456", "content": {"text": "Hi!"}}`
+
+其中 UpdateMessageRequest 的 hidden_column 字段由于未在 HTTP 请求中进行映射，所以在结果中不存在。
 
 #### 3.2.2 POST body: "*"
 通过设置 body: "*"，将 POST 请求中字段，按字段名映射到`请求模型`中，如果`请求模型`中不存在，则丢弃。
@@ -223,15 +237,47 @@ service Messaging {
         };
     }
 }
-message Message {
-    string text = 1;
-}
 message UpdateMessageRequest {
     string message_id = 1;
-    string text = 2;
+    Content content = 2;   // mapped to the body
+}
+message Content {
+    string text = 1; // content of the resource
+}
+message Message {
+    string text = 1;
 }
 ~~~
 
 通过上面的范例，我们可以得到如下的结果
-* HTTP: `POST /v1/messages/123456 { "text": "Hi!", "hidden_column": true }`
-* RPC: `UpdateMessage(UpdateMessageRequest(message_id: "123456", text: "Hi!"))`
+
+* `POST /v1/messages/{message_id}`
+    * HTTP: `POST /v1/messages/123456 { "content": {"text": "Hi!"}, "hidden_column": true }`
+    * REQUEST: `{"message_id": "123456", "content": {"text": "Hi!"}}`
+
+## 4 可选，必选
+
+proto 从 v3 版本后，就废弃了 message 字段中使用 optional 和 required 关键字设定字段是否可选项，而是默认全部字段都是可选，如果在正常业务中，需要将字段设定为必选，可以在 proto 文件转译成 swagger.json 后，可以手动在字段设定中添加`required`字段，并且值为`true`
+
+范例如下：
+~~~
+{
+    ...,
+    "definitions": {
+        "UpdateMessageRequest": {
+          "type": "object",
+          "properties": {
+            "message_id": {
+              "type": "string",
+              "format": "int64",
+              "required": true      // add required property
+            },
+            "hidden_column": {
+              "type": "boolean",
+              "format": "boolean"
+            },
+          }
+        }
+    }
+}
+~~~
