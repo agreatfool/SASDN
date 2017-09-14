@@ -238,7 +238,7 @@ message Message {
 protobuf v3版本后，废弃了 message 字段中使用 optional 和 required 关键字设定字段是否可选项，而是默认全部字段都是可选。如果在正常业务中，需要将字段设定为必选，可以在 proto 文件转译成 swagger.json 后，可以手动在字段设定中添加`required`字段，并且值为`true`
 
 e.g：
-```json
+```
 {
     ...,
     "definitions": {
