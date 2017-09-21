@@ -1,7 +1,12 @@
 import * as zipkin from "zipkin";
 import * as TransportHttp from "zipkin-transport-http";
 import * as CLSContext from "zipkin-context-cls";
-import {ConfigHandler, TracerOptions} from "./ConfigHandler";
+import {ConfigHelper} from "./ConfigHelper";
+
+export interface TracerOptions {
+    host: string;
+    port: number;
+}
 
 export interface TraceInfo {
     tracer: zipkin.Tracer;
@@ -10,19 +15,19 @@ export interface TraceInfo {
     remoteServiceName?: string;
 }
 
-export class TracerHandler {
-    private static _instance: TracerHandler;
+export class TracerHelper {
+    private static _instance: TracerHelper;
 
     private _initialized: boolean;
     private _tracer: zipkin.Tracer;
     private _serviceName: string;
     private _port: number;
 
-    public static instance(): TracerHandler {
-        if (TracerHandler._instance === undefined) {
-            TracerHandler._instance = new TracerHandler();
+    public static instance(): TracerHelper {
+        if (TracerHelper._instance === undefined) {
+            TracerHelper._instance = new TracerHelper();
         }
-        return TracerHandler._instance;
+        return TracerHelper._instance;
     }
 
     private constructor() {
@@ -34,7 +39,7 @@ export class TracerHandler {
 
     public init() {
         return new Promise((resolve) => {
-            const options = ConfigHandler.instance().getOption();
+            const options = ConfigHelper.instance().getOption();
 
             if (options.tracer !== false) {
                 this._tracer = new zipkin.Tracer({

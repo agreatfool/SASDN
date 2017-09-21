@@ -1,42 +1,27 @@
-## Getting Started
+## SASDN Scaffold README
 
----
+### 1. 环境及安装
+环境及安装相关内容请参考SASDN的主文档。
 
-### Requirements
-Mac OS X, Windows, or Linux，
-Protocol Buffers version 3.3+
-
-* NPM Global
-    * node `^8.1.0`
-    * npm `^5.0.3`
-    * typescript `^2.3.4`
-    * grpc-tools `^1.3.7`
-    * gulp `^3.9.1`
-    * better-npm-run `^0.1.0`
-* Golang Plugin
-    * github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
-
-### Directory Layout
-
-Before you start, take a moment to see how the project structure looks like:
+### 2. 文件夹结构
 
 ```
 .
-├── /__tests__/                 # Unit and end-to-end tests
-├── /bash/                      # The folder for bash shell
-├── /build/                     # The folder for compiled output
-├── /node_modules/              # 3rd-party libraries and utilities
-├── /proto/                     # The folder for .proto file in current project
-├── /spm_protos/                # 3rd-party sasdn proco package form SASDN-PM
-├── /src/                       # The source code of the application
-│   ├── /handler/               # Handler singleton need start before Server-side startup
-│   ├── /lib/                   # The folder for service implementation code
-│   ├── /proto/                 # The interface definition file(ts, js, swagger.json) generated through the proto file
-│   ├── /router/                # The API router generated through the swagger file
+├── /__tests__/                 # 单元测试用例
+├── /bash/                      # 命令行脚本文件夹，内容及层级可以自定义
+├── /build/                     # 从TS代码编译出来的JS代码文件
+├── /node_modules/              # NPM三方包
+├── /proto/                     # 当前项目自身的protobuf定义文件，注意文件夹层级需要和proto文件中的包路径一致
+├── /spm_protos/                # 第三方的proto定义文件，由SASDN-PM统一管理
+├── /src/                       # 项目源代码
+│   ├── /helper/                # Helper工具类，该文件夹内的工具类及层级可以自定义
+│   ├── /logic/                 # 实际业务逻辑文件夹，该文件夹内的层级可以自定义
+│   ├── /proto/                 # Protos对应的代码：依据根目录的protos文件，用工具自动生成
+│   ├── /router/                # Gateway Routers：依据swagger.json配置自动生成
 │   ├── /services/              # The service file generated through the proto file
-│   ├── /demoGatewayServer.ts   # Gateway Client demo
-│   ├── /demoMicorClient.ts     # Micorservice Server demo
-│   ├── /demoMicorServer.ts     # Gateway Server demo
+│   ├── /demoGatewayServer.ts   # Gateway Server demo
+│   ├── /demoMSClient.ts        # Microservice Client demo
+│   ├── /demoMSServer.ts        # Microservice Server demo
 │   ├── /index.js               # Server-side startup script
 │   └── ...                     # Other core framework modules
 ├── config.dev.json             # Global application settings when env = developement

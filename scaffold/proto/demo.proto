@@ -14,13 +14,13 @@ message GetDemoRequest {
     int64 id = 1;
 }
 
-service OrderService {
-    rpc GetOrder (GetDemoRequest) returns (Demo) {}
+service DemoService {
+    rpc GetDemo (GetDemoRequest) returns (Demo) {}
 }
 
 // gPRC-getway Test
-service OrderApiService {
-    rpc GetOrderApi (GetDemoRequest) returns (Demo) {
+service DemoApiService {
+    rpc GetDemoApi (GetDemoRequest) returns (Demo) {
         option (google.api.http) = {
             post: "/v1/getDemo"
             body: "*"

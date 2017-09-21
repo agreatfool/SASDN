@@ -2,11 +2,11 @@ import * as LibPath from "path";
 import * as Koa from "koa";
 import * as koaBodyParser from "koa-bodyparser";
 import {KoaInstrumentation} from "zipkin-instrumentation-koa"
-import RouterLoader from "./router/Router";
-import {ConfigHandler} from "./handler/ConfigHandler";
-import {TracerHandler} from "./handler/TracerHandler";
+import RouterLoader from "../router/Router";
+import {ConfigHelper} from "../helper/ConfigHelper";
+import {TracerHelper} from "../helper/TracerHelper";
 
-export default class HttpServer {
+export default class GatewayServer {
     private _initialized: boolean;
     public app: Koa;
 
@@ -22,13 +22,13 @@ export default class HttpServer {
 
         return new Promise((resolve, reject) => {
             Promise.resolve()
-                .then(() => ConfigHandler.instance().init(configPath))
-                .then(() => TracerHandler.instance().init())
+                .then(() => ConfigHelper.instance().init(configPath))
+                .then(() => TracerHelper.instance().init())
                 .then(() => RouterLoader.instance().init())
                 .then(() => {
                     const app = new Koa();
 
-                    app.use(KoaInstrumentation.middleware(TracerHandler.instance().getTraceInfo()));
+                    app.use(KoaInstrumentation.middleware(TracerHelper.instance().getTraceInfo()));
                     app.use(koaBodyParser({formLimit: '2048kb'})); // post body parser
                     app.use(RouterLoader.instance().getRouter().routes());
 
@@ -50,7 +50,7 @@ export default class HttpServer {
             return;
         }
 
-        const options = ConfigHandler.instance().getOption();
+        const options = ConfigHelper.instance().getOption();
         this.app.listen(options.port, options.host, () => {
             console.log(`API Gateway Start, Address: ${options.host}:${options.port}!`);
         });

@@ -1,6 +1,6 @@
 import {GatewayApiBase, GatewayContext, MiddlewareNext} from "sasdn";
 import {Order, GetOrderRequest, } from "../../proto/order/order_pb";
-import * as OrderService from "../../lib/OrderClientService";
+import {OrderLogic} from "../../logic/gateway/OrderLogic";
 
 interface RequestParams {
     body: GetOrderRequest.AsObject;
@@ -28,7 +28,7 @@ class PostGetOrderApi extends GatewayApiBase {
 
     public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<Order.AsObject> {
         try {
-            const order = await OrderService.getOrder(ctx, next, params);
+            const order = await OrderLogic.getOrder(ctx, next, params);
             return await order.toObject() ;
         } catch (e) {
             return e.toString();

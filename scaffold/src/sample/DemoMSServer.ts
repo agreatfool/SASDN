@@ -1,11 +1,11 @@
 import * as LibPath from 'path';
 import {RpcApplication} from "sasdn";
 import {GrpcInstrumentation} from "zipkin-instrumentation-grpcjs"
-import {registerServices} from "./services/register";
-import {ConfigHandler} from "./handler/ConfigHandler";
-import {TracerHandler} from "./handler/TracerHandler";
+import {registerServices} from "../services/register";
+import {ConfigHelper} from "../helper/ConfigHelper";
+import {TracerHelper} from "../helper/TracerHelper";
 
-export default class GrpcServer {
+export default class MSServer {
     private _initialized: boolean;
     public app: RpcApplication;
 
@@ -19,11 +19,11 @@ export default class GrpcServer {
             : LibPath.join(__dirname, '..', 'config.json');
         return new Promise((resolve, reject) => {
             Promise.resolve()
-                .then(() => ConfigHandler.instance().init(configPath))
-                .then(() => TracerHandler.instance().init())
+                .then(() => ConfigHelper.instance().init(configPath))
+                .then(() => TracerHelper.instance().init())
                 .then(() => {
                     const app = new RpcApplication();
-                    app.use(GrpcInstrumentation.middleware(TracerHandler.instance().getTraceInfo()));
+                    app.use(GrpcInstrumentation.middleware(TracerHelper.instance().getTraceInfo()));
                     this.app = app;
                 })
                 .then(() => {
@@ -44,7 +44,7 @@ export default class GrpcServer {
 
         registerServices(this.app);
 
-        const options = ConfigHandler.instance().getOption();
+        const options = ConfigHelper.instance().getOption();
         this.app.bind(`${options.host}:${options.port}`).start();
     }
 }

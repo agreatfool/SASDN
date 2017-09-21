@@ -1,15 +1,12 @@
 import * as LibFs from "mz/fs";
 
+import {TracerOptions} from "./TracerHelper";
+
 export interface ConfigOptions {
     name: string;
     host: string;
     port: number;
     tracer?: boolean | TracerOptions;
-}
-
-export interface TracerOptions {
-    host: string;
-    port: number;
 }
 
 const defaultConfigs: ConfigOptions = {
@@ -19,17 +16,17 @@ const defaultConfigs: ConfigOptions = {
     tracer: false
 };
 
-export class ConfigHandler {
-    private static _instance: ConfigHandler;
+export class ConfigHelper {
+    private static _instance: ConfigHelper;
 
     private _initialized: boolean;
     private _configs: ConfigOptions;
 
-    public static instance(): ConfigHandler {
-        if (ConfigHandler._instance === undefined) {
-            ConfigHandler._instance = new ConfigHandler();
+    public static instance(): ConfigHelper {
+        if (ConfigHelper._instance === undefined) {
+            ConfigHelper._instance = new ConfigHelper();
         }
-        return ConfigHandler._instance;
+        return ConfigHelper._instance;
     }
 
     private constructor() {
@@ -44,7 +41,7 @@ export class ConfigHandler {
                     throw new Error(`[Config] Invalid path, config:${configPath}`);
                 }
 
-                this._configs = ConfigHandler.mergerObject(defaultConfigs, require(configPath));
+                this._configs = ConfigHelper.mergerObject(defaultConfigs, require(configPath));
                 this._initialized = true;
             });
     }

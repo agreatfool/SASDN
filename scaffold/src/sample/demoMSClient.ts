@@ -2,9 +2,9 @@ import * as grpc from "grpc";
 import {GatewayContext, RpcContext} from "sasdn";
 import {GrpcInstrumentation} from "zipkin-instrumentation-grpcjs"
 
-import {OrderServiceClient} from "./proto/order/order_grpc_pb";
-import {GetOrderRequest, Order,} from "./proto/order/order_pb";
-import {TracerHandler} from "./handler/TracerHandler";
+import {OrderServiceClient} from "../proto/order/order_grpc_pb";
+import {GetOrderRequest, Order,} from "../proto/order/order_pb";
+import {TracerHelper} from "../helper/TracerHelper";
 
 export default class GrpcClientOrder {
     public client: OrderServiceClient;
@@ -13,7 +13,7 @@ export default class GrpcClientOrder {
         this.client = GrpcInstrumentation.proxyClient(
             new OrderServiceClient('127.0.0.1:9090', grpc.credentials.createInsecure()),
             ctx,
-            TracerHandler.instance().getTraceInfo(true, 'order')
+            TracerHelper.instance().getTraceInfo(true, 'order')
         );
     }
 
