@@ -47,4 +47,5 @@ export const OrderApiServiceService: IOrderApiServiceService;
 export class OrderApiServiceClient extends grpc.Client {
     constructor(address: string, credentials: any, options?: grpc.IClientOptions);
     getOrderApi(request: order_order_pb.GetOrderRequest, callback: (error: Error | null, response: order_order_pb.Order) => void): grpc.ClientUnaryCall;
+    getOrderApi(request: order_order_pb.GetOrderRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: order_order_pb.Order) => void): grpc.ClientUnaryCall;
 }

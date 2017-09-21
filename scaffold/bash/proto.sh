@@ -28,5 +28,15 @@ sasdn proto \
 --proto=${PROTO_ROOT} \
 --output=${OUTPUT} \
 --import=${PROTO_3RD} \
---javascript \
+--typescript \
+--exclude=${PROTO_3RD}/google \
+--all
+
+echo "Generate swagger json ..."
+sasdn proto \
+--proto=${PROTO_ROOT} \
+--output=${OUTPUT} \
+--import=${PROTO_3RD} \
+--swagger \
+--exclude=${PROTO_3RD}/google \
 --all
