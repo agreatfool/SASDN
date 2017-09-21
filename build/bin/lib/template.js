@@ -27,4 +27,3 @@ var TplEngine;
     }
     TplEngine.compile = compile;
 })(TplEngine = exports.TplEngine || (exports.TplEngine = {}));
-//# sourceMappingURL=template.js.map

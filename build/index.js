@@ -7,4 +7,3 @@ __export(require("./lib/gateway/ApiBase"));
 __export(require("./lib/rpc/App"));
 __export(require("./lib/rpc/Context"));
 __export(require("./lib/utility/Joi"));
-//# sourceMappingURL=index.js.map
