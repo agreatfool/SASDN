@@ -8,6 +8,9 @@ PROTO_ROOT=${ROOT}/proto
 PROTO_3RD=${ROOT}/spm_protos
 OUTPUT=${ROOT}/src
 
+IS_GATEWAY=true
+IS_MICROSERVICE=true
+
 echo "***********************"
 echo "Working dir: ${ROOT}"
 echo "Proto dir: ${PROTO_ROOT}"
@@ -40,3 +43,12 @@ sasdn proto \
 --swagger \
 --exclude=${PROTO_3RD}/google \
 --all
+
+if [ "${IS_GATEWAY}" = true ] ; then
+    echo "Generate gateway codes ..."
+    sasdn gateway \
+    --proto=${PROTO_ROOT} \
+    --swagger=${OUTPUT}/proto \
+    --output=${OUTPUT} \
+    --import=${PROTO_3RD}
+fi

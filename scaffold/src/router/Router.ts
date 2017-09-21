@@ -2,6 +2,7 @@ import * as Router from "koa-router";
 import {GatewayApiBase} from "sasdn";
 
 const API_PATHS = [
+    '../router/DemoApiService/postGetDemoApi',
     '../router/OrderApiService/postGetOrderApi',
 ];
 
