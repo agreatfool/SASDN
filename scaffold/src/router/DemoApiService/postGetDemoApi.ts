@@ -26,7 +26,7 @@ class PostGetDemoApi extends GatewayApiBase {
     }
 
     public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<Demo.AsObject> {
-        return await new Demo().toObject();
+        return Promise.resolve(new Demo().toObject());
     }
 }
 
