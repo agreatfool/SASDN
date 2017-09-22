@@ -52,3 +52,12 @@ if [ "${IS_GATEWAY}" = true ] ; then
     --output=${OUTPUT} \
     --import=${PROTO_3RD}
 fi
+
+if [ "${IS_MICROSERVICE}" = true ] ; then
+    echo "Generate microservice codes ..."
+    sasdn rpcs \
+    --proto=${PROTO_ROOT} \
+    --output=${OUTPUT} \
+    --import=${PROTO_3RD} \
+    --exclude=${PROTO_3RD}/google
+fi
