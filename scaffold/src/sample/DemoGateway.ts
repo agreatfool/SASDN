@@ -17,8 +17,8 @@ export default class GatewayServer {
     public init(isDev: boolean = false): Promise<any> {
 
         const configPath = (isDev)
-            ? LibPath.join(__dirname, '..', 'config.dev.json')
-            : LibPath.join(__dirname, '..', 'config.json');
+            ? LibPath.join(__dirname, '..', '..', 'config.dev.json')
+            : LibPath.join(__dirname, '..', '..', 'config.json');
 
         return new Promise((resolve, reject) => {
             Promise.resolve()
