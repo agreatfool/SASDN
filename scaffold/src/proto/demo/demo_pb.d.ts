@@ -1,7 +1,8 @@
 // package: demo
-// file: demo.proto
+// file: demo/demo.proto
 
 import * as jspb from "google-protobuf";
+import * as order_order_pb from "../order/order_pb";
 
 export class Demo extends jspb.Message { 
     getId(): number;

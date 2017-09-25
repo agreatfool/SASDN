@@ -1,4 +1,4 @@
-import MSServer from "./sample/DemoMSServer";
+import MSServer from './sample/DemoMSServer';
 
 const server = new MSServer();
 server.init(process.env.NODE_ENV === 'development')

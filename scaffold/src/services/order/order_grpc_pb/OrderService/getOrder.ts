@@ -1,7 +1,8 @@
 import {ServerUnaryCall, RpcImplCallback} from "grpc";
 import {RpcContext, RpcMiddleware, MiddlewareNext} from "sasdn";
-import {GetOrderRequest, Order, } from "../../../proto/order/order_pb";
-import {OrderLogic} from "../../../logic/microservice/OrderLogic"
+import {GetOrderRequest, Order, } from "../../../../proto/order/order_pb";
+
+import {OrderLogic} from "../../../../logic/microservice/OrderLogic"
 
 export const getOrderHandler: RpcMiddleware = async (ctx: RpcContext, next: MiddlewareNext) => {
     let call: ServerUnaryCall = ctx.call as ServerUnaryCall;

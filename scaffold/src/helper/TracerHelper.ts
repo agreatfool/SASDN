@@ -1,7 +1,7 @@
-import * as zipkin from "zipkin";
-import * as TransportHttp from "zipkin-transport-http";
-import * as CLSContext from "zipkin-context-cls";
-import {ConfigHelper} from "./ConfigHelper";
+import * as zipkin from 'zipkin';
+import * as TransportHttp from 'zipkin-transport-http';
+import * as CLSContext from 'zipkin-context-cls';
+import {ConfigHelper} from './ConfigHelper';
 
 export interface TracerOptions {
     host: string;

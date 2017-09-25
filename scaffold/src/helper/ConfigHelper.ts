@@ -1,6 +1,6 @@
-import * as LibFs from "mz/fs";
+import * as LibFs from 'mz/fs';
 
-import {TracerOptions} from "./TracerHelper";
+import {TracerOptions} from './TracerHelper';
 
 export interface ConfigOptions {
     name: string;
@@ -10,8 +10,8 @@ export interface ConfigOptions {
 }
 
 const defaultConfigs: ConfigOptions = {
-    name: "unknown",
-    host: "127.0.0.1",
+    name: 'unknown',
+    host: '127.0.0.1',
     port: 8080,
     tracer: false
 };

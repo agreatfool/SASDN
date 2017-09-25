@@ -1,4 +1,4 @@
-import GatewayServer from "./sample/DemoGateway";
+import GatewayServer from './sample/DemoGateway';
 
 const server = new GatewayServer();
 server.init(process.env.NODE_ENV === 'development')

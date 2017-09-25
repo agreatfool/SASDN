@@ -3,4 +3,4 @@
 BASEDIR=$(dirname "$0")
 cd ${BASEDIR}/../
 
-DEBUG=SASDN:* node ./build/index.js
+DEBUG=SASDN:* node ./build/msserver.js

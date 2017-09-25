@@ -1,25 +1,25 @@
 import {GatewayApiBase, GatewayContext, MiddlewareNext} from "sasdn";
-import {Order, GetOrderRequest, } from "../../proto/order/order_pb";
-import {OrderLogic} from "../../logic/gateway/OrderLogic";
+import {Order, } from "../../../proto/order/order_pb";
+import {GetDemoRequest, } from "../../../proto/demo/demo_pb";
 
 interface RequestParams {
-    body: GetOrderRequest.AsObject;
+    body: GetDemoRequest.AsObject;
 }
 
-class PostGetOrderApi extends GatewayApiBase {
+class PostGetDemoApi extends GatewayApiBase {
     constructor() {
         super();
         this.method = 'post';
-        this.uri = '/v1/getOrder';
+        this.uri = '/v1/getDemo';
         this.type = 'application/json; charset=utf-8';
         this.schemaDefObj = {
             body: {
                 type: 'object',
                 required: true,
                 schema: {
-                    orderid: {
+                    id: {
                         type: 'string',
-                        required: true,
+                        required: false,
                     },
                 },
             },
@@ -27,13 +27,8 @@ class PostGetOrderApi extends GatewayApiBase {
     }
 
     public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<Order.AsObject> {
-        try {
-            const order = await OrderLogic.getOrder(ctx, next, params);
-            return Promise.resolve(order.toObject());
-        } catch (e) {
-            return e.toString();
-        }
+        return Promise.resolve(new Order().toObject());
     }
 }
 
-export const api = new PostGetOrderApi();
+export const api = new PostGetDemoApi();

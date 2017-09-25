@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "demo.proto",
+    "title": "demo/demo.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -22,7 +22,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/demoDemo"
+              "$ref": "#/definitions/orderOrder"
             }
           }
         },
@@ -43,28 +43,37 @@
     }
   },
   "definitions": {
-    "demoDemo": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "format": "int64"
-        },
-        "name": {
-          "type": "string"
-        },
-        "flag": {
-          "type": "boolean",
-          "format": "boolean"
-        }
-      }
-    },
     "demoGetDemoRequest": {
       "type": "object",
       "properties": {
         "id": {
           "type": "string",
           "format": "int64"
+        }
+      }
+    },
+    "orderOrder": {
+      "type": "object",
+      "properties": {
+        "orderid": {
+          "type": "string",
+          "format": "int64"
+        },
+        "userid": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        },
+        "ispayed": {
+          "type": "boolean",
+          "format": "boolean"
+        },
+        "items": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     }

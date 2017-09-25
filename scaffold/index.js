@@ -1,2 +1,2 @@
 "use strict";
-module.exports = require("./build/index");
+module.exports = require("./build/msserver");

@@ -1,10 +1,10 @@
-import * as grpc from "grpc";
-import {GatewayContext, RpcContext} from "sasdn";
-import {GrpcInstrumentation} from "zipkin-instrumentation-grpcjs"
+import * as grpc from 'grpc';
+import {GatewayContext, RpcContext} from 'sasdn';
+import {GrpcInstrumentation} from 'zipkin-instrumentation-grpcjs';
 
-import {OrderServiceClient} from "../proto/order/order_grpc_pb";
-import {GetOrderRequest, Order,} from "../proto/order/order_pb";
-import {TracerHelper} from "../helper/TracerHelper";
+import {OrderServiceClient} from '../proto/order/order_grpc_pb';
+import {GetOrderRequest, Order,} from '../proto/order/order_pb';
+import {TracerHelper} from '../helper/TracerHelper';
 
 export default class GrpcClientOrder {
     public client: OrderServiceClient;
@@ -17,11 +17,11 @@ export default class GrpcClientOrder {
         );
     }
 
-    public getOrder(request: GetOrderRequest) : Promise<Order> {
+    public getOrder(request: GetOrderRequest): Promise<Order> {
         return new Promise((resolve, reject) => {
             this.client.getOrder(request, (err, response: Order) => {
                 if (err) {
-                    reject(err)
+                    reject(err);
                 } else {
                     resolve(response);
                 }

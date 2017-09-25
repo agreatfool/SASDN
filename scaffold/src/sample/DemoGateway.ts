@@ -1,10 +1,10 @@
-import * as LibPath from "path";
-import * as Koa from "koa";
-import * as koaBodyParser from "koa-bodyparser";
-import {KoaInstrumentation} from "zipkin-instrumentation-koa"
-import RouterLoader from "../router/Router";
-import {ConfigHelper} from "../helper/ConfigHelper";
-import {TracerHelper} from "../helper/TracerHelper";
+import * as LibPath from 'path';
+import * as Koa from 'koa';
+import * as koaBodyParser from 'koa-bodyparser';
+import {KoaInstrumentation} from 'zipkin-instrumentation-koa';
+import RouterLoader from '../router/Router';
+import {ConfigHelper} from '../helper/ConfigHelper';
+import {TracerHelper} from '../helper/TracerHelper';
 
 export default class GatewayServer {
     private _initialized: boolean;

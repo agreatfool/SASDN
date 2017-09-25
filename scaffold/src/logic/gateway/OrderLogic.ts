@@ -1,6 +1,6 @@
-import {GatewayContext, MiddlewareNext} from "sasdn";
-import {Order, GetOrderRequest,} from "../../proto/order/order_pb";
-import GrpcClientOrder from "../../sample/demoMSClient";
+import {GatewayContext, MiddlewareNext} from 'sasdn';
+import {Order, GetOrderRequest,} from '../../proto/order/order_pb';
+import GrpcClientOrder from '../../sample/demoMSClient';
 
 interface RequestParams {
     body: GetOrderRequest.AsObject;
@@ -12,7 +12,7 @@ export namespace OrderLogic {
         const orderId = params.body.orderid;
 
         if (!orderId) {
-            throw new Error("Error: orderId is required!");
+            throw new Error('Error: orderId is required!');
         }
 
         // build request params

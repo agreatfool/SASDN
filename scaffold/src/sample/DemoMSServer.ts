@@ -1,9 +1,9 @@
 import * as LibPath from 'path';
-import {RpcApplication} from "sasdn";
-import {GrpcInstrumentation} from "zipkin-instrumentation-grpcjs"
-import {registerServices} from "../services/register";
-import {ConfigHelper} from "../helper/ConfigHelper";
-import {TracerHelper} from "../helper/TracerHelper";
+import {RpcApplication} from 'sasdn';
+import {GrpcInstrumentation} from 'zipkin-instrumentation-grpcjs';
+import {registerServices} from '../services/Register';
+import {ConfigHelper} from '../helper/ConfigHelper';
+import {TracerHelper} from '../helper/TracerHelper';
 
 export default class MSServer {
     private _initialized: boolean;
