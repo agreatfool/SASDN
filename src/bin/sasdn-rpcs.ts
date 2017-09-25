@@ -1,6 +1,6 @@
-import * as LibFs from "mz/fs";
-import * as program from "commander";
-import * as LibPath from "path";
+import * as LibFs from 'mz/fs';
+import * as program from 'commander';
+import * as LibPath from 'path';
 import {
     genRpcMethodInfo,
     lcfirst,
@@ -15,9 +15,9 @@ import {
     readProtoList,
     RpcMethodInfo,
     RpcProtoServicesInfo
-} from "./lib/lib";
-import {TplEngine} from "./lib/template";
-import {Method as ProtobufMethod, Service as ProtobufService} from "protobufjs";
+} from './lib/lib';
+import {TplEngine} from './lib/template';
+import {Method as ProtobufMethod, Service as ProtobufService} from 'protobufjs';
 
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:RpcServices');
@@ -147,7 +147,7 @@ class ServiceCLI {
         if (protoServicesInfos.length === 0) {
             return;
         }
-        let outputPath = LibPath.join(OUTPUT_DIR, 'services', 'register.ts');
+        let outputPath = LibPath.join(OUTPUT_DIR, 'services', 'Register.ts');
         TplEngine.registerHelper('lcfirst', lcfirst);
         let content = TplEngine.render('rpcs/register', {
             infos: protoServicesInfos,

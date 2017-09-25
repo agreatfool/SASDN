@@ -43,27 +43,27 @@ class GatewayApiBase {
             let gatewayJoiSchema = gatewayJoiSchemaMap[key];
             let joiSchema = {};
             switch (gatewayJoiSchema.type) {
-                case "array":
+                case 'array':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.array().required()
                         : Joi_1.joi.array().optional();
                     break;
-                case "boolean":
+                case 'boolean':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.boolean().required()
                         : Joi_1.joi.boolean().optional();
                     break;
-                case "number":
+                case 'number':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.number().required()
                         : Joi_1.joi.number().optional();
                     break;
-                case "object":
+                case 'object':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.object(this._convertSchemaDefToJoiSchema(gatewayJoiSchema.schema)).required()
                         : Joi_1.joi.object(this._convertSchemaDefToJoiSchema(gatewayJoiSchema.schema)).optional();
                     break;
-                case "string":
+                case 'string':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.string().required()
                         : Joi_1.joi.string().optional();
@@ -80,3 +80,4 @@ class GatewayApiBase {
     }
 }
 exports.GatewayApiBase = GatewayApiBase;
+//# sourceMappingURL=ApiBase.js.map

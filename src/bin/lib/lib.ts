@@ -1,17 +1,17 @@
-import * as LibPath from "path";
-import * as LibFs from "mz/fs";
-import * as recursive from "recursive-readdir";
-import * as protobuf from "protobufjs";
+import * as LibPath from 'path';
+import * as LibFs from 'mz/fs';
+import * as recursive from 'recursive-readdir';
+import * as protobuf from 'protobufjs';
 import {
     IParserResult as ProtobufIParserResult,
     Method as ProtobufMethod,
     Namespace as ProtobufNamespace,
     Service as ProtobufService
-} from "protobufjs";
-import * as bluebird from "bluebird";
-import * as LibMkdirP from "mkdirp";
-import {Schema as SwaggerSchema, Spec as SwaggerSpec} from "swagger-schema-official";
-import Bluebird = require("bluebird");
+} from 'protobufjs';
+import * as bluebird from 'bluebird';
+import * as LibMkdirP from 'mkdirp';
+import {Schema as SwaggerSchema, Spec as SwaggerSpec} from 'swagger-schema-official';
+import Bluebird = require('bluebird');
 
 const mkdirp: (arg1: string) => Bluebird<string> = bluebird.promisify<string, string>(LibMkdirP);
 
@@ -41,11 +41,13 @@ export interface ProtoParseResult {
     result: ProtobufIParserResult;
     protoFile: ProtoFile;
 }
+
 export interface ProtoMsgImportInfo {
     msgType: string;
     namespace: string;
     protoFile: ProtoFile;
 }
+
 export interface ProtoMsgImportInfos {
     [msgTypeStr: string]: ProtoMsgImportInfo;
 }
@@ -57,6 +59,7 @@ export interface RpcProtoServicesInfo {
         [serviceName: string]: Array<RpcMethodInfo>;
     };
 }
+
 export interface RpcMethodInfo {
     callTypeStr: string;
     requestTypeStr: string;
@@ -66,6 +69,7 @@ export interface RpcMethodInfo {
     methodName: string;
     protoMsgImportPath: RpcMethodImportPathInfo;
 }
+
 /**
  * Used: Command rpcs, generating services stubs.
  * When handling proto to generate services files, it's necessary to know
@@ -155,7 +159,7 @@ export const parseServicesFromProto = function (proto: ProtobufIParserResult): A
     return services;
 };
 
-export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, protoFile: ProtoFile, symlink: string = "."): ProtoMsgImportInfos {
+export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, protoFile: ProtoFile, symlink: string = '.'): ProtoMsgImportInfos {
     let pkgRoot = proto.root.lookup(proto.package) as ProtobufNamespace;
     let msgImportInfos = {} as ProtoMsgImportInfos;
     let nestedKeys = Object.keys(pkgRoot.nested);
@@ -234,8 +238,8 @@ export namespace Proto {
      * @returns {string}
      */
     export function getPathToRoot(filePath: string) {
-        const depth = filePath.replace(/\\/g, '/').split("/").length;
-        return depth === 1 ? "./" : new Array(depth).join("../");
+        const depth = filePath.replace(/\\/g, '/').split('/').length;
+        return depth === 1 ? './' : new Array(depth).join('../');
     }
 
     /**
@@ -244,7 +248,7 @@ export namespace Proto {
      * @returns {string}
      */
     export const filePathToPseudoNamespace = function (filePath: string): string {
-        return filePath.replace(".proto", "").replace(/\//g, "_").replace(/\./g, "_").replace(/-/g, "_") + "_pb";
+        return filePath.replace('.proto', '').replace(/\//g, '_').replace(/\./g, '_').replace(/-/g, '_') + '_pb';
     };
 
     /**
@@ -253,7 +257,7 @@ export namespace Proto {
      * @returns {string}
      */
     export function filePathToServiceNamespace(filePath: string): string {
-        return filePath.replace(".proto", "").replace(/\//g, "_").replace(/\./g, "_").replace(/-/g, "_") + "_grpc_pb";
+        return filePath.replace('.proto', '').replace(/\//g, '_').replace(/\./g, '_').replace(/-/g, '_') + '_grpc_pb';
     }
 
     /**
@@ -335,14 +339,16 @@ export namespace Proto {
     /**
      * Generate full service stub code output dir.
      * @param {ProtoFile} protoFile
+     * @param {string} packageName
      * @param {string} serviceName
      * @param {string} apiName
      * @returns {string}
      */
-    export const genFullOutputRouterApiPath = function (protoFile: ProtoFile, serviceName: string = 'default', apiName: string = 'default') {
+    export const genFullOutputRouterApiPath = function (protoFile: ProtoFile, packageName: string = 'default', serviceName: string = 'default', apiName: string = 'default') {
         return LibPath.join(
             protoFile.outputPath,
             'router',
+            packageName,
             serviceName,
             apiName
         );

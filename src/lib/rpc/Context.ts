@@ -1,8 +1,8 @@
 ///<reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts"/>
-import * as assert from "assert";
-import {ICallStatus, IServerCall, Metadata, RpcImplCallback, status as GrpcStatus} from "grpc";
+import * as assert from 'assert';
+import {ICallStatus, IServerCall, Metadata, RpcImplCallback, status as GrpcStatus} from 'grpc';
 
-import {RpcApplication} from "./App";
+import {RpcApplication} from './App';
 
 export enum GrpcOpType {
     SEND_INITIAL_METADATA = 0,

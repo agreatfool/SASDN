@@ -1,7 +1,7 @@
-import * as LibFs from "mz/fs";
-import * as LibFsExtra from "fs-extra";
-import * as LibPath from "path";
-import * as prompt from "prompt";
+import * as LibFs from 'mz/fs';
+import * as LibFsExtra from 'fs-extra';
+import * as LibPath from 'path';
+import * as prompt from 'prompt';
 import {mkdir} from './lib/lib';
 
 const debug = require('debug')('SASDN:CLI');
@@ -29,7 +29,7 @@ prompt.get([
         name: 'version',
         required: true,
         default: '0.0.0',
-        message: "Wrong project version",
+        message: 'Wrong project version',
         conform: (value) => {
             let versions = value.split('.');
             for (let key of versions) {

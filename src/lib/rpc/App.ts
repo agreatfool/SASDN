@@ -1,11 +1,11 @@
 ///<reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts"/>
-import * as EventEmitter from "events";
-import * as assert from "assert";
-import * as koaCompose from "koa-compose";
-import * as koaConvert from "koa-convert";
-import * as isGeneratorFunction from "is-generator-function";
-import {IServerCall, RpcImplCallback, Server, ServerCredentials} from "grpc";
-import {RpcContext} from "./Context";
+import * as EventEmitter from 'events';
+import * as assert from 'assert';
+import * as koaCompose from 'koa-compose';
+import * as koaConvert from 'koa-convert';
+import * as isGeneratorFunction from 'is-generator-function';
+import {IServerCall, RpcImplCallback, Server, ServerCredentials} from 'grpc';
+import {RpcContext} from './Context';
 
 const deprecate = require('depd')('SASDN');
 const debug = require('debug')('SASDN:application');

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import * as program from "commander";
+import * as program from 'commander';
 
 const pkg = require('../../package.json');
 

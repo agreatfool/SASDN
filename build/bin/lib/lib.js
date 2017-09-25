@@ -75,7 +75,7 @@ exports.parseServicesFromProto = function (proto) {
     });
     return services;
 };
-exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = ".") {
+exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
     let pkgRoot = proto.root.lookup(proto.package);
     let msgImportInfos = {};
     let nestedKeys = Object.keys(pkgRoot.nested);
@@ -144,8 +144,8 @@ var Proto;
      * @returns {string}
      */
     function getPathToRoot(filePath) {
-        const depth = filePath.replace(/\\/g, '/').split("/").length;
-        return depth === 1 ? "./" : new Array(depth).join("../");
+        const depth = filePath.replace(/\\/g, '/').split('/').length;
+        return depth === 1 ? './' : new Array(depth).join('../');
     }
     Proto.getPathToRoot = getPathToRoot;
     /**
@@ -154,7 +154,7 @@ var Proto;
      * @returns {string}
      */
     Proto.filePathToPseudoNamespace = function (filePath) {
-        return filePath.replace(".proto", "").replace(/\//g, "_").replace(/\./g, "_").replace(/-/g, "_") + "_pb";
+        return filePath.replace('.proto', '').replace(/\//g, '_').replace(/\./g, '_').replace(/-/g, '_') + '_pb';
     };
     /**
      * dummy/your.proto => dummy_your_grpc_pb
@@ -162,7 +162,7 @@ var Proto;
      * @returns {string}
      */
     function filePathToServiceNamespace(filePath) {
-        return filePath.replace(".proto", "").replace(/\//g, "_").replace(/\./g, "_").replace(/-/g, "_") + "_grpc_pb";
+        return filePath.replace('.proto', '').replace(/\//g, '_').replace(/\./g, '_').replace(/-/g, '_') + '_grpc_pb';
     }
     Proto.filePathToServiceNamespace = filePathToServiceNamespace;
     /**
@@ -217,12 +217,13 @@ var Proto;
     /**
      * Generate full service stub code output dir.
      * @param {ProtoFile} protoFile
+     * @param {string} packageName
      * @param {string} serviceName
      * @param {string} apiName
      * @returns {string}
      */
-    Proto.genFullOutputRouterApiPath = function (protoFile, serviceName = 'default', apiName = 'default') {
-        return LibPath.join(protoFile.outputPath, 'router', serviceName, apiName);
+    Proto.genFullOutputRouterApiPath = function (protoFile, packageName = 'default', serviceName = 'default', apiName = 'default') {
+        return LibPath.join(protoFile.outputPath, 'router', packageName, serviceName, apiName);
     };
 })(Proto = exports.Proto || (exports.Proto = {}));
 /**
@@ -379,3 +380,4 @@ var Swagger;
     }
     Swagger.parseSwaggerDefinitionMap = parseSwaggerDefinitionMap;
 })(Swagger = exports.Swagger || (exports.Swagger = {}));
+//# sourceMappingURL=lib.js.map

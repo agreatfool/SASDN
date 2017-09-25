@@ -1,8 +1,8 @@
-import * as LibFs from "mz/fs";
-import * as program from "commander";
-import * as LibPath from "path";
-import * as LibShell from "shelljs";
-import {mkdir, Proto, ProtoFile, readProtoList} from "./lib/lib";
+import * as LibFs from 'mz/fs';
+import * as program from 'commander';
+import * as LibPath from 'path';
+import * as LibShell from 'shelljs';
+import {mkdir, Proto, ProtoFile, readProtoList} from './lib/lib';
 
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:Proto');

@@ -1,6 +1,6 @@
-import {Context as KoaContext, Middleware as KoaMiddleware, Request as KoaRequest} from "koa";
-import {joi, joiValidate} from "../utility/Joi";
-import {MiddlewareNext} from "../rpc/App";
+import {Context as KoaContext, Middleware as KoaMiddleware, Request as KoaRequest} from 'koa';
+import {joi, joiValidate} from '../utility/Joi';
+import {MiddlewareNext} from '../rpc/App';
 
 export interface GatewayContext extends KoaContext {
     params: any;
@@ -72,27 +72,27 @@ export abstract class GatewayApiBase {
             let joiSchema = {} as joi.Schema;
 
             switch (gatewayJoiSchema.type) {
-                case "array":
+                case 'array':
                     joiSchema = (gatewayJoiSchema.required)
                         ? joi.array().required()
                         : joi.array().optional();
                     break;
-                case "boolean":
+                case 'boolean':
                     joiSchema = (gatewayJoiSchema.required)
                         ? joi.boolean().required()
                         : joi.boolean().optional();
                     break;
-                case "number":
+                case 'number':
                     joiSchema = (gatewayJoiSchema.required)
                         ? joi.number().required()
                         : joi.number().optional();
                     break;
-                case "object":
+                case 'object':
                     joiSchema = (gatewayJoiSchema.required)
                         ? joi.object(this._convertSchemaDefToJoiSchema(gatewayJoiSchema.schema)).required()
                         : joi.object(this._convertSchemaDefToJoiSchema(gatewayJoiSchema.schema)).optional();
                     break;
-                case "string":
+                case 'string':
                     joiSchema = (gatewayJoiSchema.required)
                         ? joi.string().required()
                         : joi.string().optional();
