@@ -59,5 +59,5 @@ if [ "${IS_MICROSERVICE}" = true ] ; then
     --proto=${PROTO_ROOT} \
     --output=${OUTPUT} \
     --import=${PROTO_3RD} \
-    --exclude=${PROTO_3RD}/google
+    --exclude=${PROTO_3RD}/google,${PROTO_ROOT}/demo
 fi
