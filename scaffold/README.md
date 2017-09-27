@@ -20,7 +20,7 @@
 │   ├── /router/                # Gateway Routers：依据swagger.json配置自动生成
 │   ├── /services/              # The service file generated through the proto file
 │   ├── /demoGatewayServer.ts   # Gateway Server demo
-│   ├── /demoMSClient.ts        # Microservice Client demo
+│   ├── /MSClientOrder.ts       # Microservice Client demo
 │   ├── /demoMSServer.ts        # Microservice Server demo
 │   ├── /index.js               # Server-side startup script
 │   └── ...                     # Other core framework modules

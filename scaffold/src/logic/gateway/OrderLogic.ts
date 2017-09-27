@@ -1,6 +1,6 @@
 import {GatewayContext, MiddlewareNext} from 'sasdn';
 import {Order, GetOrderRequest,} from '../../proto/order/order_pb';
-import GrpcClientOrder from '../../sample/demoMSClient';
+import MSClientOrder from '../../sample/client/MSClientOrder';
 
 interface RequestParams {
     body: GetOrderRequest.AsObject;
@@ -9,7 +9,7 @@ interface RequestParams {
 export namespace OrderLogic {
 
     export async function getOrder(ctx: GatewayContext, next?: MiddlewareNext, params?: RequestParams): Promise<Order> {
-        const orderId = params.body.orderid;
+        const orderId = params.body.orderId;
 
         if (!orderId) {
             throw new Error('Error: orderId is required!');
@@ -17,10 +17,10 @@ export namespace OrderLogic {
 
         // build request params
         const request = new GetOrderRequest();
-        request.setOrderid(orderId);
+        request.setOrderId(orderId);
 
         // connect && query
-        const orderClient = new GrpcClientOrder(ctx);
+        const orderClient = new MSClientOrder(ctx);
 
         // return
         return await orderClient.getOrder(request);

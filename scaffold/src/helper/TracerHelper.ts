@@ -37,27 +37,26 @@ export class TracerHelper {
         this._initialized = false;
     }
 
-    public init() {
-        return new Promise((resolve) => {
-            const options = ConfigHelper.instance().getOption();
+    public async init(): Promise<any> {
+        const options = ConfigHelper.instance().getOption();
 
-            if (options.tracer !== false) {
-                this._tracer = new zipkin.Tracer({
-                    ctxImpl: new CLSContext('zipkin'),
-                    recorder: new zipkin.BatchRecorder({
-                        logger: new TransportHttp.HttpLogger({
-                            endpoint: `http://${(options.tracer as TracerOptions).host}:${(options.tracer as TracerOptions).port}/api/v1/spans`
-                        })
-                    }),
-                    sampler: new zipkin.sampler.CountingSampler(1), // sample rate 0.5 will sample 1 % of all incoming requests
-                });
-            }
+        if (options.tracer !== false) {
+            this._tracer = new zipkin.Tracer({
+                ctxImpl: new CLSContext('zipkin'),
+                recorder: new zipkin.BatchRecorder({
+                    logger: new TransportHttp.HttpLogger({
+                        endpoint: `http://${(options.tracer as TracerOptions).host}:${(options.tracer as TracerOptions).port}/api/v1/spans`
+                    })
+                }),
+                sampler: new zipkin.sampler.CountingSampler(1), // sample rate 0.5 will sample 1 % of all incoming requests
+            });
+        }
 
-            this._serviceName = options.name;
-            this._port = options.port;
-            this._initialized = true;
-            resolve();
-        });
+        this._serviceName = options.name;
+        this._port = options.port;
+        this._initialized = true;
+
+        return Promise.resolve();
     }
 
     public getTraceInfo(isRequest?: boolean, remoteServiceName?: string): TraceInfo {

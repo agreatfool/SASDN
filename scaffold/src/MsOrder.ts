@@ -1,6 +1,6 @@
-import MSServer from './sample/DemoMSServer';
+import MSOrder from './sample/MSOrder';
 
-const server = new MSServer();
+const server = new MSOrder();
 server.init(process.env.NODE_ENV === 'development')
     .then(() => {
         server.start();

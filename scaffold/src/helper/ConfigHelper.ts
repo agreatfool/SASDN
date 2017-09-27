@@ -33,17 +33,18 @@ export class ConfigHelper {
         this._initialized = false;
     }
 
-    public init(configPath: string) {
-        return LibFs.stat(configPath)
-            .then((stats) => {
-                // validate file is exist
-                if (!stats.isFile()) {
-                    throw new Error(`[Config] Invalid path, config:${configPath}`);
-                }
+    public async init(configPath: string): Promise<any> {
+        let stats = await LibFs.stat(configPath);
 
-                this._configs = ConfigHelper.mergerObject(defaultConfigs, require(configPath));
-                this._initialized = true;
-            });
+        // validate file is exist
+        if (!stats.isFile()) {
+            throw new Error(`[Config] Invalid path, config:${configPath}`);
+        }
+
+        this._configs = ConfigHelper.mergerObject(defaultConfigs, require(configPath));
+        this._initialized = true;
+
+        return Promise.resolve();
     }
 
     public getOption(): ConfigOptions {

@@ -6,8 +6,8 @@ export namespace OrderLogic {
     export async function getOrder(request: GetOrderRequest, ctx?: RpcContext): Promise<Order> {
 
         const order = new Order();
-        order.setOrderid(request.getOrderid());
-        order.setUserid('demoUserId');
+        order.setOrderId(request.getOrderId());
+        order.setUserId('dummyUserId');
         order.setPrice('2000');
         order.setIspayed(true);
         order.getItemsMap()

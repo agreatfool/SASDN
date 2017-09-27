@@ -5,7 +5,7 @@ import {registerServices} from '../services/Register';
 import {ConfigHelper} from '../helper/ConfigHelper';
 import {TracerHelper} from '../helper/TracerHelper';
 
-export default class MSServer {
+export default class MSOrder {
     private _initialized: boolean;
     public app: RpcApplication;
 
@@ -13,28 +13,21 @@ export default class MSServer {
         this._initialized = false;
     }
 
-    public init(isDev: boolean = false): Promise<any> {
+    public async init(isDev: boolean = false): Promise<any> {
         const configPath = (isDev)
             ? LibPath.join(__dirname, '..', '..', 'config.dev.json')
             : LibPath.join(__dirname, '..', '..', 'config.json');
-        return new Promise((resolve, reject) => {
-            Promise.resolve()
-                .then(() => ConfigHelper.instance().init(configPath))
-                .then(() => TracerHelper.instance().init())
-                .then(() => {
-                    const app = new RpcApplication();
-                    app.use(GrpcInstrumentation.middleware(TracerHelper.instance().getTraceInfo()));
-                    this.app = app;
-                })
-                .then(() => {
-                    this._initialized = true;
-                    resolve();
-                })
-                .catch((err) => {
-                    reject(err);
-                });
-        });
 
+        await ConfigHelper.instance().init(configPath);
+        await TracerHelper.instance().init();
+
+        const app = new RpcApplication();
+        app.use(GrpcInstrumentation.middleware(TracerHelper.instance().getTraceInfo()));
+        this.app = app;
+
+        this._initialized = true;
+
+        return Promise.resolve();
     }
 
     public start(): void {
