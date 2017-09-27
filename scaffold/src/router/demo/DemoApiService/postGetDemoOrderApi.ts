@@ -1,6 +1,7 @@
 import {GatewayApiBase, GatewayContext, MiddlewareNext} from "sasdn";
 import {Order, } from "../../../proto/order/order_pb";
 import {GetDemoOrderRequest, } from "../../../proto/demo/demo_pb";
+import {OrderLogic} from "../../../logic/gateway/OrderLogic";
 
 interface RequestParams {
     body: GetDemoOrderRequest.AsObject;
@@ -27,7 +28,8 @@ class PostGetDemoOrderApi extends GatewayApiBase {
     }
 
     public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<Order.AsObject> {
-        return Promise.resolve((new Order()).toObject());
+        console.log(`[Gateway] /v1/getDemoOrder, params: ${JSON.stringify(params)}`);
+        return Promise.resolve((await OrderLogic.getOrder(ctx, next, params)).toObject() as Order.AsObject);
     }
 }
 

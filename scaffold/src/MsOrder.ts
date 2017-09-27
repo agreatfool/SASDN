@@ -8,3 +8,7 @@ server.init(process.env.NODE_ENV === 'development')
     .catch((err) => {
         console.log(err.message);
     });
+
+process.on('unhandledRejection', function (reason, p) {
+    console.log('Unhandled Rejection at:', p, 'reason:', reason);
+});

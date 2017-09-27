@@ -24,10 +24,10 @@ export default class GWDemo {
         await RouterLoader.instance().init();
 
         const app = new Koa();
-
         app.use(KoaInstrumentation.middleware(TracerHelper.instance().getTraceInfo()));
         app.use(koaBodyParser({formLimit: '2048kb'})); // post body parser
         app.use(RouterLoader.instance().getRouter().routes());
+        this.app = app;
 
         this._initialized = true;
 
@@ -40,8 +40,10 @@ export default class GWDemo {
         }
 
         const options = ConfigHelper.instance().getOption();
-        this.app.listen(options.port, options.host, () => {
-            console.log(`API Gateway Start, Address: ${options.host}:${options.port + 1}!`);
+        const host = options.host;
+        const port = options.port + 1;
+        this.app.listen(port, options.host, () => {
+            console.log(`API Gateway Start, Address: ${host}:${port}!`);
         });
     }
 }
