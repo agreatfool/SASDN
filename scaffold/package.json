@@ -4,25 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
-    "start": "better-npm-run start",
-    "dev": "better-npm-run dev"
-  },
-  "betterScripts": {
-    "start": {
-      "command": "gulp typescript & gulp protoc-copy & node index.js",
-      "env": {
-        "NODE_ENV": "production",
-        "DEBUG": "SASDN:*"
-      }
-    },
-    "dev": {
-      "command": "gulp typescript & gulp protoc-copy & node index.js",
-      "env": {
-        "NODE_ENV": "development",
-        "DEBUG": "SASDN:*"
-      }
-    }
+    "test": "jest"
   },
   "license": "MIT",
   "dependencies": {

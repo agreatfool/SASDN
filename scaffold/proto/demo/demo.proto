@@ -6,11 +6,7 @@ import "order/order.proto";
 package demo;
 
 message GetDemoOrderRequest {
-    int64 id = 1;
-}
-
-service DemoService {
-    rpc GetDemoOrder (GetDemoOrderRequest) returns (order.Order) {}
+    int64 orderId = 1;
 }
 
 // gPRC-getway Test

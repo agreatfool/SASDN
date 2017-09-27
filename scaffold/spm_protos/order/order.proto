@@ -5,27 +5,17 @@ import "google/api/annotations.proto";
 package order;
 
 message Order {
-    int64 orderid = 1;
-    string userid = 2;
+    int64 orderId = 1;
+    string userId = 2;
     string price = 3;
     bool ispayed = 4;
     map<int64, string> items = 5;
 }
 
 message GetOrderRequest {
-    int64 orderid = 1;
+    int64 orderId = 1;
 }
 
 service OrderService {
     rpc GetOrder (GetOrderRequest) returns (Order) {}
-}
-
-// gPRC-getway Test
-service OrderApiService {
-    rpc GetOrderApi (GetOrderRequest) returns (Order) {
-        option (google.api.http) = {
-            post: "/v1/getOrder"
-            body: "*"
-        };
-    }
 }

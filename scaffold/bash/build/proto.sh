@@ -41,7 +41,7 @@ sasdn proto \
 --output=${OUTPUT} \
 --import=${PROTO_3RD} \
 --swagger \
---exclude=${PROTO_3RD}/google,${PROTO_3RD}/order \
+--exclude=${PROTO_3RD}/google \
 --all
 
 if [ "${IS_GATEWAY}" = true ] ; then
