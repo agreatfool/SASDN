@@ -5,25 +5,19 @@ import "order/order.proto";
 
 package demo;
 
-message Demo {
-    int64 id = 1;
-    string name = 2;
-    bool flag = 3;
-}
-
-message GetDemoRequest {
+message GetDemoOrderRequest {
     int64 id = 1;
 }
 
 service DemoService {
-    rpc GetDemo (GetDemoRequest) returns (order.Order) {}
+    rpc GetDemoOrder (GetDemoOrderRequest) returns (order.Order) {}
 }
 
 // gPRC-getway Test
 service DemoApiService {
-    rpc GetDemoApi (GetDemoRequest) returns (order.Order) {
+    rpc GetDemoOrderApi (GetDemoOrderRequest) returns (order.Order) {
         option (google.api.http) = {
-            post: "/v1/getDemo"
+            post: "/v1/getDemoOrder"
             body: "*"
         };
     }

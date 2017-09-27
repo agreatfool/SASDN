@@ -1,7 +1,7 @@
 #!/bin/bash
 
 BASEDIR=$(dirname "$0")
-cd ${BASEDIR}/../
+cd ${BASEDIR}/../../
 ROOT=${PWD}
 
 PROTO_ROOT=${ROOT}/proto
@@ -41,11 +41,11 @@ sasdn proto \
 --output=${OUTPUT} \
 --import=${PROTO_3RD} \
 --swagger \
---exclude=${PROTO_3RD}/google \
+--exclude=${PROTO_3RD}/google,${PROTO_3RD}/order \
 --all
 
 if [ "${IS_GATEWAY}" = true ] ; then
-    echo "Generate gateway codes ..."
+    echo "Generate gateway router codes ..."
     sasdn gateway \
     --proto=${PROTO_ROOT} \
     --swagger=${OUTPUT}/proto \
@@ -54,7 +54,7 @@ if [ "${IS_GATEWAY}" = true ] ; then
 fi
 
 if [ "${IS_MICROSERVICE}" = true ] ; then
-    echo "Generate microservice codes ..."
+    echo "Generate microservice service codes ..."
     sasdn rpcs \
     --proto=${PROTO_ROOT} \
     --output=${OUTPUT} \
