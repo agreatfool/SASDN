@@ -21,7 +21,6 @@ export namespace OrderLogic {
 
         // connect && query
         const orderClient = new MSClientOrder(ctx);
-        console.log('shall be right');
         const order = await orderClient.getOrder(request);
 
         // return

@@ -21,8 +21,14 @@ export default class MSClientOrder {
         );
     }
 
-    public async getOrder(request: GetOrderRequest): Promise<Order> {
-        const getOrderPromise = LibUtil.promisify<GetOrderRequest, Order>(this.client.getOrder);
-        return getOrderPromise(request);
+    public getOrder(request: GetOrderRequest): Promise<Order> {
+        return new Promise((resolve, reject) => {
+            this.client.getOrder(request, (err, res: Order) => {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(res);
+            });
+        });
     }
 }

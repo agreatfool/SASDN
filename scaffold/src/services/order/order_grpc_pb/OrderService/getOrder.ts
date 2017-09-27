@@ -9,10 +9,10 @@ export const getOrderHandler: RpcMiddleware = async (ctx: RpcContext, next: Midd
     let request = call.request as GetOrderRequest;
 
     console.log(`[MicroService] getOrderHandler, request: ${JSON.stringify(request.toObject())}`);
+    let order = await OrderLogic.getOrder(request);
+    console.log(`[MicroService] getorderHandler, response: ${JSON.stringify(order.toObject())}`);
 
-    await next();
-
-    callback(null, await OrderLogic.getOrder(request));
+    callback(null, order);
 
     return Promise.resolve();
 };
