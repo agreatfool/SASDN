@@ -13,7 +13,6 @@ const LibFsExtra = require("fs-extra");
 const LibPath = require("path");
 const prompt = require("prompt");
 const lib_1 = require("./lib/lib");
-const debug = require('debug')('SASDN:CLI');
 prompt.start();
 prompt.get([
     {
@@ -43,7 +42,7 @@ prompt.get([
     }
 ], (err, input) => {
     ScaffoldCLI.instance().run(input).catch((err) => {
-        debug('err: %O', err.message);
+        console.log('err: ', err.message);
     });
 });
 class ScaffoldCLI {
@@ -52,7 +51,7 @@ class ScaffoldCLI {
     }
     run(input) {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ScaffoldCLI start.');
+            console.log('ScaffoldCLI start.');
             this._input = input;
             yield this._validate();
             yield this._genScaffold();
@@ -60,12 +59,12 @@ class ScaffoldCLI {
     }
     _validate() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ScaffoldCLI validate.');
+            console.log('ScaffoldCLI validate.');
         });
     }
     _genScaffold() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ScaffoldCLI _genScaffold.');
+            console.log('ScaffoldCLI _genScaffold.');
             try {
                 yield this._copyScaffold();
                 yield this._updateScaffold();
@@ -77,30 +76,22 @@ class ScaffoldCLI {
     }
     _copyScaffold() {
         return __awaiter(this, void 0, void 0, function* () {
-            return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
-                const scaffoldDir = LibPath.join(__dirname, '..', '..', 'scaffold');
-                if (!LibFs.existsSync(scaffoldDir) || !LibFs.statSync(scaffoldDir).isDirectory()) {
-                    reject('scaffold dir not found, path:' + scaffoldDir);
-                    return;
-                }
-                const outputDir = LibPath.join(process.cwd(), this._input.name);
-                if (LibFs.existsSync(outputDir) && LibFs.statSync(outputDir).isDirectory()) {
-                    reject('output dir already exists, path:' + outputDir);
-                    return;
-                }
-                try {
-                    yield lib_1.mkdir(outputDir);
-                    yield LibFsExtra.copy(scaffoldDir, outputDir, (e) => {
-                        if (e == null) {
-                            debug('ScaffoldCLI _genScaffold finish.');
-                            resolve();
-                        }
-                    });
-                }
-                catch (e) {
-                    reject(e.message);
-                }
-            }));
+            const scaffoldDir = LibPath.join(__dirname, '..', '..', 'scaffold');
+            if (!LibFs.existsSync(scaffoldDir) || !LibFs.statSync(scaffoldDir).isDirectory()) {
+                throw new Error('scaffold dir not found, path:' + scaffoldDir);
+            }
+            const outputDir = LibPath.join(process.cwd(), this._input.name);
+            if (LibFs.existsSync(outputDir) && LibFs.statSync(outputDir).isDirectory()) {
+                throw new Error('output dir already exists, path:' + outputDir);
+            }
+            try {
+                yield lib_1.mkdir(outputDir);
+                yield LibFsExtra.copy(scaffoldDir, outputDir);
+                console.log('ScaffoldCLI _genScaffold finish.');
+            }
+            catch (e) {
+                throw e;
+            }
         });
     }
     _updateScaffold() {
@@ -112,21 +103,13 @@ class ScaffoldCLI {
                 packageConfig.name = this._input.name;
                 packageConfig.version = this._input.version;
                 packageConfig.description = this._input.description;
-                yield LibFs.writeFile(packageConfigPath, Buffer.from(JSON.stringify(packageConfig, null, 2)), (err) => {
-                    if (err) {
-                        throw err;
-                    }
-                });
+                yield LibFs.writeFile(packageConfigPath, Buffer.from(JSON.stringify(packageConfig, null, 2)));
                 let spmConfigPath = LibPath.join(outputDir, 'spm.json');
                 let spmConfig = this._getPackageConfig(spmConfigPath);
                 spmConfig.name = this._input.name;
                 spmConfig.version = this._input.version;
                 spmConfig.description = this._input.description;
-                yield LibFs.writeFile(spmConfigPath, Buffer.from(JSON.stringify(spmConfig, null, 2)), (err) => {
-                    if (err) {
-                        throw err;
-                    }
-                });
+                yield LibFs.writeFile(spmConfigPath, Buffer.from(JSON.stringify(spmConfig, null, 2)));
             }
             catch (e) {
                 throw e;
@@ -137,4 +120,3 @@ class ScaffoldCLI {
         return JSON.parse(LibFs.readFileSync(path).toString());
     }
 }
-//# sourceMappingURL=sasdn-scaffold.js.map

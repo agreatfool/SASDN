@@ -1,8 +1,8 @@
 /// <reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts" />
 /// <reference types="node" />
-import * as EventEmitter from "events";
-import { IServerCall, RpcImplCallback, Server, ServerCredentials } from "grpc";
-import { RpcContext } from "./Context";
+import * as EventEmitter from 'events';
+import { IServerCall, RpcImplCallback, Server, ServerCredentials } from 'grpc';
+import { RpcContext } from './Context';
 export declare type RpcMiddleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
 export declare type MiddlewareNext = () => Promise<any>;
 export declare type WrappedHandler = (call: IServerCall, callback?: RpcImplCallback) => Promise<any>;

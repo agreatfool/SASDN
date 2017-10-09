@@ -20,7 +20,6 @@ import {TplEngine} from './lib/template';
 import {Method as ProtobufMethod, Service as ProtobufService} from 'protobufjs';
 
 const pkg = require('../../package.json');
-const debug = require('debug')('SASDN:CLI:RpcServices');
 
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
@@ -48,14 +47,14 @@ class ServiceCLI {
     }
 
     public async run() {
-        debug('ServiceCLI start.');
+        console.log('ServiceCLI start.');
         await this._validate();
         await this._loadProtos();
         await this._genProtoServices();
     }
 
     private async _validate() {
-        debug('ServiceCLI validate.');
+        console.log('ServiceCLI validate.');
 
         if (!PROTO_DIR) {
             throw new Error('--proto is required');
@@ -75,7 +74,7 @@ class ServiceCLI {
     }
 
     private async _loadProtos() {
-        debug('ServiceCLI load proto files.');
+        console.log('ServiceCLI load proto files.');
 
         this._protoFiles = await readProtoList(PROTO_DIR, OUTPUT_DIR);
         if (IMPORTS.length > 0) {
@@ -89,7 +88,7 @@ class ServiceCLI {
     }
 
     private async _genProtoServices() {
-        debug('ServiceCLI generate services.');
+        console.log('ServiceCLI generate services.');
 
         let protoServicesInfos = [] as Array<RpcProtoServicesInfo>;
 
@@ -157,7 +156,7 @@ class ServiceCLI {
     }
 
     private async _genService(protoFile: ProtoFile, service: ProtobufService, shallIgnore: boolean = false): Promise<Array<RpcMethodInfo>> {
-        debug('ServiceCLI generate service: %s', service.name);
+        console.log('ServiceCLI generate service: %s', service.name);
 
         let methodKeys = Object.keys(service.methods);
         if (methodKeys.length === 0) {
@@ -175,7 +174,7 @@ class ServiceCLI {
     }
 
     private async _genServiceMethod(protoFile: ProtoFile, service: ProtobufService, method: ProtobufMethod, shallIgnore: boolean = false): Promise<RpcMethodInfo> {
-        debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
+        console.log('ServiceCLI generate service method: %s.%s', service.name, method.name);
 
         let outputPath = Proto.genFullOutputServicePath(protoFile, service, method);
         let methodInfo = genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
@@ -216,5 +215,5 @@ class ServiceCLI {
 }
 
 ServiceCLI.instance().run().catch((err: Error) => {
-    debug('err: %O', err.message);
+    console.log('err: ', err.message);
 });

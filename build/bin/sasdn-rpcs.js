@@ -14,7 +14,6 @@ const LibPath = require("path");
 const lib_1 = require("./lib/lib");
 const template_1 = require("./lib/template");
 const pkg = require('../../package.json');
-const debug = require('debug')('SASDN:CLI:RpcServices');
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-o, --output <dir>', 'directory to output service codes')
@@ -39,7 +38,7 @@ class ServiceCLI {
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ServiceCLI start.');
+            console.log('ServiceCLI start.');
             yield this._validate();
             yield this._loadProtos();
             yield this._genProtoServices();
@@ -47,7 +46,7 @@ class ServiceCLI {
     }
     _validate() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ServiceCLI validate.');
+            console.log('ServiceCLI validate.');
             if (!PROTO_DIR) {
                 throw new Error('--proto is required');
             }
@@ -66,7 +65,7 @@ class ServiceCLI {
     }
     _loadProtos() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ServiceCLI load proto files.');
+            console.log('ServiceCLI load proto files.');
             this._protoFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR);
             if (IMPORTS.length > 0) {
                 for (let i = 0; i < IMPORTS.length; i++) {
@@ -80,7 +79,7 @@ class ServiceCLI {
     }
     _genProtoServices() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ServiceCLI generate services.');
+            console.log('ServiceCLI generate services.');
             let protoServicesInfos = [];
             let parseResults = [];
             for (let i = 0; i < this._protoFiles.length; i++) {
@@ -140,7 +139,7 @@ class ServiceCLI {
     }
     _genService(protoFile, service, shallIgnore = false) {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ServiceCLI generate service: %s', service.name);
+            console.log('ServiceCLI generate service: %s', service.name);
             let methodKeys = Object.keys(service.methods);
             if (methodKeys.length === 0) {
                 return;
@@ -156,7 +155,7 @@ class ServiceCLI {
     }
     _genServiceMethod(protoFile, service, method, shallIgnore = false) {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ServiceCLI generate service method: %s.%s', service.name, method.name);
+            console.log('ServiceCLI generate service method: %s.%s', service.name, method.name);
             let outputPath = lib_1.Proto.genFullOutputServicePath(protoFile, service, method);
             let methodInfo = lib_1.genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
             if (!method.requestStream && !method.responseStream) {
@@ -194,6 +193,5 @@ class ServiceCLI {
     }
 }
 ServiceCLI.instance().run().catch((err) => {
-    debug('err: %O', err.message);
+    console.log('err: ', err.message);
 });
-//# sourceMappingURL=sasdn-rpcs.js.map

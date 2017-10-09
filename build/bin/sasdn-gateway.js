@@ -14,7 +14,6 @@ const LibPath = require("path");
 const lib_1 = require("./lib/lib");
 const template_1 = require("./lib/template");
 const pkg = require('../../package.json');
-const debug = require('debug')('SASDN:CLI:Gateway');
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-s, --swagger <dir>', 'directory of swagger spec files')
@@ -41,7 +40,7 @@ class GatewayCLI {
     }
     run() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('GatewayCLI start.');
+            console.log('GatewayCLI start.');
             yield this._validate();
             yield this._loadProtos();
             yield this._loadSpecs();
@@ -50,7 +49,7 @@ class GatewayCLI {
     }
     _validate() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('GatewayCLI validate.');
+            console.log('GatewayCLI validate.');
             if (!PROTO_DIR) {
                 throw new Error('--proto is required');
             }
@@ -76,7 +75,7 @@ class GatewayCLI {
     }
     _loadProtos() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('ServiceCLI load result files.');
+            console.log('ServiceCLI load result files.');
             this._protoFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR);
             if (IMPORTS.length > 0) {
                 for (let i = 0; i < IMPORTS.length; i++) {
@@ -90,7 +89,7 @@ class GatewayCLI {
     }
     _loadSpecs() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('GatewayCLI load swagger spec files.');
+            console.log('GatewayCLI load swagger spec files.');
             this._swaggerList = yield lib_1.readSwaggerList(SWAGGER_DIR, OUTPUT_DIR);
             if (this._swaggerList.length === 0) {
                 throw new Error('no valid swagger spec json found');
@@ -99,7 +98,7 @@ class GatewayCLI {
     }
     _genSpecs() {
         return __awaiter(this, void 0, void 0, function* () {
-            debug('GatewayCLI generate router api codes.');
+            console.log('GatewayCLI generate router api codes.');
             let parseResults = [];
             for (let i = 0; i < this._protoFiles.length; i++) {
                 let protoFile = this._protoFiles[i];
@@ -117,7 +116,7 @@ class GatewayCLI {
             }
             let gatewayInfoList = [];
             for (let swaggerSpec of this._swaggerList) {
-                debug(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
+                console.log(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
                 // Parse swagger definitions schema to ${Array<GatewaySwaggerSchema>}
                 let gatewayDefinitionSchemaMap = {};
                 for (let definitionName in swaggerSpec.definitions) {
@@ -234,6 +233,5 @@ class GatewayCLI {
     }
 }
 GatewayCLI.instance().run().catch((err) => {
-    debug('err: %O', err.message);
+    console.log('err: ', err.message);
 });
-//# sourceMappingURL=sasdn-gateway.js.map

@@ -1,7 +1,7 @@
 /// <reference types="koa" />
-import { Context as KoaContext, Middleware as KoaMiddleware, Request as KoaRequest } from "koa";
-import { joi } from "../utility/Joi";
-import { MiddlewareNext } from "../rpc/App";
+import { Context as KoaContext, Middleware as KoaMiddleware, Request as KoaRequest } from 'koa';
+import { joi } from '../utility/Joi';
+import { MiddlewareNext } from '../rpc/App';
 export interface GatewayContext extends KoaContext {
     params: any;
     request: GatewayRequest;

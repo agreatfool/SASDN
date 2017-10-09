@@ -5,7 +5,6 @@ import * as LibShell from 'shelljs';
 import {mkdir, Proto, ProtoFile, readProtoList} from './lib/lib';
 
 const pkg = require('../../package.json');
-const debug = require('debug')('SASDN:CLI:Proto');
 
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of source proto files')
@@ -40,14 +39,14 @@ class ProtoCLI {
     }
 
     public async run() {
-        debug('ProtoCLI start.');
+        console.log('ProtoCLI start.');
         await this._validate();
         await this._loadProtos();
         await this._genProtos();
     }
 
     private async _validate() {
-        debug('ProtoCLI validate.');
+        console.log('ProtoCLI validate.');
 
         if (!PROTO_DIR) {
             throw new Error('--proto is required');
@@ -67,7 +66,7 @@ class ProtoCLI {
     }
 
     private async _loadProtos() {
-        debug('ProtoCLI load proto files.');
+        console.log('ProtoCLI load proto files.');
 
         this._protoFiles = this._protoFiles.concat(await readProtoList(PROTO_DIR, OUTPUT_DIR, EXCLUDES));
         if (ALL && IMPORTS.length > 0) {
@@ -81,14 +80,14 @@ class ProtoCLI {
     }
 
     private async _genProtos() {
-        debug('ProtoCLI generate proto codes.');
+        console.log('ProtoCLI generate proto codes.');
 
         const outputDir = LibPath.join(OUTPUT_DIR, 'proto');
         await mkdir(outputDir);
 
         for (let i = 0; i < this._protoFiles.length; i++) {
             let protoFile = this._protoFiles[i];
-            debug(`ProtoCLI generate proto: ${protoFile.fileName}`);
+            console.log(`ProtoCLI generate proto: ${protoFile.fileName}`);
 
             let cmds = [];
             let imports = '';
@@ -143,5 +142,5 @@ class ProtoCLI {
 }
 
 ProtoCLI.instance().run().catch((err: Error) => {
-    debug('err: %O', err.message);
+    console.log('err: ', err.message);
 });

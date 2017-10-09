@@ -29,7 +29,6 @@ import {
 import {TplEngine} from './lib/template';
 
 const pkg = require('../../package.json');
-const debug = require('debug')('SASDN:CLI:Gateway');
 
 interface GatewayInfo {
     apiName: string;
@@ -78,7 +77,7 @@ class GatewayCLI {
     }
 
     public async run() {
-        debug('GatewayCLI start.');
+        console.log('GatewayCLI start.');
         await this._validate();
         await this._loadProtos();
         await this._loadSpecs();
@@ -86,7 +85,7 @@ class GatewayCLI {
     }
 
     private async _validate() {
-        debug('GatewayCLI validate.');
+        console.log('GatewayCLI validate.');
 
         if (!PROTO_DIR) {
             throw new Error('--proto is required');
@@ -113,7 +112,7 @@ class GatewayCLI {
     }
 
     private async _loadProtos() {
-        debug('ServiceCLI load result files.');
+        console.log('ServiceCLI load result files.');
 
         this._protoFiles = await readProtoList(PROTO_DIR, OUTPUT_DIR);
         if (IMPORTS.length > 0) {
@@ -127,7 +126,7 @@ class GatewayCLI {
     }
 
     private async _loadSpecs() {
-        debug('GatewayCLI load swagger spec files.');
+        console.log('GatewayCLI load swagger spec files.');
 
         this._swaggerList = await readSwaggerList(SWAGGER_DIR, OUTPUT_DIR);
         if (this._swaggerList.length === 0) {
@@ -136,7 +135,7 @@ class GatewayCLI {
     }
 
     private async _genSpecs() {
-        debug('GatewayCLI generate router api codes.');
+        console.log('GatewayCLI generate router api codes.');
 
         let parseResults = [] as Array<ProtoParseResult>;
         for (let i = 0; i < this._protoFiles.length; i++) {
@@ -158,7 +157,7 @@ class GatewayCLI {
         let gatewayInfoList = [] as Array<GatewayInfo>;
 
         for (let swaggerSpec of this._swaggerList) {
-            debug(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
+            console.log(`GatewayCLI generate swagger spec: ${swaggerSpec.info.title}`);
 
             // Parse swagger definitions schema to ${Array<GatewaySwaggerSchema>}
             let gatewayDefinitionSchemaMap = {} as GatewayDefinitionSchemaMap;
@@ -315,5 +314,5 @@ class GatewayCLI {
 }
 
 GatewayCLI.instance().run().catch((err: Error) => {
-    debug('err: %O', err.message);
+    console.log('err: ', err.message);
 });

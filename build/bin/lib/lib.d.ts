@@ -1,6 +1,6 @@
-import * as protobuf from "protobufjs";
-import { IParserResult as ProtobufIParserResult } from "protobufjs";
-import { Schema as SwaggerSchema, Spec as SwaggerSpec } from "swagger-schema-official";
+import * as protobuf from 'protobufjs';
+import { IParserResult as ProtobufIParserResult } from 'protobufjs';
+import { Schema as SwaggerSchema, Spec as SwaggerSpec } from 'swagger-schema-official';
 /**
  * protoDir: /Users/XXX/Projects/projectX/result
  * outputDir: /output/dir/specified
@@ -144,11 +144,12 @@ export declare namespace Proto {
     /**
      * Generate full service stub code output dir.
      * @param {ProtoFile} protoFile
+     * @param {string} packageName
      * @param {string} serviceName
      * @param {string} apiName
      * @returns {string}
      */
-    const genFullOutputRouterApiPath: (protoFile: ProtoFile, serviceName?: string, apiName?: string) => string;
+    const genFullOutputRouterApiPath: (protoFile: ProtoFile, packageName?: string, serviceName?: string, apiName?: string) => string;
 }
 /**
  * Read Swagger spec schema from swagger dir

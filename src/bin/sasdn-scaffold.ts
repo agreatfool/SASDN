@@ -4,8 +4,6 @@ import * as LibPath from 'path';
 import * as prompt from 'prompt';
 import {mkdir} from './lib/lib';
 
-const debug = require('debug')('SASDN:CLI');
-
 interface PromptInput {
     name: string;
     version: string;
@@ -47,7 +45,7 @@ prompt.get([
     }
 ], (err, input: PromptInput) => {
     ScaffoldCLI.instance().run(input).catch((err: Error) => {
-        debug('err: %O', err.message);
+        console.log('err: ', err.message);
     });
 });
 
@@ -60,7 +58,7 @@ class ScaffoldCLI {
     }
 
     public async run(input: PromptInput) {
-        debug('ScaffoldCLI start.');
+        console.log('ScaffoldCLI start.');
 
         this._input = input;
 
@@ -69,11 +67,11 @@ class ScaffoldCLI {
     }
 
     private async _validate() {
-        debug('ScaffoldCLI validate.');
+        console.log('ScaffoldCLI validate.');
     }
 
     private async _genScaffold() {
-        debug('ScaffoldCLI _genScaffold.');
+        console.log('ScaffoldCLI _genScaffold.');
 
         try {
             await this._copyScaffold();
@@ -84,31 +82,23 @@ class ScaffoldCLI {
     }
 
     private async _copyScaffold() {
-        return new Promise(async (resolve, reject) => {
-            const scaffoldDir = LibPath.join(__dirname, '..', '..', 'scaffold');
-            if (!LibFs.existsSync(scaffoldDir) || !LibFs.statSync(scaffoldDir).isDirectory()) {
-                reject('scaffold dir not found, path:' + scaffoldDir);
-                return;
-            }
+        const scaffoldDir = LibPath.join(__dirname, '..', '..', 'scaffold');
+        if (!LibFs.existsSync(scaffoldDir) || !LibFs.statSync(scaffoldDir).isDirectory()) {
+            throw new Error('scaffold dir not found, path:' + scaffoldDir);
+        }
 
-            const outputDir = LibPath.join(process.cwd(), this._input.name);
-            if (LibFs.existsSync(outputDir) && LibFs.statSync(outputDir).isDirectory()) {
-                reject('output dir already exists, path:' + outputDir);
-                return;
-            }
+        const outputDir = LibPath.join(process.cwd(), this._input.name);
+        if (LibFs.existsSync(outputDir) && LibFs.statSync(outputDir).isDirectory()) {
+            throw new Error('output dir already exists, path:' + outputDir);
+        }
 
-            try {
-                await mkdir(outputDir);
-                await LibFsExtra.copy(scaffoldDir, outputDir, (e: Error) => {
-                    if (e == null) {
-                        debug('ScaffoldCLI _genScaffold finish.');
-                        resolve();
-                    }
-                });
-            } catch (e) {
-                reject(e.message);
-            }
-        });
+        try {
+            await mkdir(outputDir);
+            await LibFsExtra.copy(scaffoldDir, outputDir);
+            console.log('ScaffoldCLI _genScaffold finish.');
+        } catch (e) {
+            throw e;
+        }
     }
 
     private async _updateScaffold() {
@@ -120,22 +110,14 @@ class ScaffoldCLI {
             packageConfig.name = this._input.name;
             packageConfig.version = this._input.version;
             packageConfig.description = this._input.description;
-            await LibFs.writeFile(packageConfigPath, Buffer.from(JSON.stringify(packageConfig, null, 2)), (err) => {
-                if (err) {
-                    throw err;
-                }
-            });
+            await LibFs.writeFile(packageConfigPath, Buffer.from(JSON.stringify(packageConfig, null, 2)));
 
             let spmConfigPath = LibPath.join(outputDir, 'spm.json');
             let spmConfig = this._getPackageConfig(spmConfigPath);
             spmConfig.name = this._input.name;
             spmConfig.version = this._input.version;
             spmConfig.description = this._input.description;
-            await LibFs.writeFile(spmConfigPath, Buffer.from(JSON.stringify(spmConfig, null, 2)), (err) => {
-                if (err) {
-                    throw err;
-                }
-            });
+            await LibFs.writeFile(spmConfigPath, Buffer.from(JSON.stringify(spmConfig, null, 2)));
         } catch (e) {
             throw e;
         }

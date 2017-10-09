@@ -1,6 +1,6 @@
 /// <reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts" />
-import { IServerCall, RpcImplCallback } from "grpc";
-import { RpcApplication } from "./App";
+import { IServerCall, RpcImplCallback } from 'grpc';
+import { RpcApplication } from './App';
 export declare enum GrpcOpType {
     SEND_INITIAL_METADATA = 0,
     SEND_MESSAGE = 1,
