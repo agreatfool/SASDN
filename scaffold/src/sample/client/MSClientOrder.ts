@@ -1,4 +1,3 @@
-import * as LibUtil from 'util';
 import * as grpc from 'grpc';
 import {GatewayContext, RpcContext} from 'sasdn';
 import {GrpcInstrumentation} from 'zipkin-instrumentation-grpcjs';
