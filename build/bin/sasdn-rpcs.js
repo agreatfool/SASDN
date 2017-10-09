@@ -130,7 +130,7 @@ class ServiceCLI {
             if (protoServicesInfos.length === 0) {
                 return;
             }
-            let outputPath = LibPath.join(OUTPUT_DIR, 'services', 'register.ts');
+            let outputPath = LibPath.join(OUTPUT_DIR, 'services', 'Register.ts');
             template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
             let content = template_1.TplEngine.render('rpcs/register', {
                 infos: protoServicesInfos,

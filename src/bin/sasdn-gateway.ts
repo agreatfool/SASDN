@@ -1,6 +1,6 @@
-import * as LibFs from "mz/fs";
-import * as program from "commander";
-import * as LibPath from "path";
+import * as LibFs from 'mz/fs';
+import * as program from 'commander';
+import * as LibPath from 'path';
 import {
     BodyParameter,
     Operation,
@@ -8,7 +8,7 @@ import {
     PathParameter,
     QueryParameter,
     Spec as SwaggerSpec
-} from "swagger-schema-official";
+} from 'swagger-schema-official';
 import {
     GatewaySwaggerSchema,
     lcfirst,
@@ -25,8 +25,8 @@ import {
     RpcMethodImportPathInfo,
     Swagger,
     ucfirst
-} from "./lib/lib";
-import {TplEngine} from "./lib/template";
+} from './lib/lib';
+import {TplEngine} from './lib/template';
 
 const pkg = require('../../package.json');
 const debug = require('debug')('SASDN:CLI:Gateway');
@@ -35,6 +35,7 @@ interface GatewayInfo {
     apiName: string;
     serviceName: string;
     fileName: string;
+    packageName: string;
     method: string;
     uri: string;
     parameters: Array<GatewaySwaggerSchema>;
@@ -262,6 +263,7 @@ class GatewayCLI {
                         apiName: ucfirst(method) + methodOperation.operationId,
                         serviceName: methodOperation.tags[0],
                         fileName: lcfirst(method) + methodOperation.operationId,
+                        packageName: swaggerSpec.info.title.split('/')[0],
                         method: method,
                         uri: Swagger.convertSwaggerUriToKoaUri(pathName),
                         parameters: swaggerSchemaList,
@@ -287,11 +289,14 @@ class GatewayCLI {
 
             // write file ${gatewayApiName}.ts in OUTPUT_DIR/router/${gatewayApiService}/
             for (let gatewayInfo of gatewayInfoList) {
-                await mkdir(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName));
+                const relativePath = this._protoMsgImportInfos[`${gatewayInfo.packageName}${gatewayInfo.serviceName}`].protoFile.relativePath;
+                await mkdir(LibPath.join(OUTPUT_DIR, 'router', relativePath, gatewayInfo.serviceName));
+
                 let apiContent = TplEngine.render('router/api', {
                     info: gatewayInfo,
                 });
-                await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName, gatewayInfo.fileName + '.ts'), apiContent);
+
+                await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', relativePath, gatewayInfo.serviceName, gatewayInfo.fileName + '.ts'), apiContent);
             }
 
             // make client dir in OUTPUT_DIR
@@ -303,7 +308,7 @@ class GatewayCLI {
                 let clientContent = TplEngine.render('client/client', {
                     infos: gatewayInfoList,
                 });
-                await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'client', 'sasdnAPI.ts'), clientContent);
+                await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'client', 'SasdnAPI.ts'), clientContent);
             }
         }
     }

@@ -25,7 +25,7 @@ prompt.get([
         name: 'version',
         required: true,
         default: '0.0.0',
-        message: "Wrong project version",
+        message: 'Wrong project version',
         conform: (value) => {
             let versions = value.split('.');
             for (let key of versions) {

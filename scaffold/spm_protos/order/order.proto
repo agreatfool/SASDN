@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+
+package order;
+
+message Order {
+    int64 order_id = 1;
+    string user_id = 2;
+    string price = 3;
+    bool ispayed = 4;
+    map<int64, string> items = 5;
+}
+
+message GetOrderRequest {
+    int64 order_id = 1;
+}
+
+service OrderService {
+    rpc GetOrder (GetOrderRequest) returns (Order) {}
+}

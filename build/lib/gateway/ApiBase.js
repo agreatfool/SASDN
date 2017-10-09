@@ -15,30 +15,24 @@ class GatewayApiBase {
     }
     ;
     _validate() {
-        let _this = this;
-        return function (ctx, next) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let aggregatedParams = _this._parseParams(ctx);
-                let joiSchemaMap = _this._convertSchemaDefToJoiSchema(_this.schemaDefObj);
-                try {
-                    yield Joi_1.joiValidate(aggregatedParams, joiSchemaMap, { allowUnknown: true });
-                    yield next();
-                }
-                catch (err) {
-                    ctx.body = err.toString();
-                }
-            });
-        };
+        return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
+            let aggregatedParams = this._parseParams(ctx);
+            let joiSchemaMap = this._convertSchemaDefToJoiSchema(this.schemaDefObj);
+            try {
+                yield Joi_1.joiValidate(aggregatedParams, joiSchemaMap, { allowUnknown: true });
+                yield next();
+            }
+            catch (e) {
+                ctx.body = e.toString();
+            }
+        });
     }
     _execute() {
-        let _this = this;
-        return function (ctx, next) {
-            return __awaiter(this, void 0, void 0, function* () {
-                let aggregatedParams = _this._parseParams(ctx);
-                ctx.body = yield _this.handle(ctx, next, aggregatedParams);
-                yield next();
-            });
-        };
+        return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
+            let aggregatedParams = this._parseParams(ctx);
+            ctx.body = yield this.handle(ctx, next, aggregatedParams);
+            yield next();
+        });
     }
     _parseParams(ctx) {
         return Object.assign({}, ctx.params, ctx.query, { body: ctx.request.body }); // bodyParse required
@@ -49,27 +43,27 @@ class GatewayApiBase {
             let gatewayJoiSchema = gatewayJoiSchemaMap[key];
             let joiSchema = {};
             switch (gatewayJoiSchema.type) {
-                case "array":
+                case 'array':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.array().required()
                         : Joi_1.joi.array().optional();
                     break;
-                case "boolean":
+                case 'boolean':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.boolean().required()
                         : Joi_1.joi.boolean().optional();
                     break;
-                case "number":
+                case 'number':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.number().required()
                         : Joi_1.joi.number().optional();
                     break;
-                case "object":
+                case 'object':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.object(this._convertSchemaDefToJoiSchema(gatewayJoiSchema.schema)).required()
                         : Joi_1.joi.object(this._convertSchemaDefToJoiSchema(gatewayJoiSchema.schema)).optional();
                     break;
-                case "string":
+                case 'string':
                     joiSchema = (gatewayJoiSchema.required)
                         ? Joi_1.joi.string().required()
                         : Joi_1.joi.string().optional();

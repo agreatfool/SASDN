@@ -189,6 +189,7 @@ class GatewayCLI {
                             apiName: lib_1.ucfirst(method) + methodOperation.operationId,
                             serviceName: methodOperation.tags[0],
                             fileName: lib_1.lcfirst(method) + methodOperation.operationId,
+                            packageName: swaggerSpec.info.title.split('/')[0],
                             method: method,
                             uri: lib_1.Swagger.convertSwaggerUriToKoaUri(pathName),
                             parameters: swaggerSchemaList,
@@ -211,11 +212,12 @@ class GatewayCLI {
                 yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'Router.ts'), routerContent);
                 // write file ${gatewayApiName}.ts in OUTPUT_DIR/router/${gatewayApiService}/
                 for (let gatewayInfo of gatewayInfoList) {
-                    yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName));
+                    const relativePath = this._protoMsgImportInfos[`${gatewayInfo.packageName}${gatewayInfo.serviceName}`].protoFile.relativePath;
+                    yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router', relativePath, gatewayInfo.serviceName));
                     let apiContent = template_1.TplEngine.render('router/api', {
                         info: gatewayInfo,
                     });
-                    yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', gatewayInfo.serviceName, gatewayInfo.fileName + '.ts'), apiContent);
+                    yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', relativePath, gatewayInfo.serviceName, gatewayInfo.fileName + '.ts'), apiContent);
                 }
                 // make client dir in OUTPUT_DIR
                 if (API_GATEWAY_CLIENT) {
@@ -225,7 +227,7 @@ class GatewayCLI {
                     let clientContent = template_1.TplEngine.render('client/client', {
                         infos: gatewayInfoList,
                     });
-                    yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'client', 'sasdnAPI.ts'), clientContent);
+                    yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'client', 'SasdnAPI.ts'), clientContent);
                 }
             }
         });

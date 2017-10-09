@@ -1,7 +1,7 @@
-import * as LibFs from "fs";
-import * as LibPath from "path";
-import * as handlebars from "handlebars";
-import * as helpers from "handlebars-helpers";
+import * as LibFs from 'fs';
+import * as LibPath from 'path';
+import * as handlebars from 'handlebars';
+import * as helpers from 'handlebars-helpers';
 
 helpers({handlebars: handlebars});
 handlebars.registerHelper('curlyLeft', function () {

@@ -3,7 +3,7 @@ import {GatewayApiBase} from "sasdn";
 
 const API_PATHS = [
     {{#each infos}}
-    '../router/{{this.serviceName}}/{{this.fileName}}',
+    '../router/{{this.packageName}}/{{this.serviceName}}/{{this.fileName}}',
     {{/each}}
 ];
 
