@@ -235,3 +235,4 @@ class GatewayCLI {
 GatewayCLI.instance().run().catch((err) => {
     console.log('err: ', err.message);
 });
+//# sourceMappingURL=sasdn-gateway.js.map

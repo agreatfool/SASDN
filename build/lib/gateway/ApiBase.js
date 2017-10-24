@@ -10,8 +10,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const Joi_1 = require("../utility/Joi");
 class GatewayApiBase {
+    handleMock(ctx, next, params) {
+        return Promise.resolve(`API:${ctx.path}, has no mock data!`);
+    }
+    ;
     register() {
-        return [this.uri, this._validate(), this._execute()];
+        return [this.uri, this._validate(), this._mock(), this._execute()];
     }
     ;
     _validate() {
@@ -24,6 +28,17 @@ class GatewayApiBase {
             }
             catch (e) {
                 ctx.body = e.toString();
+            }
+        });
+    }
+    _mock() {
+        return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
+            let aggregatedParams = this._parseParams(ctx);
+            if (process.env.NODE_ENV == 'development' && aggregatedParams.hasOwnProperty('mock') && aggregatedParams['mock'] == 1) {
+                ctx.body = yield this.handleMock(ctx, next, aggregatedParams);
+            }
+            else {
+                yield next();
             }
         });
     }
@@ -80,3 +95,4 @@ class GatewayApiBase {
     }
 }
 exports.GatewayApiBase = GatewayApiBase;
+//# sourceMappingURL=ApiBase.js.map
