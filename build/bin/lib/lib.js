@@ -357,10 +357,18 @@ var Swagger;
                 type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
                 if (definitionSchema.type === 'array' && definitionSchema.items.hasOwnProperty('$ref')) {
                     // is repeated field
+                    if (canDeepSearch) {
+                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items.$ref), level);
+                    }
                 }
-                else if (definitionSchema.type === 'object' && definitionSchema.additionalProperties) {
+                else if (definitionSchema.type === 'object' && definitionSchema.additionalProperties && definitionSchema.additionalProperties.hasOwnProperty('$ref')) {
                     // is map field field
-                    type = 'array';
+                    if (canDeepSearch) {
+                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.additionalProperties.$ref), level);
+                    }
+                }
+                else if (definitionSchema.type === 'string' && definitionSchema.format == 'int64') {
+                    type = 'number';
                 }
             }
             else {
@@ -371,8 +379,23 @@ var Swagger;
                 required: (!definition.required == undefined && definition.required.length > 0 && definition.required.indexOf(propertyName) >= 0),
                 type: type,
             };
-            if (schema.length > 0) {
-                swaggerSchema.schema = schema;
+            if (definitionSchema.$ref) {
+                swaggerSchema.$ref = definitionSchema.$ref;
+                if (schema.length > 0) {
+                    swaggerSchema.schema = schema;
+                }
+            }
+            else if (definitionSchema.additionalProperties) {
+                swaggerSchema.additionalProperties = definitionSchema.additionalProperties;
+                if (schema.length > 0) {
+                    swaggerSchema.additionalProperties.schema = schema;
+                }
+            }
+            else if (definitionSchema.items) {
+                swaggerSchema.items = definitionSchema.items;
+                if (schema.length > 0) {
+                    swaggerSchema.items.schema = schema;
+                }
             }
             swaggerSchemaList.push(swaggerSchema);
         }

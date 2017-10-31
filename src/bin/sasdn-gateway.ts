@@ -37,13 +37,14 @@ interface GatewayInfo {
     packageName: string;
     method: string;
     uri: string;
-    parameters: Array<GatewaySwaggerSchema>;
     protoMsgImportPath: RpcMethodImportPathInfo;
-    responseTypeStr: string;
-    requestTypeStr: string | boolean;
     funcParamsStr: string;
     aggParamsStr: string;
     requiredParamsStr: string;
+    requestTypeStr: string | boolean;
+    requestParameters: Array<GatewaySwaggerSchema>;
+    responseTypeStr: string;
+    responseParameters: Array<GatewaySwaggerSchema>;
 }
 
 interface GatewayDefinitionSchemaMap {
@@ -186,6 +187,8 @@ class GatewayCLI {
 
                     // responseType handler
                     let responseType = Swagger.getRefName(methodOperation.responses[200].schema.$ref);
+                    let responseParameters = gatewayDefinitionSchemaMap[responseType];
+
                     if (this._protoMsgImportInfos.hasOwnProperty(responseType)) {
                         let protoMsgImportInfo = this._protoMsgImportInfos[responseType];
                         responseType = protoMsgImportInfo.msgType;
@@ -258,6 +261,43 @@ class GatewayCLI {
                         }
                     }
 
+                    // response definitions import
+                    for (let i in responseParameters) {
+                        if (responseParameters[i].hasOwnProperty('$ref')
+                            || (responseParameters[i].items && responseParameters[i].items.hasOwnProperty('$ref'))
+                            || (responseParameters[i].additionalProperties && responseParameters[i].additionalProperties.hasOwnProperty('$ref'))) {
+
+                            let definitionName: string;
+                            if (responseParameters[i].items && responseParameters[i].items.hasOwnProperty('$ref')) {
+                                definitionName = Swagger.getRefName(responseParameters[i].items['$ref']);
+                            } else if (responseParameters[i].additionalProperties && responseParameters[i].additionalProperties.hasOwnProperty('$ref')) {
+                                definitionName = Swagger.getRefName(responseParameters[i].additionalProperties['$ref']);
+                            } else {
+                                definitionName = Swagger.getRefName(responseParameters[i]['$ref']);
+                            }
+
+                            if (this._protoMsgImportInfos.hasOwnProperty(definitionName)) {
+                                let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
+                                if (responseParameters[i].items && responseParameters[i].items.hasOwnProperty('$ref')) {
+                                    responseParameters[i].items['$ref'] = protoMsgImportInfo.msgType;
+                                } else if (responseParameters[i].additionalProperties && responseParameters[i].additionalProperties.hasOwnProperty('$ref')) {
+                                    responseParameters[i].additionalProperties['$ref'] = protoMsgImportInfo.msgType;
+                                } else {
+                                    responseParameters[i]['$ref'] = protoMsgImportInfo.msgType;
+                                }
+
+                                protoMsgImportPaths = parseImportPathInfos(
+                                    protoMsgImportPaths,
+                                    protoMsgImportInfo.msgType,
+                                    Proto.genProtoMsgImportPathViaRouterPath(
+                                        protoMsgImportInfo.protoFile,
+                                        Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)
+                                    ).replace(/\\/g, '/')
+                                );
+                            }
+                        }
+                    }
+
                     gatewayInfoList.push({
                         apiName: ucfirst(method) + methodOperation.operationId,
                         serviceName: methodOperation.tags[0],
@@ -265,13 +305,14 @@ class GatewayCLI {
                         packageName: swaggerSpec.info.title.split('/')[0],
                         method: method,
                         uri: Swagger.convertSwaggerUriToKoaUri(pathName),
-                        parameters: swaggerSchemaList,
                         protoMsgImportPath: protoMsgImportPaths,
-                        responseTypeStr: responseType,
-                        requestTypeStr: requestType,
                         funcParamsStr: funcParamsStr,
                         aggParamsStr: aggParamsStr,
                         requiredParamsStr: requiredParamsStr,
+                        requestTypeStr: requestType,
+                        requestParameters: swaggerSchemaList,
+                        responseTypeStr: responseType,
+                        responseParameters: responseParameters,
                     });
                 }
             }

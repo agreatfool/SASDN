@@ -89,7 +89,18 @@ export interface GatewaySwaggerSchema {
     name: string;
     type: string;           // string, number, array, object
     required: boolean;      // required, optional
+    $ref?: string;
     schema?: Array<GatewaySwaggerSchema>;
+    items?: {
+        type?: string;
+        $ref?: string;
+        schema?: Array<GatewaySwaggerSchema>;
+    }
+    additionalProperties?: {
+        type?: string;
+        $ref?: string;
+        schema?: Array<GatewaySwaggerSchema>;
+    }
 }
 
 export interface SwaggerDefinitionMap {
@@ -488,9 +499,16 @@ export namespace Swagger {
                 type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
                 if (definitionSchema.type === 'array' && definitionSchema.items.hasOwnProperty('$ref')) {
                     // is repeated field
-                } else if (definitionSchema.type === 'object' && definitionSchema.additionalProperties) {
+                    if (canDeepSearch) {
+                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName((definitionSchema.items as SwaggerSchema).$ref), level);
+                    }
+                } else if (definitionSchema.type === 'object' && definitionSchema.additionalProperties && definitionSchema.additionalProperties.hasOwnProperty('$ref')) {
                     // is map field field
-                    type = 'array';
+                    if (canDeepSearch) {
+                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.additionalProperties.$ref), level);
+                    }
+                } else if (definitionSchema.type === 'string' && definitionSchema.format == 'int64') {
+                    type = 'number';
                 }
             } else {
                 type = 'any';
@@ -502,8 +520,24 @@ export namespace Swagger {
                 type: type,
             };
 
-            if (schema.length > 0) {
-                swaggerSchema.schema = schema;
+            if (definitionSchema.$ref) {
+                swaggerSchema.$ref = definitionSchema.$ref;
+
+                if (schema.length > 0) {
+                    swaggerSchema.schema = schema;
+                }
+            } else if (definitionSchema.additionalProperties) {
+                swaggerSchema.additionalProperties = definitionSchema.additionalProperties;
+
+                if (schema.length > 0) {
+                    swaggerSchema.additionalProperties.schema = schema;
+                }
+            } else if (definitionSchema.items) {
+                swaggerSchema.items = definitionSchema.items as SwaggerSchema;
+
+                if (schema.length > 0) {
+                    swaggerSchema.items.schema = schema;
+                }
             }
 
             swaggerSchemaList.push(swaggerSchema);
