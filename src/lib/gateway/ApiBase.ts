@@ -33,10 +33,7 @@ export abstract class GatewayApiBase {
     public schemaDefObj: GatewayJoiSchemaMap;
 
     public abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
-
-    public handleMock(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any> {
-        return Promise.resolve(`API:${ctx.path}, has no mock data!`);
-    };
+    public abstract handleMock(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
 
     public register(): Array<string | KoaMiddleware> {
         return [this.uri, this._validate(), this._mock(), this._execute()];
