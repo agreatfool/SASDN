@@ -28,20 +28,32 @@ class {{info.apiName}} extends GatewayApiBase {
                 {{#if this.schema}}
                 schema: {
                 {{#each this.schema}}
-                    {{hump this.name}}: {
-                        type: '{{this.type}}',
+                    {{#equal this.type 'number'}}{{hump this.name}}{{/equal~}}
+                    {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
+                    {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
+                    {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
+                    {{#equal this.type 'object'}}{{hump this.name}}{{#if this.additionalProperties}}Map{{/if}}{{/equal}}: {
+                        type: '{{#if this.additionalProperties}}array{{else}}{{this.type}}{{/if}}',
                         required: {{this.required}},
                         {{#if this.schema}}
                         schema: {
                         {{#each this.schema}}
-                            {{hump this.name}}: {
-                                type: '{{this.type}}',
+                            {{#equal this.type 'number'}}{{hump this.name}}{{/equal~}}
+                            {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
+                            {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
+                            {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
+                            {{#equal this.type 'object'}}{{hump this.name}}{{#if this.additionalProperties}}Map{{/if}}{{/equal}}: {
+                                type: '{{#if this.additionalProperties}}array{{else}}{{this.type}}{{/if}}',
                                 required: {{this.required}},
                                 {{#if this.schema}}
                                 schema: {
                                 {{#each this.schema}}
-                                    {{hump this.name}}: {
-                                        type: '{{this.type}}',
+                                    {{#equal this.type 'number'}}{{hump this.name}}{{/equal~}}
+                                    {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
+                                    {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
+                                    {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
+                                    {{#equal this.type 'object'}}{{hump this.name}}{{#if this.additionalProperties}}Map{{/if}}{{/equal}}: {
+                                        type: '{{#if this.additionalProperties}}array{{else}}{{this.type}}{{/if}}',
                                         required: {{this.required}},
                                     },
                                 {{/each}}
@@ -152,7 +164,13 @@ class {{info.apiName}} extends GatewayApiBase {
         const {{hump this.name}}Map = new {{this.additionalProperties.$ref}}();
                     {{/if}}
         response.get{{hump this.name 'ucfirst'}}Map()
-            .set(Mock.Random.string('lower', 5, 10), {{#if this.additionalProperties.type}}{{#equal this.additionalProperties.type 'number'}}Mock.Random.natural(){{/equal}}{{#equal this.additionalProperties.type 'boolean'}}Mock.Random.boolean(){{/equal}}{{#equal this.additionalProperties.type 'string'}}Mock.Random.string('lower', 5, 10){{/equal}}{{/if}}{{#if this.additionalProperties.$ref}}{{hump this.name}}Map{{/if}});
+            .set(Mock.Random.string('lower', 5, 10),
+                    {{~#if this.additionalProperties.type~}}
+                        {{~#equal this.additionalProperties.type 'number'}} Mock.Random.natural(){{/equal~}}
+                        {{~#equal this.additionalProperties.type 'boolean'}} Mock.Random.boolean(){{/equal~}}
+                        {{~#equal this.additionalProperties.type 'string'}} Mock.Random.string('lower', 5, 10){{/equal~}}
+                    {{/if~}}
+                    {{#if this.additionalProperties.$ref}} {{hump this.name}}Map{{/if}});
                 {{/if}}
             {{/equal}}
         {{/each}}

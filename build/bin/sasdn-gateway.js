@@ -235,12 +235,39 @@ class GatewayCLI {
                 }
                 // make router dir in OUTPUT_DIR
                 yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router'));
-                // write file Router.ts in OUTPUT_DIR/router/
+                // TplEngine RegisterHelper
                 template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
+                template_1.TplEngine.registerHelper('equal', function (v1, v2, options) {
+                    if (v1 === v2) {
+                        return options.fn(this);
+                    }
+                    else {
+                        return options.inverse(this);
+                    }
+                });
+                template_1.TplEngine.registerHelper('hump', function (str, type) {
+                    let name = '';
+                    let tmp = str.split('_');
+                    for (let i = 0; i < tmp.length; i++) {
+                        if (i > 0 || type == 'ucfirst') {
+                            name += tmp[i].charAt(0).toUpperCase() + tmp[i].slice(1);
+                        }
+                        else {
+                            name += tmp[i];
+                        }
+                    }
+                    return name;
+                });
+                // write file Router.ts in OUTPUT_DIR/router/
                 let routerContent = template_1.TplEngine.render('router/router', {
                     infos: gatewayInfoList,
                 });
                 yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'Router.ts'), routerContent);
+                // write file test.ts in OUTPUT_DIR/router/
+                let testContent = template_1.TplEngine.render('router/test', {
+                    infos: gatewayInfoList,
+                });
+                yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'test.ts'), testContent);
                 // write file ${gatewayApiName}.ts in OUTPUT_DIR/router/${gatewayApiService}/
                 for (let gatewayInfo of gatewayInfoList) {
                     const relativePath = this._protoMsgImportInfos[`${gatewayInfo.packageName}${gatewayInfo.serviceName}`].protoFile.relativePath;

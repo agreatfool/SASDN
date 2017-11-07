@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "apitest": "jest --collectCoverage false --testRegex /src/router/test.ts"
   },
   "license": "MIT",
   "dependencies": {
@@ -33,6 +34,7 @@
     "merge2": "^1.0.3",
     "mz": "^2.6.0",
     "protobufjs": "^6.7.3",
+    "supertest": "^3.0.0",
     "ts-jest": "^21.0.0",
     "typescript": "^2.3.4",
     "zipkin": "^0.7.3",
