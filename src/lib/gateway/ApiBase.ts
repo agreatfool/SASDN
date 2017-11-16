@@ -33,9 +33,10 @@ export abstract class GatewayApiBase {
     public schemaDefObj: GatewayJoiSchemaMap;
 
     public abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
+    public abstract handleMock(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
 
     public register(): Array<string | KoaMiddleware> {
-        return [this.uri, this._validate(), this._execute()];
+        return [this.uri, this._validate(), this._mock(), this._execute()];
     };
 
     protected _validate(): KoaMiddleware {
@@ -48,6 +49,17 @@ export abstract class GatewayApiBase {
                 await next();
             } catch (e) {
                 ctx.body = e.toString();
+            }
+        };
+    }
+
+    protected _mock(): KoaMiddleware {
+        return async (ctx: GatewayContext, next: MiddlewareNext): Promise<void> => {
+            let aggregatedParams = this._parseParams(ctx);
+            if (process.env.NODE_ENV == 'development' && aggregatedParams.hasOwnProperty('mock') && aggregatedParams['mock'] == 1) {
+                ctx.body = await this.handleMock(ctx, next, aggregatedParams);
+            } else {
+                await next();
             }
         };
     }

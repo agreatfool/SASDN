@@ -1,14 +1,15 @@
-import {GatewayApiBase, GatewayContext, MiddlewareNext} from "sasdn";
+import * as Mock from 'mockjs';
+import {GatewayApiBase, GatewayContext, MiddlewareNext} from 'sasdn';
 {{#each info.protoMsgImportPath}}
-import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from "{{{@key}}}";
+import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from '{{{@key}}}';
 {{/each}}
 
 interface RequestParams {
-{{#each info.parameters}}
-{{#eq this.type "object"}}
+{{#each info.requestParameters}}
+{{#eq this.type 'object'}}
     {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq ../info.requestTypeStr false}}any{{else}}{{../info.requestTypeStr}}.AsObject{{/eq}};
 {{else}}
-    {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type "array"}}Array<any>{{else}}{{this.type}}{{/eq}};
+    {{this.name}}{{#eq this.required false}}?{{/eq}}: {{#eq this.type 'array'}}Array<any>{{else}}{{this.type}}{{/eq}};
 {{/eq}}
 {{/each}}
 }
@@ -20,27 +21,39 @@ class {{info.apiName}} extends GatewayApiBase {
         this.uri = '{{info.uri}}';
         this.type = 'application/json; charset=utf-8';
         this.schemaDefObj = {
-        {{#each info.parameters}}
-            {{this.name}}: {
+        {{#each info.requestParameters}}
+            {{hump this.name}}: {
                 type: '{{this.type}}',
                 required: {{this.required}},
                 {{#if this.schema}}
                 schema: {
                 {{#each this.schema}}
-                    {{this.name}}: {
-                        type: '{{this.type}}',
+                    {{#equal this.type 'number'}}{{hump this.name}}{{/equal~}}
+                    {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
+                    {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
+                    {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
+                    {{#equal this.type 'object'}}{{hump this.name}}{{#if this.protoMap}}Map{{/if}}{{/equal}}: {
+                        type: '{{#if this.protoMap}}array{{else}}{{this.type}}{{/if}}',
                         required: {{this.required}},
                         {{#if this.schema}}
                         schema: {
                         {{#each this.schema}}
-                            {{this.name}}: {
-                                type: '{{this.type}}',
+                            {{#equal this.type 'number'}}{{hump this.name}}{{/equal~}}
+                            {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
+                            {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
+                            {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
+                            {{#equal this.type 'object'}}{{hump this.name}}{{#if this.protoMap}}Map{{/if}}{{/equal}}: {
+                                type: '{{#if this.protoMap}}array{{else}}{{this.type}}{{/if}}',
                                 required: {{this.required}},
                                 {{#if this.schema}}
                                 schema: {
                                 {{#each this.schema}}
-                                    {{this.name}}: {
-                                        type: '{{this.type}}',
+                                    {{#equal this.type 'number'}}{{hump this.name}}{{/equal~}}
+                                    {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
+                                    {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
+                                    {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
+                                    {{#equal this.type 'object'}}{{hump this.name}}{{#if this.protoMap}}Map{{/if}}{{/equal}}: {
+                                        type: '{{#if this.protoMap}}array{{else}}{{this.type}}{{/if}}',
                                         required: {{this.required}},
                                     },
                                 {{/each}}
@@ -61,6 +74,108 @@ class {{info.apiName}} extends GatewayApiBase {
 
     public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<{{ info.responseTypeStr }}.AsObject> {
         return Promise.resolve((new {{ info.responseTypeStr }}()).toObject());
+    }
+
+    public async handleMock(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<{{ info.responseTypeStr }}.AsObject> {
+        const response = new {{ info.responseTypeStr }}();
+        {{#each info.responseParameters}}
+            {{#equal this.type 'number'}}
+        response.set{{hump this.name 'ucfirst'}}(Mock.Random.natural());
+            {{/equal}}
+            {{#equal this.type 'boolean'}}
+        response.set{{hump this.name 'ucfirst'}}(Mock.Random.boolean());
+            {{/equal}}
+            {{#equal this.type 'string'}}
+        response.set{{hump this.name 'ucfirst'}}(Mock.Random.string('symbol', 5, 10));
+            {{/equal}}
+            {{#equal this.type 'array'}}
+
+        // List {{hump this.name 'ucfirst'}}
+        const {{hump this.name}}List = [];
+        for (let i = 0; i < Mock.Random.natural(5, 10); i++) {
+                {{#equal this.protoArray.type 'number'}}
+            {{hump this.name}}List.push(Mock.Random.natural());
+                {{/equal}}
+                {{#equal this.protoArray.type 'boolean'}}
+            {{hump this.name}}List.push(Mock.Random.boolean());
+                {{/equal}}
+                {{#equal this.protoArray.type 'string'}}
+            {{hump this.name}}List.push(Mock.Random.string('symbol', 5, 10));
+                {{/equal}}
+                {{#equal this.protoArray.type 'array'}}
+            {{hump this.name}}List.push([]);
+                {{/equal}}
+                {{#if this.protoArray.$ref}}
+            const {{hump this.name}}{{this.protoArray.$ref}} = new {{this.protoArray.$ref}}();
+                    {{#each this.protoArray.schema}}
+                        {{#equal this.type 'number'}}
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}(Mock.Random.natural());
+                        {{/equal}}
+                        {{#equal this.type 'boolean'}}
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}(Mock.Random.boolean());
+                        {{/equal}}
+                        {{#equal this.type 'string'}}
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}(Mock.Random.string('symbol', 5, 10));
+                        {{/equal}}
+                        {{#equal this.type 'array'}}
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}List([]);
+                        {{/equal}}
+                        {{#equal this.type 'object'}}
+                            {{#if this.schema}}
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}();
+                            {{/if}}
+                        {{/equal}}
+                    {{/each}}
+            {{hump this.name}}List.push({{hump this.name}}{{this.protoArray.$ref}});
+                {{/if}}
+        }
+        response.set{{hump this.name 'ucfirst'}}List({{hump this.name}}List);
+            {{/equal}}
+            {{#equal this.type 'object'}}
+                {{#if this.schema}}
+
+        // PB {{this.$ref}} {{hump this.name 'ucfirst'}}
+        const {{hump this.name}} = new {{this.$ref}}();
+                    {{#each this.schema}}
+                        {{#equal this.type 'number'}}
+        {{hump ../this.name}}.set{{hump this.name 'ucfirst'}}(Mock.Random.natural());
+                        {{/equal}}
+                        {{#equal this.type 'boolean'}}
+        {{hump ../this.name}}.set{{hump this.name 'ucfirst'}}(Mock.Random.boolean());
+                        {{/equal}}
+                        {{#equal this.type 'string'}}
+        {{hump ../this.name}}.set{{hump this.name 'ucfirst'}}(Mock.Random.string('symbol', 5, 10));
+                        {{/equal}}
+                        {{#equal this.type 'array'}}
+        {{hump ../this.name}}.set{{hump this.name 'ucfirst'}}List([]);
+                        {{/equal}}
+                        {{#equal this.type 'object'}}
+                            {{#if this.schema}}
+        {{hump ../this.name}}.set{{hump this.name 'ucfirst'}}();
+                            {{/if}}
+                        {{/equal}}
+                    {{/each}}
+        response.set{{hump this.name 'ucfirst'}}({{hump this.name}});
+                {{/if}}
+                {{#if this.protoMap}}
+
+        // Map {{hump this.name 'ucfirst'}}
+                    {{#if this.protoMap.$ref}}
+        const {{hump this.name}}Map = new {{this.protoMap.$ref}}();
+                    {{/if}}
+        response.get{{hump this.name 'ucfirst'}}Map()
+            .set(Mock.Random.string('lower', 5, 10),
+                    {{~#if this.protoMap.type~}}
+                        {{~#equal this.protoMap.type 'number'}} Mock.Random.natural(){{/equal~}}
+                        {{~#equal this.protoMap.type 'boolean'}} Mock.Random.boolean(){{/equal~}}
+                        {{~#equal this.protoMap.type 'string'}} Mock.Random.string('lower', 5, 10){{/equal~}}
+                    {{/if~}}
+                    {{#if this.protoMap.$ref}} {{hump this.name}}Map{{/if}});
+                {{/if}}
+            {{/equal}}
+        {{/each}}
+
+        return Promise.resolve(response.toObject());
     }
 }
 

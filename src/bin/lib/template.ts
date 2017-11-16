@@ -19,7 +19,7 @@ export namespace TplEngine {
         handlebars.registerHelper(name, fn, inverse);
     }
 
-    export function render(templateName: string, params: { [key: string]: any }): string {
+    export function render(templateName: string, params: {[key: string]: any}): string {
         return compile(templateName)(params);
     }
 

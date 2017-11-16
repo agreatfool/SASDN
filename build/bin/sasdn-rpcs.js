@@ -195,3 +195,4 @@ class ServiceCLI {
 ServiceCLI.instance().run().catch((err) => {
     console.log('err: ', err.message);
 });
+//# sourceMappingURL=sasdn-rpcs.js.map
