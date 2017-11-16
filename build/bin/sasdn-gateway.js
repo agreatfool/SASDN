@@ -21,12 +21,14 @@ program.version(pkg.version)
     .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
     return val.split(',');
 })
+    .option('-d, --deepSearchLevel <number>', 'add -d to parse swagger definition depth, default: 5')
     .option('-c, --client', 'add -c to output API Gateway client codes')
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const SWAGGER_DIR = program.swagger === undefined ? undefined : LibPath.normalize(program.swagger);
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
 const IMPORTS = program.import === undefined ? [] : program.import;
+const DEEP_SEARCH_LEVEL = program.deepSearchLevel === undefined ? 5 : program.deepSearchLevel;
 const API_GATEWAY_CLIENT = program.client !== undefined;
 const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 class GatewayCLI {
@@ -99,6 +101,7 @@ class GatewayCLI {
     _genSpecs() {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('GatewayCLI generate router api codes.');
+            // 从 proto 文件中解析出 ProtobufIParserResult 数据
             let parseResults = [];
             for (let i = 0; i < this._protoFiles.length; i++) {
                 let protoFile = this._protoFiles[i];
@@ -120,7 +123,7 @@ class GatewayCLI {
                 // Parse swagger definitions schema to ${Array<GatewaySwaggerSchema>}
                 let gatewayDefinitionSchemaMap = {};
                 for (let definitionName in swaggerSpec.definitions) {
-                    gatewayDefinitionSchemaMap[definitionName] = lib_1.Swagger.parseSwaggerDefinitionMap(swaggerSpec.definitions, definitionName);
+                    gatewayDefinitionSchemaMap[definitionName] = lib_1.Swagger.parseSwaggerDefinitionMap(swaggerSpec.definitions, definitionName, 1, DEEP_SEARCH_LEVEL);
                 }
                 // Loop paths uri
                 for (let pathName in swaggerSpec.paths) {
@@ -142,12 +145,13 @@ class GatewayCLI {
                         if (this._protoMsgImportInfos.hasOwnProperty(responseType)) {
                             let protoMsgImportInfo = this._protoMsgImportInfos[responseType];
                             responseType = protoMsgImportInfo.msgType;
-                            protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, responseType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
+                            protoMsgImportPaths = lib_1.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, responseType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                         }
-                        let requestType = false;
+                        let requestType = '';
                         let funcParamsStr = '';
                         let aggParamsStr = '';
                         let requiredParamsStr = '';
+                        // 循环解析 parameters 字段，并将字段类型和 schema 结构加入到 swaggerSchemaList。
                         for (let parameter of methodOperation.parameters) {
                             let type;
                             let schema = [];
@@ -159,7 +163,7 @@ class GatewayCLI {
                                     if (this._protoMsgImportInfos.hasOwnProperty(definitionName)) {
                                         let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
                                         requestType = protoMsgImportInfo.msgType;
-                                        protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, requestType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
+                                        protoMsgImportPaths = lib_1.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, requestType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                                     }
                                     break;
                                 case 'query':
@@ -185,35 +189,37 @@ class GatewayCLI {
                                 requiredParamsStr += (requiredParamsStr == '') ? `'${parameter.name}'` : `, '${parameter.name}'`;
                             }
                         }
-                        // response definitions import
+                        // 循环解析 response 的 definitions 数据，将需要 import 的文件和类名加入到 RpcMethodImportPathInfos 列表数据中。
                         for (let i in responseParameters) {
-                            if (responseParameters[i].hasOwnProperty('$ref')
-                                || (responseParameters[i].items && responseParameters[i].items.hasOwnProperty('$ref'))
-                                || (responseParameters[i].additionalProperties && responseParameters[i].additionalProperties.hasOwnProperty('$ref'))) {
+                            const responseParameter = responseParameters[i];
+                            if (responseParameter.hasOwnProperty('$ref')
+                                || (responseParameter.protoArray && responseParameter.protoArray.hasOwnProperty('$ref'))
+                                || (responseParameter.protoMap && responseParameter.protoMap.hasOwnProperty('$ref'))) {
                                 let definitionName;
-                                if (responseParameters[i].items && responseParameters[i].items.hasOwnProperty('$ref')) {
-                                    definitionName = lib_1.Swagger.getRefName(responseParameters[i].items['$ref']);
+                                if (responseParameter.protoArray && responseParameter.protoArray.hasOwnProperty('$ref')) {
+                                    definitionName = lib_1.Swagger.getRefName(responseParameter.protoArray['$ref']);
                                 }
-                                else if (responseParameters[i].additionalProperties && responseParameters[i].additionalProperties.hasOwnProperty('$ref')) {
-                                    definitionName = lib_1.Swagger.getRefName(responseParameters[i].additionalProperties['$ref']);
+                                else if (responseParameter.protoMap && responseParameter.protoMap.hasOwnProperty('$ref')) {
+                                    definitionName = lib_1.Swagger.getRefName(responseParameter.protoMap['$ref']);
                                 }
                                 else {
-                                    definitionName = lib_1.Swagger.getRefName(responseParameters[i]['$ref']);
+                                    definitionName = lib_1.Swagger.getRefName(responseParameter['$ref']);
                                 }
                                 if (this._protoMsgImportInfos.hasOwnProperty(definitionName)) {
                                     let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
-                                    if (responseParameters[i].items && responseParameters[i].items.hasOwnProperty('$ref')) {
-                                        responseParameters[i].items['$ref'] = protoMsgImportInfo.msgType;
+                                    if (responseParameter.protoArray && responseParameter.protoArray.hasOwnProperty('$ref')) {
+                                        responseParameter.protoArray['$ref'] = protoMsgImportInfo.msgType;
                                     }
-                                    else if (responseParameters[i].additionalProperties && responseParameters[i].additionalProperties.hasOwnProperty('$ref')) {
-                                        responseParameters[i].additionalProperties['$ref'] = protoMsgImportInfo.msgType;
+                                    else if (responseParameter.protoMap && responseParameter.protoMap.hasOwnProperty('$ref')) {
+                                        responseParameter.protoMap['$ref'] = protoMsgImportInfo.msgType;
                                     }
                                     else {
-                                        responseParameters[i]['$ref'] = protoMsgImportInfo.msgType;
+                                        responseParameter['$ref'] = protoMsgImportInfo.msgType;
                                     }
-                                    protoMsgImportPaths = lib_1.parseImportPathInfos(protoMsgImportPaths, protoMsgImportInfo.msgType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
+                                    protoMsgImportPaths = lib_1.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, protoMsgImportInfo.msgType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                                 }
                             }
+                            responseParameters[i] = responseParameter;
                         }
                         gatewayInfoList.push({
                             apiName: lib_1.ucfirst(method) + methodOperation.operationId,
@@ -263,11 +269,11 @@ class GatewayCLI {
                     infos: gatewayInfoList,
                 });
                 yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'Router.ts'), routerContent);
-                // write file test.ts in OUTPUT_DIR/router/
+                // write file RouterAPITest.ts in OUTPUT_DIR/router/
                 let testContent = template_1.TplEngine.render('router/test', {
                     infos: gatewayInfoList,
                 });
-                yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'test.ts'), testContent);
+                yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'router', 'RouterAPITest.ts'), testContent);
                 // write file ${gatewayApiName}.ts in OUTPUT_DIR/router/${gatewayApiService}/
                 for (let gatewayInfo of gatewayInfoList) {
                     const relativePath = this._protoMsgImportInfos[`${gatewayInfo.packageName}${gatewayInfo.serviceName}`].protoFile.relativePath;

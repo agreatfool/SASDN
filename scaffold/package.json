@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "apitest": "jest --collectCoverage false --testRegex /src/router/test.ts"
+    "apitest": "jest --collectCoverage false --testRegex /src/router/RouterAPITest.ts"
   },
   "license": "MIT",
   "dependencies": {

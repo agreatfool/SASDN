@@ -67,7 +67,7 @@ export interface RpcMethodInfo {
     hasCallback: boolean;
     hasRequest: boolean;
     methodName: string;
-    protoMsgImportPath: RpcMethodImportPathInfo;
+    protoMsgImportPath: RpcMethodImportPathInfos;
 }
 
 /**
@@ -81,32 +81,95 @@ export interface RpcMethodInfo {
  *   '../../proto/user_pb': [ 'User', 'GetUserRequest' ]
  * }
  */
-export interface RpcMethodImportPathInfo {
+export interface RpcMethodImportPathInfos {
     [importPath: string]: Array<string>;
 }
 
+/**
+ * 将 swagger.json 的 definitions 下的内容解析成 Array<GatewaySwaggerSchema>
+ *
+ * e.g
+ * demo.swagger.json
+ * {
+ *  ...
+ *  "definitions": {
+ *    "demoDemo": {
+ *      "type": "object",
+ *      "properties": {
+ *          "id": {
+ *              "type": "string",
+ *              "format": "int64"
+ *           },
+ *           "tags": {
+ *              "type": "array",
+ *              "items": {
+ *                  "type": "string"
+ *              }
+ *           },
+ *           "demoOrders": {
+ *              "type": "object",
+ *              "additionalProperties": {
+ *                  "$ref": "#/definitions/orderOrder"
+ *              }
+ *           }
+ *      },
+ *      },
+ *  },
+ *  ...
+ * }
+ * gatewaySwaggerSchema.name = "demoDemo"
+ * gatewaySwaggerSchema.type = "object"
+ * gatewaySwaggerSchema.required = false
+ * gatewaySwaggerSchema.schema = [
+ *      GatewaySwaggerSchema(
+ *          name: "id",
+ *          type: "string",
+ *      ),
+ *      GatewaySwaggerSchema(
+ *          name: "tags",
+ *          type: "array",
+ *          protoArray: {
+ *              "type": "string"
+ *          }
+ *      ),
+ *      GatewaySwaggerSchema(
+ *          name: "demoOrders",
+ *          type: "object",
+ *          protoMap: {
+ *              "$ref": "#/definitions/orderOrder"
+ *          }
+ *      ),
+ * ]
+ */
 export interface GatewaySwaggerSchema {
     name: string;
     type: string;           // string, number, array, object
     required: boolean;      // required, optional
     $ref?: string;
     schema?: Array<GatewaySwaggerSchema>;
-    items?: {
-        type?: string;
-        $ref?: string;
-        schema?: Array<GatewaySwaggerSchema>;
-    }
-    additionalProperties?: {
-        type?: string;
-        $ref?: string;
-        schema?: Array<GatewaySwaggerSchema>;
-    }
+    protoArray?: GatewaySwaggerCustomerSchema;  // Proto: "repeated string tags" => Swagger: definitions.demoDemo.properties.tags.items
+    protoMap?: GatewaySwaggerCustomerSchema;    // Proto: "map<string, order.Order> demoOrders" => Swagger: definitions.demoDemo.properties.demoOrders.additionalProperties
 }
 
+export interface GatewaySwaggerCustomerSchema extends SwaggerSchema{
+    schema?: Array<GatewaySwaggerSchema>;
+}
+
+/**
+ * 定义一个 swagger.json 中的 definitions 的结构。
+ */
 export interface SwaggerDefinitionMap {
     [definitionsName: string]: SwaggerSchema;
 }
 
+/**
+ * 读取 protoDir 文件夹内的 proto 文件名生成 ProtoFile 结构体。
+ *
+ * @param {string} protoDir
+ * @param {string} outputDir
+ * @param {Array<string>} excludes
+ * @returns {Promise<Array<ProtoFile>>}
+ */
 export const readProtoList = async function (protoDir: string, outputDir: string, excludes?: Array<string>): Promise<Array<ProtoFile>> {
     let files = await recursive(protoDir, ['.DS_Store', function ignoreFunc(file, stats) {
         let shallIgnore = false;
@@ -148,6 +211,12 @@ export const readProtoList = async function (protoDir: string, outputDir: string
     return Promise.resolve(protoFiles);
 };
 
+/**
+ * 读取 *.proto 文件生成 ProtobufIParserResult 结构体
+ *
+ * @param {ProtoFile} protoFile
+ * @returns {Promise<IParserResult>}
+ */
 export const parseProto = async function (protoFile: ProtoFile): Promise<ProtobufIParserResult> {
     let content = await LibFs.readFile(Proto.genFullProtoFilePath(protoFile));
     let proto = protobuf.parse(content.toString());
@@ -155,6 +224,12 @@ export const parseProto = async function (protoFile: ProtoFile): Promise<Protobu
     return Promise.resolve(proto);
 };
 
+/**
+ * 从 ProtobufIParserResult 结构体中解析 Service 数据
+ *
+ * @param {IParserResult} proto
+ * @returns {Array<Service>}
+ */
 export const parseServicesFromProto = function (proto: ProtobufIParserResult): Array<ProtobufService> {
     let pkgRoot = proto.root.lookup(proto.package) as ProtobufNamespace;
     let services = [] as Array<ProtobufService>;
@@ -170,6 +245,14 @@ export const parseServicesFromProto = function (proto: ProtobufIParserResult): A
     return services;
 };
 
+/**
+ * 从 ProtobufIParserResult 结构体中解析 import 的 package 相关数据
+ *
+ * @param {IParserResult} proto
+ * @param {ProtoFile} protoFile
+ * @param {string} symlink
+ * @returns {ProtoMsgImportInfos}
+ */
 export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, protoFile: ProtoFile, symlink: string = '.'): ProtoMsgImportInfos {
     let pkgRoot = proto.root.lookup(proto.package) as ProtobufNamespace;
     let msgImportInfos = {} as ProtoMsgImportInfos;
@@ -187,9 +270,19 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
     return msgImportInfos;
 };
 
+/**
+ * When handling proto to generate services files, it's necessary to know
+ * the imported messages in third party codes.
+ *
+ * @param {ProtoFile} protoFile
+ * @param {Method} method
+ * @param {string} outputPath
+ * @param {ProtoMsgImportInfos} protoMsgImportInfos
+ * @returns {RpcMethodInfo}
+ */
 export const genRpcMethodInfo = function (protoFile: ProtoFile, method: ProtobufMethod, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos): RpcMethodInfo {
     let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath);
-    let protoMsgImportPaths = {} as RpcMethodImportPathInfo;
+    let protoMsgImportPaths = {} as RpcMethodImportPathInfos;
 
     let requestType = method.requestType;
     let requestTypeImportPath = defaultImportPath;
@@ -197,7 +290,7 @@ export const genRpcMethodInfo = function (protoFile: ProtoFile, method: Protobuf
         requestType = protoMsgImportInfos[method.requestType].msgType;
         requestTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
     }
-    protoMsgImportPaths = parseImportPathInfos(protoMsgImportPaths, requestType, requestTypeImportPath);
+    protoMsgImportPaths = addIntoRpcMethodImportPathInfos(protoMsgImportPaths, requestType, requestTypeImportPath);
 
     let responseType = method.responseType;
     let responseTypeImportPath = defaultImportPath;
@@ -205,7 +298,7 @@ export const genRpcMethodInfo = function (protoFile: ProtoFile, method: Protobuf
         responseType = protoMsgImportInfos[method.responseType].msgType;
         responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.responseType].protoFile, outputPath);
     }
-    protoMsgImportPaths = parseImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
+    protoMsgImportPaths = addIntoRpcMethodImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
 
     return {
         callTypeStr: '',
@@ -218,14 +311,14 @@ export const genRpcMethodInfo = function (protoFile: ProtoFile, method: Protobuf
     } as RpcMethodInfo;
 };
 
-export const parseImportPathInfos = function (importPathInfos: RpcMethodImportPathInfo, type: string, importPath: string): RpcMethodImportPathInfo {
-    if (!importPathInfos.hasOwnProperty(importPath)) {
-        importPathInfos[importPath] = [];
+export const addIntoRpcMethodImportPathInfos = function (protoMsgImportPaths: RpcMethodImportPathInfos, type: string, importPath: string): RpcMethodImportPathInfos {
+    if (!protoMsgImportPaths.hasOwnProperty(importPath)) {
+        protoMsgImportPaths[importPath] = [];
     }
 
-    importPathInfos[importPath].push(type);
+    protoMsgImportPaths[importPath].push(type);
 
-    return importPathInfos;
+    return protoMsgImportPaths;
 };
 
 export const mkdir = async function (path: string): Promise<string> {
@@ -478,7 +571,7 @@ export namespace Swagger {
         if (!definitionMap.hasOwnProperty(definitionName)) {
             return [];
         }
-        let canDeepSearch = (level++ <= maxLevel);
+        let canDeepSearch = (maxLevel <= 0) ? true : (level++ <= maxLevel);
 
         let swaggerSchemaList = [] as Array<GatewaySwaggerSchema>;
         let definition = definitionMap[definitionName] as SwaggerSchema;
@@ -493,19 +586,19 @@ export namespace Swagger {
             if (definitionSchema.$ref) {
                 type = 'object';
                 if (canDeepSearch) {
-                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref), level);
+                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref), level, maxLevel);
                 }
             } else if (definitionSchema.type) {
                 type = Swagger.convertSwaggerTypeToJoiType(definitionSchema.type);
                 if (definitionSchema.type === 'array' && definitionSchema.items.hasOwnProperty('$ref')) {
                     // is repeated field
                     if (canDeepSearch) {
-                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName((definitionSchema.items as SwaggerSchema).$ref), level);
+                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName((definitionSchema.items as SwaggerSchema).$ref), level, maxLevel);
                     }
                 } else if (definitionSchema.type === 'object' && definitionSchema.additionalProperties && definitionSchema.additionalProperties.hasOwnProperty('$ref')) {
                     // is map field field
                     if (canDeepSearch) {
-                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.additionalProperties.$ref), level);
+                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.additionalProperties.$ref), level, maxLevel);
                     }
                 } else if (definitionSchema.type === 'string' && definitionSchema.format == 'int64') {
                     type = 'number';
@@ -527,16 +620,16 @@ export namespace Swagger {
                     swaggerSchema.schema = schema;
                 }
             } else if (definitionSchema.additionalProperties) {
-                swaggerSchema.additionalProperties = definitionSchema.additionalProperties;
+                swaggerSchema.protoMap = definitionSchema.additionalProperties;
 
                 if (schema.length > 0) {
-                    swaggerSchema.additionalProperties.schema = schema;
+                    swaggerSchema.protoMap.schema = schema;
                 }
             } else if (definitionSchema.items) {
-                swaggerSchema.items = definitionSchema.items as SwaggerSchema;
+                swaggerSchema.protoArray = definitionSchema.items as GatewaySwaggerCustomerSchema;
 
                 if (schema.length > 0) {
-                    swaggerSchema.items.schema = schema;
+                    swaggerSchema.protoArray.schema = schema;
                 }
             }
 

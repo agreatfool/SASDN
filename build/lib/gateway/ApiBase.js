@@ -10,10 +10,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const Joi_1 = require("../utility/Joi");
 class GatewayApiBase {
-    handleMock(ctx, next, params) {
-        return Promise.resolve(`API:${ctx.path}, has no mock data!`);
-    }
-    ;
     register() {
         return [this.uri, this._validate(), this._mock(), this._execute()];
     }

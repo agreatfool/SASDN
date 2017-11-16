@@ -16,6 +16,14 @@ const protobufjs_1 = require("protobufjs");
 const bluebird = require("bluebird");
 const LibMkdirP = require("mkdirp");
 const mkdirp = bluebird.promisify(LibMkdirP);
+/**
+ * 读取 protoDir 文件夹内的 proto 文件名生成 ProtoFile 结构体。
+ *
+ * @param {string} protoDir
+ * @param {string} outputDir
+ * @param {Array<string>} excludes
+ * @returns {Promise<Array<ProtoFile>>}
+ */
 exports.readProtoList = function (protoDir, outputDir, excludes) {
     return __awaiter(this, void 0, void 0, function* () {
         let files = yield recursive(protoDir, ['.DS_Store', function ignoreFunc(file, stats) {
@@ -55,6 +63,12 @@ exports.readProtoList = function (protoDir, outputDir, excludes) {
         return Promise.resolve(protoFiles);
     });
 };
+/**
+ * 读取 *.proto 文件生成 ProtobufIParserResult 结构体
+ *
+ * @param {ProtoFile} protoFile
+ * @returns {Promise<IParserResult>}
+ */
 exports.parseProto = function (protoFile) {
     return __awaiter(this, void 0, void 0, function* () {
         let content = yield LibFs.readFile(Proto.genFullProtoFilePath(protoFile));
@@ -62,6 +76,12 @@ exports.parseProto = function (protoFile) {
         return Promise.resolve(proto);
     });
 };
+/**
+ * 从 ProtobufIParserResult 结构体中解析 Service 数据
+ *
+ * @param {IParserResult} proto
+ * @returns {Array<Service>}
+ */
 exports.parseServicesFromProto = function (proto) {
     let pkgRoot = proto.root.lookup(proto.package);
     let services = [];
@@ -75,6 +95,14 @@ exports.parseServicesFromProto = function (proto) {
     });
     return services;
 };
+/**
+ * 从 ProtobufIParserResult 结构体中解析 import 的 package 相关数据
+ *
+ * @param {IParserResult} proto
+ * @param {ProtoFile} protoFile
+ * @param {string} symlink
+ * @returns {ProtoMsgImportInfos}
+ */
 exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
     let pkgRoot = proto.root.lookup(proto.package);
     let msgImportInfos = {};
@@ -90,6 +118,16 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
     });
     return msgImportInfos;
 };
+/**
+ * When handling proto to generate services files, it's necessary to know
+ * the imported messages in third party codes.
+ *
+ * @param {ProtoFile} protoFile
+ * @param {Method} method
+ * @param {string} outputPath
+ * @param {ProtoMsgImportInfos} protoMsgImportInfos
+ * @returns {RpcMethodInfo}
+ */
 exports.genRpcMethodInfo = function (protoFile, method, outputPath, protoMsgImportInfos) {
     let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath);
     let protoMsgImportPaths = {};
@@ -99,14 +137,14 @@ exports.genRpcMethodInfo = function (protoFile, method, outputPath, protoMsgImpo
         requestType = protoMsgImportInfos[method.requestType].msgType;
         requestTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
     }
-    protoMsgImportPaths = exports.parseImportPathInfos(protoMsgImportPaths, requestType, requestTypeImportPath);
+    protoMsgImportPaths = exports.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, requestType, requestTypeImportPath);
     let responseType = method.responseType;
     let responseTypeImportPath = defaultImportPath;
     if (protoMsgImportInfos.hasOwnProperty(method.responseType)) {
         responseType = protoMsgImportInfos[method.responseType].msgType;
         responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.responseType].protoFile, outputPath);
     }
-    protoMsgImportPaths = exports.parseImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
+    protoMsgImportPaths = exports.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
     return {
         callTypeStr: '',
         requestTypeStr: requestType,
@@ -117,12 +155,12 @@ exports.genRpcMethodInfo = function (protoFile, method, outputPath, protoMsgImpo
         protoMsgImportPath: protoMsgImportPaths
     };
 };
-exports.parseImportPathInfos = function (importPathInfos, type, importPath) {
-    if (!importPathInfos.hasOwnProperty(importPath)) {
-        importPathInfos[importPath] = [];
+exports.addIntoRpcMethodImportPathInfos = function (protoMsgImportPaths, type, importPath) {
+    if (!protoMsgImportPaths.hasOwnProperty(importPath)) {
+        protoMsgImportPaths[importPath] = [];
     }
-    importPathInfos[importPath].push(type);
-    return importPathInfos;
+    protoMsgImportPaths[importPath].push(type);
+    return protoMsgImportPaths;
 };
 exports.mkdir = function (path) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -339,7 +377,7 @@ var Swagger;
         if (!definitionMap.hasOwnProperty(definitionName)) {
             return [];
         }
-        let canDeepSearch = (level++ <= maxLevel);
+        let canDeepSearch = (maxLevel <= 0) ? true : (level++ <= maxLevel);
         let swaggerSchemaList = [];
         let definition = definitionMap[definitionName];
         // key: string => value: SwaggerSchema
@@ -350,7 +388,7 @@ var Swagger;
             if (definitionSchema.$ref) {
                 type = 'object';
                 if (canDeepSearch) {
-                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref), level);
+                    schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.$ref), level, maxLevel);
                 }
             }
             else if (definitionSchema.type) {
@@ -358,13 +396,13 @@ var Swagger;
                 if (definitionSchema.type === 'array' && definitionSchema.items.hasOwnProperty('$ref')) {
                     // is repeated field
                     if (canDeepSearch) {
-                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items.$ref), level);
+                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.items.$ref), level, maxLevel);
                     }
                 }
                 else if (definitionSchema.type === 'object' && definitionSchema.additionalProperties && definitionSchema.additionalProperties.hasOwnProperty('$ref')) {
                     // is map field field
                     if (canDeepSearch) {
-                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.additionalProperties.$ref), level);
+                        schema = parseSwaggerDefinitionMap(definitionMap, Swagger.getRefName(definitionSchema.additionalProperties.$ref), level, maxLevel);
                     }
                 }
                 else if (definitionSchema.type === 'string' && definitionSchema.format == 'int64') {
@@ -386,15 +424,15 @@ var Swagger;
                 }
             }
             else if (definitionSchema.additionalProperties) {
-                swaggerSchema.additionalProperties = definitionSchema.additionalProperties;
+                swaggerSchema.protoMap = definitionSchema.additionalProperties;
                 if (schema.length > 0) {
-                    swaggerSchema.additionalProperties.schema = schema;
+                    swaggerSchema.protoMap.schema = schema;
                 }
             }
             else if (definitionSchema.items) {
-                swaggerSchema.items = definitionSchema.items;
+                swaggerSchema.protoArray = definitionSchema.items;
                 if (schema.length > 0) {
-                    swaggerSchema.items.schema = schema;
+                    swaggerSchema.protoArray.schema = schema;
                 }
             }
             swaggerSchemaList.push(swaggerSchema);

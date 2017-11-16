@@ -32,8 +32,8 @@ class {{info.apiName}} extends GatewayApiBase {
                     {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
                     {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
                     {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
-                    {{#equal this.type 'object'}}{{hump this.name}}{{#if this.additionalProperties}}Map{{/if}}{{/equal}}: {
-                        type: '{{#if this.additionalProperties}}array{{else}}{{this.type}}{{/if}}',
+                    {{#equal this.type 'object'}}{{hump this.name}}{{#if this.protoMap}}Map{{/if}}{{/equal}}: {
+                        type: '{{#if this.protoMap}}array{{else}}{{this.type}}{{/if}}',
                         required: {{this.required}},
                         {{#if this.schema}}
                         schema: {
@@ -42,8 +42,8 @@ class {{info.apiName}} extends GatewayApiBase {
                             {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
                             {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
                             {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
-                            {{#equal this.type 'object'}}{{hump this.name}}{{#if this.additionalProperties}}Map{{/if}}{{/equal}}: {
-                                type: '{{#if this.additionalProperties}}array{{else}}{{this.type}}{{/if}}',
+                            {{#equal this.type 'object'}}{{hump this.name}}{{#if this.protoMap}}Map{{/if}}{{/equal}}: {
+                                type: '{{#if this.protoMap}}array{{else}}{{this.type}}{{/if}}',
                                 required: {{this.required}},
                                 {{#if this.schema}}
                                 schema: {
@@ -52,8 +52,8 @@ class {{info.apiName}} extends GatewayApiBase {
                                     {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
                                     {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
                                     {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
-                                    {{#equal this.type 'object'}}{{hump this.name}}{{#if this.additionalProperties}}Map{{/if}}{{/equal}}: {
-                                        type: '{{#if this.additionalProperties}}array{{else}}{{this.type}}{{/if}}',
+                                    {{#equal this.type 'object'}}{{hump this.name}}{{#if this.protoMap}}Map{{/if}}{{/equal}}: {
+                                        type: '{{#if this.protoMap}}array{{else}}{{this.type}}{{/if}}',
                                         required: {{this.required}},
                                     },
                                 {{/each}}
@@ -93,40 +93,40 @@ class {{info.apiName}} extends GatewayApiBase {
         // List {{hump this.name 'ucfirst'}}
         const {{hump this.name}}List = [];
         for (let i = 0; i < Mock.Random.natural(5, 10); i++) {
-                {{#equal this.items.type 'number'}}
+                {{#equal this.protoArray.type 'number'}}
             {{hump this.name}}List.push(Mock.Random.natural());
                 {{/equal}}
-                {{#equal this.items.type 'boolean'}}
+                {{#equal this.protoArray.type 'boolean'}}
             {{hump this.name}}List.push(Mock.Random.boolean());
                 {{/equal}}
-                {{#equal this.items.type 'string'}}
+                {{#equal this.protoArray.type 'string'}}
             {{hump this.name}}List.push(Mock.Random.string('symbol', 5, 10));
                 {{/equal}}
-                {{#equal this.items.type 'array'}}
+                {{#equal this.protoArray.type 'array'}}
             {{hump this.name}}List.push([]);
                 {{/equal}}
-                {{#if this.items.$ref}}
-            const {{hump this.name}}{{this.items.$ref}} = new {{this.items.$ref}}();
-                    {{#each this.items.schema}}
+                {{#if this.protoArray.$ref}}
+            const {{hump this.name}}{{this.protoArray.$ref}} = new {{this.protoArray.$ref}}();
+                    {{#each this.protoArray.schema}}
                         {{#equal this.type 'number'}}
-            {{hump ../this.name}}{{../this.items.$ref}}.set{{hump this.name 'ucfirst'}}(Mock.Random.natural());
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}(Mock.Random.natural());
                         {{/equal}}
                         {{#equal this.type 'boolean'}}
-            {{hump ../this.name}}{{../this.items.$ref}}.set{{hump this.name 'ucfirst'}}(Mock.Random.boolean());
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}(Mock.Random.boolean());
                         {{/equal}}
                         {{#equal this.type 'string'}}
-            {{hump ../this.name}}{{../this.items.$ref}}.set{{hump this.name 'ucfirst'}}(Mock.Random.string('symbol', 5, 10));
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}(Mock.Random.string('symbol', 5, 10));
                         {{/equal}}
                         {{#equal this.type 'array'}}
-            {{hump ../this.name}}{{../this.items.$ref}}.set{{hump this.name 'ucfirst'}}List([]);
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}List([]);
                         {{/equal}}
                         {{#equal this.type 'object'}}
                             {{#if this.schema}}
-            {{hump ../this.name}}{{../this.items.$ref}}.set{{hump this.name 'ucfirst'}}();
+            {{hump ../this.name}}{{../this.protoArray.$ref}}.set{{hump this.name 'ucfirst'}}();
                             {{/if}}
                         {{/equal}}
                     {{/each}}
-            {{hump this.name}}List.push({{hump this.name}}{{this.items.$ref}});
+            {{hump this.name}}List.push({{hump this.name}}{{this.protoArray.$ref}});
                 {{/if}}
         }
         response.set{{hump this.name 'ucfirst'}}List({{hump this.name}}List);
@@ -157,20 +157,20 @@ class {{info.apiName}} extends GatewayApiBase {
                     {{/each}}
         response.set{{hump this.name 'ucfirst'}}({{hump this.name}});
                 {{/if}}
-                {{#if this.additionalProperties}}
+                {{#if this.protoMap}}
 
         // Map {{hump this.name 'ucfirst'}}
-                    {{#if this.additionalProperties.$ref}}
-        const {{hump this.name}}Map = new {{this.additionalProperties.$ref}}();
+                    {{#if this.protoMap.$ref}}
+        const {{hump this.name}}Map = new {{this.protoMap.$ref}}();
                     {{/if}}
         response.get{{hump this.name 'ucfirst'}}Map()
             .set(Mock.Random.string('lower', 5, 10),
-                    {{~#if this.additionalProperties.type~}}
-                        {{~#equal this.additionalProperties.type 'number'}} Mock.Random.natural(){{/equal~}}
-                        {{~#equal this.additionalProperties.type 'boolean'}} Mock.Random.boolean(){{/equal~}}
-                        {{~#equal this.additionalProperties.type 'string'}} Mock.Random.string('lower', 5, 10){{/equal~}}
+                    {{~#if this.protoMap.type~}}
+                        {{~#equal this.protoMap.type 'number'}} Mock.Random.natural(){{/equal~}}
+                        {{~#equal this.protoMap.type 'boolean'}} Mock.Random.boolean(){{/equal~}}
+                        {{~#equal this.protoMap.type 'string'}} Mock.Random.string('lower', 5, 10){{/equal~}}
                     {{/if~}}
-                    {{#if this.additionalProperties.$ref}} {{hump this.name}}Map{{/if}});
+                    {{#if this.protoMap.$ref}} {{hump this.name}}Map{{/if}});
                 {{/if}}
             {{/equal}}
         {{/each}}
