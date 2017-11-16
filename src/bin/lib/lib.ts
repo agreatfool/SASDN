@@ -147,11 +147,11 @@ export interface GatewaySwaggerSchema {
     required: boolean;      // required, optional
     $ref?: string;
     schema?: Array<GatewaySwaggerSchema>;
-    protoArray?: GatewaySwaggerCustomerSchema;  // Proto: "repeated string tags" => Swagger: definitions.demoDemo.properties.tags.items
-    protoMap?: GatewaySwaggerCustomerSchema;    // Proto: "map<string, order.Order> demoOrders" => Swagger: definitions.demoDemo.properties.demoOrders.additionalProperties
+    protoArray?: GatewaySwaggerCustomizedSchema;  // Proto: "repeated string tags" => Swagger: definitions.demoDemo.properties.tags.items
+    protoMap?: GatewaySwaggerCustomizedSchema;    // Proto: "map<string, order.Order> demoOrders" => Swagger: definitions.demoDemo.properties.demoOrders.additionalProperties
 }
 
-export interface GatewaySwaggerCustomerSchema extends SwaggerSchema{
+export interface GatewaySwaggerCustomizedSchema extends SwaggerSchema{
     schema?: Array<GatewaySwaggerSchema>;
 }
 
@@ -626,7 +626,7 @@ export namespace Swagger {
                     swaggerSchema.protoMap.schema = schema;
                 }
             } else if (definitionSchema.items) {
-                swaggerSchema.protoArray = definitionSchema.items as GatewaySwaggerCustomerSchema;
+                swaggerSchema.protoArray = definitionSchema.items as GatewaySwaggerCustomizedSchema;
 
                 if (schema.length > 0) {
                     swaggerSchema.protoArray.schema = schema;
