@@ -26,8 +26,10 @@ export declare abstract class GatewayApiBase {
     type: string;
     schemaDefObj: GatewayJoiSchemaMap;
     abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
+    abstract handleMock(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
     register(): Array<string | KoaMiddleware>;
     protected _validate(): KoaMiddleware;
+    protected _mock(): KoaMiddleware;
     protected _execute(): KoaMiddleware;
     protected _parseParams(ctx: GatewayContext): {
         [key: string]: any;

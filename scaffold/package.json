@@ -9,7 +9,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "sasdn": "1.1.4"
+    "sasdn": "1.1.5"
   },
   "devDependencies": {
     "@types/google-protobuf": "3.2.5",

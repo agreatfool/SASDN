@@ -48,7 +48,7 @@ export interface RpcMethodInfo {
     hasCallback: boolean;
     hasRequest: boolean;
     methodName: string;
-    protoMsgImportPath: RpcMethodImportPathInfo;
+    protoMsgImportPath: RpcMethodImportPathInfos;
 }
 /**
  * Used: Command rpcs, generating services stubs.
@@ -61,24 +61,127 @@ export interface RpcMethodInfo {
  *   '../../proto/user_pb': [ 'User', 'GetUserRequest' ]
  * }
  */
-export interface RpcMethodImportPathInfo {
+export interface RpcMethodImportPathInfos {
     [importPath: string]: Array<string>;
 }
+/**
+ * 将 swagger.json 的 definitions 下的内容解析成 Array<GatewaySwaggerSchema>
+ *
+ * e.g
+ * demo.swagger.json
+ * {
+ *  ...
+ *  "definitions": {
+ *    "demoDemo": {
+ *      "type": "object",
+ *      "properties": {
+ *          "id": {
+ *              "type": "string",
+ *              "format": "int64"
+ *           },
+ *           "tags": {
+ *              "type": "array",
+ *              "items": {
+ *                  "type": "string"
+ *              }
+ *           },
+ *           "demoOrders": {
+ *              "type": "object",
+ *              "additionalProperties": {
+ *                  "$ref": "#/definitions/orderOrder"
+ *              }
+ *           }
+ *      },
+ *      },
+ *  },
+ *  ...
+ * }
+ * gatewaySwaggerSchema.name = "demoDemo"
+ * gatewaySwaggerSchema.type = "object"
+ * gatewaySwaggerSchema.required = false
+ * gatewaySwaggerSchema.schema = [
+ *      GatewaySwaggerSchema(
+ *          name: "id",
+ *          type: "string",
+ *      ),
+ *      GatewaySwaggerSchema(
+ *          name: "tags",
+ *          type: "array",
+ *          protoArray: {
+ *              "type": "string"
+ *          }
+ *      ),
+ *      GatewaySwaggerSchema(
+ *          name: "demoOrders",
+ *          type: "object",
+ *          protoMap: {
+ *              "$ref": "#/definitions/orderOrder"
+ *          }
+ *      ),
+ * ]
+ */
 export interface GatewaySwaggerSchema {
     name: string;
     type: string;
     required: boolean;
+    $ref?: string;
+    schema?: Array<GatewaySwaggerSchema>;
+    protoArray?: GatewaySwaggerCustomizedSchema;
+    protoMap?: GatewaySwaggerCustomizedSchema;
+}
+export interface GatewaySwaggerCustomizedSchema extends SwaggerSchema {
     schema?: Array<GatewaySwaggerSchema>;
 }
+/**
+ * 定义一个 swagger.json 中的 definitions 的结构。
+ */
 export interface SwaggerDefinitionMap {
     [definitionsName: string]: SwaggerSchema;
 }
+/**
+ * 读取 protoDir 文件夹内的 proto 文件名生成 ProtoFile 结构体。
+ *
+ * @param {string} protoDir
+ * @param {string} outputDir
+ * @param {Array<string>} excludes
+ * @returns {Promise<Array<ProtoFile>>}
+ */
 export declare const readProtoList: (protoDir: string, outputDir: string, excludes?: string[]) => Promise<ProtoFile[]>;
+/**
+ * 读取 *.proto 文件生成 ProtobufIParserResult 结构体
+ *
+ * @param {ProtoFile} protoFile
+ * @returns {Promise<IParserResult>}
+ */
 export declare const parseProto: (protoFile: ProtoFile) => Promise<protobuf.IParserResult>;
+/**
+ * 从 ProtobufIParserResult 结构体中解析 Service 数据
+ *
+ * @param {IParserResult} proto
+ * @returns {Array<Service>}
+ */
 export declare const parseServicesFromProto: (proto: protobuf.IParserResult) => protobuf.Service[];
+/**
+ * 从 ProtobufIParserResult 结构体中解析 import 的 package 相关数据
+ *
+ * @param {IParserResult} proto
+ * @param {ProtoFile} protoFile
+ * @param {string} symlink
+ * @returns {ProtoMsgImportInfos}
+ */
 export declare const parseMsgNamesFromProto: (proto: protobuf.IParserResult, protoFile: ProtoFile, symlink?: string) => ProtoMsgImportInfos;
+/**
+ * When handling proto to generate services files, it's necessary to know
+ * the imported messages in third party codes.
+ *
+ * @param {ProtoFile} protoFile
+ * @param {Method} method
+ * @param {string} outputPath
+ * @param {ProtoMsgImportInfos} protoMsgImportInfos
+ * @returns {RpcMethodInfo}
+ */
 export declare const genRpcMethodInfo: (protoFile: ProtoFile, method: protobuf.Method, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos) => RpcMethodInfo;
-export declare const parseImportPathInfos: (importPathInfos: RpcMethodImportPathInfo, type: string, importPath: string) => RpcMethodImportPathInfo;
+export declare const addIntoRpcMethodImportPathInfos: (protoMsgImportPaths: RpcMethodImportPathInfos, type: string, importPath: string) => RpcMethodImportPathInfos;
 export declare const mkdir: (path: string) => Promise<string>;
 export declare const lcfirst: (str: any) => string;
 export declare const ucfirst: (str: any) => string;

@@ -441,4 +441,3 @@ var Swagger;
     }
     Swagger.parseSwaggerDefinitionMap = parseSwaggerDefinitionMap;
 })(Swagger = exports.Swagger || (exports.Swagger = {}));
-//# sourceMappingURL=lib.js.map

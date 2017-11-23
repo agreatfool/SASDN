@@ -120,4 +120,3 @@ class ScaffoldCLI {
         return JSON.parse(LibFs.readFileSync(path).toString());
     }
 }
-//# sourceMappingURL=sasdn-scaffold.js.map
