@@ -15,6 +15,7 @@ const lib_1 = require("./lib/lib");
 const template_1 = require("./lib/template");
 const pkg = require('../../package.json');
 program.version(pkg.version)
+    .option('-p, --proto <dir>', 'directory of proto files')
     .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
     return val.split(',');
 })
@@ -22,10 +23,13 @@ program.version(pkg.version)
     .option('-e, --exclude <items>', 'files or paths in -p shall be excluded: e.g file1,path1,path2,file2', function list(val) {
     return val.split(',');
 })
+    .option('-z, --zipkin', 'need add zipkin plugin')
     .parse(process.argv);
+const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const IMPORTS = program.import === undefined ? [] : program.import;
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
 const EXCLUDES = program.exclude === undefined ? [] : program.exclude;
+const ZIPKIN = program.zipkin === undefined ? undefined : true;
 class ClientCLI {
     constructor() {
         this._protoFiles = [];
@@ -41,6 +45,7 @@ class ClientCLI {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('ClientCLI start.');
             yield this._validate();
+            yield this._loadSelfProtos();
             yield this._loadProtos();
             yield this._genProtoDependencyClients();
         });
@@ -48,6 +53,9 @@ class ClientCLI {
     _validate() {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('ClientCLI validate.');
+            if (!PROTO_DIR) {
+                throw new Error('--proto is required');
+            }
             if (!OUTPUT_DIR) {
                 throw new Error('--output is required');
             }
@@ -55,6 +63,15 @@ class ClientCLI {
             if (!outputStat.isDirectory()) {
                 throw new Error('--output is not a directory');
             }
+        });
+    }
+    _loadSelfProtos() {
+        return __awaiter(this, void 0, void 0, function* () {
+            console.log('ClientCLI load self proto file.');
+            // Package name is same so only need parse one proto
+            const protoFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR);
+            const parseResult = yield lib_1.parseProto(protoFiles[0]);
+            this._packageName = parseResult.package;
         });
     }
     _loadProtos() {
@@ -112,11 +129,14 @@ class ClientCLI {
                 const protoName = protoInfo.result.package;
                 const ucBaseName = lib_1.ucfirst(protoName);
                 let protoClientInfo = {
+                    packageName: this._packageName.toUpperCase(),
                     protoName: protoName,
+                    ucProtoName: protoName.toUpperCase(),
                     className: `MS${ucBaseName}Client`,
                     protoFile: protoInfo.protoFile,
                     protoImportPath: lib_1.Proto.genProtoClientImportPath(protoInfo.protoFile).replace(/\\/g, '/'),
                     methodList: {},
+                    useZipkin: ZIPKIN,
                 };
                 const outputPath = lib_1.Proto.genFullOutputClientPath(protoInfo.protoFile);
                 let methodInfos = this._genMethodInfos(protoInfo.protoFile, service, outputPath, protoMsgImportInfos, shallIgnore);
@@ -136,7 +156,6 @@ class ClientCLI {
                 // check same name
                 protoClientInfo.allMethodImportModule = [...moduleSet];
                 yield lib_1.mkdir(LibPath.dirname(outputPath));
-                template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
                 let content = template_1.TplEngine.render('rpcs/client', Object.assign({}, protoClientInfo));
                 yield LibFs.writeFile(outputPath, content);
             }
@@ -161,3 +180,4 @@ class ClientCLI {
 ClientCLI.instance().run().catch((err) => {
     console.log('err: ', err.message);
 });
+//# sourceMappingURL=sasdn-client.js.map

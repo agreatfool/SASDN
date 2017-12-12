@@ -1,9 +1,9 @@
 import * as LibPath from 'path';
-import {RpcApplication} from 'sasdn';
-import {GrpcInstrumentation} from 'zipkin-instrumentation-grpcjs';
-import {registerServices} from '../services/Register';
-import {ConfigHelper} from '../helper/ConfigHelper';
-import {TracerHelper} from '../helper/TracerHelper';
+import { RpcApplication } from 'sasdn';
+import { GrpcImpl } from 'sasdn-zipkin';
+import { registerServices } from '../services/Register';
+import { ConfigHelper } from '../helper/ConfigHelper';
+import { TracerHelper } from '../helper/TracerHelper';
 
 export default class MSOrder {
     private _initialized: boolean;
@@ -21,8 +21,13 @@ export default class MSOrder {
         await ConfigHelper.instance().init(configPath);
         await TracerHelper.instance().init();
 
+        GrpcImpl.init(process.env.ZIPKIN_URL, {
+            serviceName: process.env.ORDER,
+            port: process.env.ORDER_PORT
+        });
+
         const app = new RpcApplication();
-        app.use(GrpcInstrumentation.middleware(TracerHelper.instance().getTraceInfo()));
+        app.use(new GrpcImpl().createMiddleware());
         this.app = app;
 
         this._initialized = true;

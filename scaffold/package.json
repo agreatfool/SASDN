@@ -9,7 +9,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "sasdn": "1.1.5"
+    "sasdn": "1.1.5",
+    "sasdn-zipkin": "1.0.3"
   },
   "devDependencies": {
     "@types/google-protobuf": "3.2.5",

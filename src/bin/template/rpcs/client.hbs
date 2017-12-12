@@ -1,6 +1,8 @@
 import * as grpc from 'grpc';
 import {{curlyLeft}}GatewayContext, RpcContext{{curlyRight}} from "sasdn";
-import {GrpcInstrumentation} from 'zipkin-instrumentation-grpcjs';
+{{#if this.useZipkin}}
+import {GrpcImpl} from 'sasdn-zipkin';
+{{/if}}
 
 import {
     {{this.clientName}}Client,
@@ -19,11 +21,27 @@ export default class {{{this.className}}} {
     constructor(ctx?: GatewayContext | RpcContext) {
         const options = ConfigHelper.instance().getOption();
 
-        this.client = GrpcInstrumentation.proxyClient(
-            new {{{this.clientName}}}Client(`${options.host}:${options.port}`, grpc.credentials.createInsecure()),
-            ctx,
-            TracerHelper.instance().getTraceInfo(true, '{{{this.protoName}}}')
+        {{#if this.useZipkin}}
+        GrpcImpl.init(process.env.ZIPKIN_URL, {
+            serviceName: process.env.{{this.packageName}},
+            port: process.env.{{this.packageName}}_PORT
+        });
+        GrpcImpl.setReceiverServiceInfo({
+            serviceName: process.env.{{this.ucProtoName}},
+            host: process.env.{{this.ucProtoName}}_ADDRESS,
+            port: process.env.{{this.ucProtoName}}_PORT
+        });
+
+        const proxyClient = new GrpcImpl().createClient(
+            new {{{this.clientName}}}Client(`${options.host}:${options.port}`, grpc.credentials.createInsecure()), 
+            ctx
         );
+        {{else}}
+        const proxyClient = new {{{this.clientName}}}Client(
+            `${options.host}:${options.port}`, 
+            grpc.credentials.createInsecure()
+        );
+        {{/if}}
     }
 
     {{#each methodList}}

@@ -61,7 +61,9 @@ export interface RpcProtoServicesInfo {
 }
 
 export interface RpcProtoClientInfo {
+    packageName: string;
     protoName: string;
+    ucProtoName: string;
     className: string;
     clientName: string;
     protoFile: ProtoFile;
@@ -69,6 +71,7 @@ export interface RpcProtoClientInfo {
     methodList: Array<RpcMethodInfo>;
     allMethodImportPath: string;
     allMethodImportModule: Array<string>;
+    useZipkin: boolean;
 }
 
 export interface RpcMethodInfo {

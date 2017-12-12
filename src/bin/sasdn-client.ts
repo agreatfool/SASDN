@@ -21,11 +21,16 @@ import {
     addIntoRpcMethodImportPathInfos
 } from './lib/lib';
 import { TplEngine } from './lib/template';
-import { Method as ProtobufMethod, Service as ProtobufService } from 'protobufjs';
+import { 
+    Method as ProtobufMethod, 
+    Service as ProtobufService,
+    IParserResult as ProtoIParserResult
+} from 'protobufjs';
 
 const pkg = require('../../package.json');
 
 program.version(pkg.version)
+    .option('-p, --proto <dir>', 'directory of proto files')
     .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
         return val.split(',');
     })
@@ -33,15 +38,20 @@ program.version(pkg.version)
     .option('-e, --exclude <items>', 'files or paths in -p shall be excluded: e.g file1,path1,path2,file2', function list(val) {
         return val.split(',');
     })
+    .option('-z, --zipkin', 'need add zipkin plugin')
     .parse(process.argv);
 
+const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.normalize((program as any).proto);
 const IMPORTS = (program as any).import === undefined ? [] : (program as any).import;
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
 const EXCLUDES = (program as any).exclude === undefined ? [] : (program as any).exclude;
+const ZIPKIN = (program as any).zipkin === undefined ? undefined : true;
 
 class ClientCLI {
 
     private _protoFiles: Array<ProtoFile> = [];
+
+    private _packageName: string;
 
     static instance() {
         return new ClientCLI();
@@ -54,12 +64,17 @@ class ClientCLI {
     public async run() {
         console.log('ClientCLI start.');
         await this._validate();
+        await this._loadSelfProtos();
         await this._loadProtos();
         await this._genProtoDependencyClients();
     }
 
     private async _validate() {
         console.log('ClientCLI validate.');
+
+        if (!PROTO_DIR) {
+            throw new Error('--proto is required');
+        }
 
         if (!OUTPUT_DIR) {
             throw new Error('--output is required');
@@ -69,6 +84,17 @@ class ClientCLI {
         if (!outputStat.isDirectory()) {
             throw new Error('--output is not a directory');
         }
+    }
+
+    private async _loadSelfProtos() {
+        console.log('ClientCLI load self proto file.');
+
+        // Package name is same so only need parse one proto
+        const protoFiles: ProtoFile[] = await readProtoList(PROTO_DIR, OUTPUT_DIR);
+
+        const parseResult: ProtoIParserResult = await parseProto(protoFiles[0]);
+
+        this._packageName = parseResult.package;
     }
 
     private async _loadProtos() {
@@ -134,11 +160,14 @@ class ClientCLI {
             const protoName: string = protoInfo.result.package;
             const ucBaseName: string = ucfirst(protoName);
             let protoClientInfo = {
+                packageName: this._packageName.toUpperCase(),
                 protoName: protoName,
+                ucProtoName: protoName.toUpperCase(),
                 className: `MS${ucBaseName}Client`,
                 protoFile: protoInfo.protoFile,
                 protoImportPath: Proto.genProtoClientImportPath(protoInfo.protoFile).replace(/\\/g, '/'),
                 methodList: {} as Array<RpcMethodInfo>,
+                useZipkin: ZIPKIN,
             } as RpcProtoClientInfo;
             const outputPath = Proto.genFullOutputClientPath(protoInfo.protoFile);
             let methodInfos = this._genMethodInfos(protoInfo.protoFile, service, outputPath, protoMsgImportInfos, shallIgnore);
@@ -158,7 +187,6 @@ class ClientCLI {
             // check same name
             protoClientInfo.allMethodImportModule = [...moduleSet];
             await mkdir(LibPath.dirname(outputPath));
-            TplEngine.registerHelper('lcfirst', lcfirst);
             let content = TplEngine.render('rpcs/client', {
                 ...protoClientInfo
             });
