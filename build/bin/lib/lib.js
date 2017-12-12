@@ -126,6 +126,7 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
  * @param {Method} method
  * @param {string} outputPath
  * @param {ProtoMsgImportInfos} protoMsgImportInfos
+ * @param {string} dirName
  * @returns {RpcMethodInfo}
  */
 exports.genRpcMethodInfo = function (protoFile, method, outputPath, protoMsgImportInfos, dirName = 'services') {
@@ -212,6 +213,11 @@ var Proto;
     Proto.genProtoServiceImportPath = function (protoFile) {
         return LibPath.join('..', 'proto', protoFile.relativePath, protoFile.svcNamespace);
     };
+    /**
+     * Generate client proto js file (e.g *_grpc_pb.js) import path.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
     Proto.genProtoClientImportPath = function (protoFile) {
         return LibPath.join('..', '..', 'proto', protoFile.relativePath, protoFile.svcNamespace);
     };
@@ -256,6 +262,11 @@ var Proto;
     Proto.genFullOutputServicePath = function (protoFile, service, method) {
         return LibPath.join(protoFile.outputPath, 'services', protoFile.relativePath, protoFile.svcNamespace, service.name, exports.lcfirst(method.name) + '.ts');
     };
+    /**
+     * Generate full client stub code output path.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
     Proto.genFullOutputClientPath = function (protoFile) {
         return LibPath.join(protoFile.outputPath, 'clients', protoFile.relativePath, `MS${exports.ucfirst(LibPath.basename(protoFile.fileName, '.proto'))}Client.ts`);
     };

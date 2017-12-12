@@ -60,6 +60,17 @@ export interface RpcProtoServicesInfo {
     };
 }
 
+export interface RpcProtoClientInfo {
+    protoName: string;
+    className: string;
+    clientName: string;
+    protoFile: ProtoFile;
+    protoImportPath: string;
+    methodList: Array<RpcMethodInfo>;
+    allMethodImportPath: string;
+    allMethodImportModule: Array<string>;
+}
+
 export interface RpcMethodInfo {
     callTypeStr: string;
     requestTypeStr: string;
@@ -278,17 +289,18 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
  * @param {Method} method
  * @param {string} outputPath
  * @param {ProtoMsgImportInfos} protoMsgImportInfos
+ * @param {string} dirName
  * @returns {RpcMethodInfo}
  */
-export const genRpcMethodInfo = function (protoFile: ProtoFile, method: ProtobufMethod, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos): RpcMethodInfo {
-    let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath);
+export const genRpcMethodInfo = function (protoFile: ProtoFile, method: ProtobufMethod, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos, dirName: string = 'services'): RpcMethodInfo {
+    let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath, dirName);
     let protoMsgImportPaths = {} as RpcMethodImportPathInfos;
 
     let requestType = method.requestType;
     let requestTypeImportPath = defaultImportPath;
     if (protoMsgImportInfos.hasOwnProperty(method.requestType)) {
         requestType = protoMsgImportInfos[method.requestType].msgType;
-        requestTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
+        requestTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath, dirName);
     }
     protoMsgImportPaths = addIntoRpcMethodImportPathInfos(protoMsgImportPaths, requestType, requestTypeImportPath);
 
@@ -296,7 +308,7 @@ export const genRpcMethodInfo = function (protoFile: ProtoFile, method: Protobuf
     let responseTypeImportPath = defaultImportPath;
     if (protoMsgImportInfos.hasOwnProperty(method.responseType)) {
         responseType = protoMsgImportInfos[method.responseType].msgType;
-        responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.responseType].protoFile, outputPath);
+        responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.responseType].protoFile, outputPath, dirName);
     }
     protoMsgImportPaths = addIntoRpcMethodImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
 
@@ -380,6 +392,21 @@ export namespace Proto {
     };
 
     /**
+     * Generate client proto js file (e.g *_grpc_pb.js) import path.
+     * @param {ProtoFile} protoFile 
+     * @returns {string}
+     */
+    export const genProtoClientImportPath = function (protoFile: ProtoFile): string {
+        return LibPath.join(
+            '..',
+            '..',
+            'proto',
+            protoFile.relativePath,
+            protoFile.svcNamespace
+        );
+    }
+
+    /**
      * Generate origin protobuf definition (e.g *.proto) full file path.
      * @param {ProtoFile} protoFile
      * @returns {string}
@@ -393,12 +420,13 @@ export namespace Proto {
      * Source code path is generated with {@link genFullOutputServicePath},
      * message proto js import path is relative to it.
      * @param {ProtoFile} protoFile
-     * @param {string} serviceFilePath
+     * @param {string} filePath
+     * @param {string} dirname
      * @returns {string}
      */
-    export const genProtoMsgImportPath = function (protoFile: ProtoFile, serviceFilePath: string): string {
+    export const genProtoMsgImportPath = function (protoFile: ProtoFile, filePath: string, dirName: string = 'services'): string {
         return LibPath.join(
-            getPathToRoot(serviceFilePath.substr(serviceFilePath.indexOf('services'))),
+            getPathToRoot(filePath.substr(filePath.indexOf(dirName))),
             'proto',
             protoFile.relativePath,
             protoFile.msgNamespace
@@ -437,6 +465,20 @@ export namespace Proto {
             protoFile.svcNamespace,
             service.name,
             lcfirst(method.name) + '.ts'
+        );
+    };
+
+    /**
+     * Generate full client stub code output path.
+     * @param {ProtoFile} protoFile 
+     * @returns {string}
+     */
+    export const genFullOutputClientPath = function (protoFile: ProtoFile) {
+        return LibPath.join(
+            protoFile.outputPath,
+            'clients',
+            protoFile.relativePath,
+            `MS${ucfirst(LibPath.basename(protoFile.fileName, '.proto'))}Client.ts`
         );
     };
 
