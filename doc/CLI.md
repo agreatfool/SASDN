@@ -68,3 +68,21 @@ Generate demo Micro Service from scaffold files.
 ```
 sasdn scaffold
 ```
+
+
+# Command: Client
+Generate remote rpc api client stubs from proto files.
+
+```
+sasdn client [options]
+
+  Options:
+
+    -V, --version          output the version number
+    -p, --proto <dir>      directory of proto files
+    -i, --import <items>   third party proto import path: e.g path1,path2,path3
+    -o, --output <dir>     directory to output service codes
+    -e, --exclude <items>  files or paths in -p shall be excluded: e.g file1,path1,path2,file2
+    -z, --zipkin           need add zipkin plugin
+    -h, --help             output usage information
+```
