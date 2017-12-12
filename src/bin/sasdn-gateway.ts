@@ -45,6 +45,7 @@ interface GatewayInfo {
     requestParameters: Array<GatewaySwaggerSchema>;
     responseTypeStr: string;
     responseParameters: Array<GatewaySwaggerSchema>;
+    firstCallCode: string;
 }
 
 interface GatewayDefinitionSchemaMap {
@@ -60,6 +61,7 @@ program.version(pkg.version)
     })
     .option('-d, --deepSearchLevel <number>', 'add -d to parse swagger definition depth, default: 5')
     .option('-c, --client', 'add -c to output API Gateway client codes')
+    .option('-fc, --firstCall <code>', 'add some code to run at start of handle')
     .parse(process.argv);
 
 const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.normalize((program as any).proto);
@@ -68,6 +70,7 @@ const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.n
 const IMPORTS = (program as any).import === undefined ? [] : (program as any).import;
 const DEEP_SEARCH_LEVEL = (program as any).deepSearchLevel === undefined ? 5 : (program as any).deepSearchLevel;
 const API_GATEWAY_CLIENT = (program as any).client !== undefined;
+const FIRST_CALL_CODE = (program as any).firstCall === undefined ? undefined : (program as any).firstCall;
 const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 class GatewayCLI {
@@ -320,6 +323,7 @@ class GatewayCLI {
                         requestParameters: swaggerSchemaList,
                         responseTypeStr: responseType,
                         responseParameters: responseParameters,
+                        firstCallCode: FIRST_CALL_CODE,
                     });
                 }
             }
