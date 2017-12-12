@@ -73,8 +73,8 @@ class {{info.apiName}} extends GatewayApiBase {
     }
 
     public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<{{ info.responseTypeStr }}.AsObject> {
-        {{#if this.firstCallCode}}
-        {{this.firstCallCode}}
+        {{#if this.injectedCode}}
+        {{this.injectedCode}}
         {{/if}}
         return Promise.resolve((new {{ info.responseTypeStr }}()).toObject());
     }

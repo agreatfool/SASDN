@@ -41,6 +41,16 @@ export interface RpcProtoServicesInfo {
         [serviceName: string]: Array<RpcMethodInfo>;
     };
 }
+export interface RpcProtoClientInfo {
+    protoName: string;
+    className: string;
+    clientName: string;
+    protoFile: ProtoFile;
+    protoImportPath: string;
+    methodList: Array<RpcMethodInfo>;
+    allMethodImportPath: string;
+    allMethodImportModule: Array<string>;
+}
 export interface RpcMethodInfo {
     callTypeStr: string;
     requestTypeStr: string;
@@ -178,9 +188,10 @@ export declare const parseMsgNamesFromProto: (proto: protobuf.IParserResult, pro
  * @param {Method} method
  * @param {string} outputPath
  * @param {ProtoMsgImportInfos} protoMsgImportInfos
+ * @param {string} dirName
  * @returns {RpcMethodInfo}
  */
-export declare const genRpcMethodInfo: (protoFile: ProtoFile, method: protobuf.Method, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos) => RpcMethodInfo;
+export declare const genRpcMethodInfo: (protoFile: ProtoFile, method: protobuf.Method, outputPath: string, protoMsgImportInfos: ProtoMsgImportInfos, dirName?: string) => RpcMethodInfo;
 export declare const addIntoRpcMethodImportPathInfos: (protoMsgImportPaths: RpcMethodImportPathInfos, type: string, importPath: string) => RpcMethodImportPathInfos;
 export declare const mkdir: (path: string) => Promise<string>;
 export declare const lcfirst: (str: any) => string;
@@ -213,6 +224,12 @@ export declare namespace Proto {
      */
     const genProtoServiceImportPath: (protoFile: ProtoFile) => string;
     /**
+     * Generate client proto js file (e.g *_grpc_pb.js) import path.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
+    const genProtoClientImportPath: (protoFile: ProtoFile) => string;
+    /**
      * Generate origin protobuf definition (e.g *.proto) full file path.
      * @param {ProtoFile} protoFile
      * @returns {string}
@@ -223,10 +240,11 @@ export declare namespace Proto {
      * Source code path is generated with {@link genFullOutputServicePath},
      * message proto js import path is relative to it.
      * @param {ProtoFile} protoFile
-     * @param {string} serviceFilePath
+     * @param {string} filePath
+     * @param {string} dirname
      * @returns {string}
      */
-    const genProtoMsgImportPath: (protoFile: ProtoFile, serviceFilePath: string) => string;
+    const genProtoMsgImportPath: (protoFile: ProtoFile, filePath: string, dirName?: string) => string;
     /**
      * Generate message result js file (e.g *_pb.js) import path.
      * Source code path is generated with {@link genFullOutputServicePath},
@@ -244,6 +262,12 @@ export declare namespace Proto {
      * @returns {string}
      */
     const genFullOutputServicePath: (protoFile: ProtoFile, service: protobuf.Service, method: protobuf.Method) => string;
+    /**
+     * Generate full client stub code output path.
+     * @param {ProtoFile} protoFile
+     * @returns {string}
+     */
+    const genFullOutputClientPath: (protoFile: ProtoFile) => string;
     /**
      * Generate full service stub code output dir.
      * @param {ProtoFile} protoFile

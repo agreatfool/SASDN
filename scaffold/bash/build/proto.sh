@@ -64,6 +64,6 @@ fi
 
 echo "Generate grpc client code ..."
 sasdn client \
--- import=${PROTO_3RD} \
--- output=${OUTPUT} \
--- exclude=${PROTO_3RD}/google
+--import=${PROTO_3RD} \
+--output=${OUTPUT} \
+--exclude=${PROTO_3RD}/google

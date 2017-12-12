@@ -23,7 +23,7 @@ program.version(pkg.version)
 })
     .option('-d, --deepSearchLevel <number>', 'add -d to parse swagger definition depth, default: 5')
     .option('-c, --client', 'add -c to output API Gateway client codes')
-    .option('-fc, --firstCall <code>', 'add some code to run at start of handle')
+    .option('-j, --injected <code>', 'inject some code to run at the beginning of handle function')
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const SWAGGER_DIR = program.swagger === undefined ? undefined : LibPath.normalize(program.swagger);
@@ -31,7 +31,7 @@ const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(
 const IMPORTS = program.import === undefined ? [] : program.import;
 const DEEP_SEARCH_LEVEL = program.deepSearchLevel === undefined ? 5 : program.deepSearchLevel;
 const API_GATEWAY_CLIENT = program.client !== undefined;
-const FIRST_CALL_CODE = program.firstCall === undefined ? undefined : program.firstCall;
+const INJECTED_CODE = program.injected === undefined ? undefined : program.injected;
 const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 class GatewayCLI {
     constructor() {
@@ -238,7 +238,7 @@ class GatewayCLI {
                             requestParameters: swaggerSchemaList,
                             responseTypeStr: responseType,
                             responseParameters: responseParameters,
-                            firstCallCode: FIRST_CALL_CODE,
+                            injectedCode: INJECTED_CODE,
                         });
                     }
                 }
@@ -303,4 +303,3 @@ class GatewayCLI {
 GatewayCLI.instance().run().catch((err) => {
     console.log('err: ', err.message);
 });
-//# sourceMappingURL=sasdn-gateway.js.map

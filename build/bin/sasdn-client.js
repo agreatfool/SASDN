@@ -161,4 +161,3 @@ class ClientCLI {
 ClientCLI.instance().run().catch((err) => {
     console.log('err: ', err.message);
 });
-//# sourceMappingURL=sasdn-client.js.map
