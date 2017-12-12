@@ -154,7 +154,9 @@ class ClientCLI {
             }
             const importPath = Object.keys(allMethodImportPath)[0];
             protoClientInfo.allMethodImportPath = importPath.replace(/\\/g, '/');
-            protoClientInfo.allMethodImportModule = allMethodImportPath[importPath];
+            const moduleSet = new Set(allMethodImportPath[importPath]);
+            // check same name
+            protoClientInfo.allMethodImportModule = [...moduleSet];
             await mkdir(LibPath.dirname(outputPath));
             TplEngine.registerHelper('lcfirst', lcfirst);
             let content = TplEngine.render('rpcs/client', {
