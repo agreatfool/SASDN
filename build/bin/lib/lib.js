@@ -128,21 +128,21 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
  * @param {ProtoMsgImportInfos} protoMsgImportInfos
  * @returns {RpcMethodInfo}
  */
-exports.genRpcMethodInfo = function (protoFile, method, outputPath, protoMsgImportInfos) {
-    let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath);
+exports.genRpcMethodInfo = function (protoFile, method, outputPath, protoMsgImportInfos, dirName = 'services') {
+    let defaultImportPath = Proto.genProtoMsgImportPath(protoFile, outputPath, dirName);
     let protoMsgImportPaths = {};
     let requestType = method.requestType;
     let requestTypeImportPath = defaultImportPath;
     if (protoMsgImportInfos.hasOwnProperty(method.requestType)) {
         requestType = protoMsgImportInfos[method.requestType].msgType;
-        requestTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath);
+        requestTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.requestType].protoFile, outputPath, dirName);
     }
     protoMsgImportPaths = exports.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, requestType, requestTypeImportPath);
     let responseType = method.responseType;
     let responseTypeImportPath = defaultImportPath;
     if (protoMsgImportInfos.hasOwnProperty(method.responseType)) {
         responseType = protoMsgImportInfos[method.responseType].msgType;
-        responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.responseType].protoFile, outputPath);
+        responseTypeImportPath = Proto.genProtoMsgImportPath(protoMsgImportInfos[method.responseType].protoFile, outputPath, dirName);
     }
     protoMsgImportPaths = exports.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, responseType, responseTypeImportPath);
     return {
@@ -212,6 +212,9 @@ var Proto;
     Proto.genProtoServiceImportPath = function (protoFile) {
         return LibPath.join('..', 'proto', protoFile.relativePath, protoFile.svcNamespace);
     };
+    Proto.genProtoClientImportPath = function (protoFile) {
+        return LibPath.join('..', '..', 'proto', protoFile.relativePath, protoFile.svcNamespace);
+    };
     /**
      * Generate origin protobuf definition (e.g *.proto) full file path.
      * @param {ProtoFile} protoFile
@@ -225,11 +228,12 @@ var Proto;
      * Source code path is generated with {@link genFullOutputServicePath},
      * message proto js import path is relative to it.
      * @param {ProtoFile} protoFile
-     * @param {string} serviceFilePath
+     * @param {string} filePath
+     * @param {string} dirname
      * @returns {string}
      */
-    Proto.genProtoMsgImportPath = function (protoFile, serviceFilePath) {
-        return LibPath.join(getPathToRoot(serviceFilePath.substr(serviceFilePath.indexOf('services'))), 'proto', protoFile.relativePath, protoFile.msgNamespace);
+    Proto.genProtoMsgImportPath = function (protoFile, filePath, dirName = 'services') {
+        return LibPath.join(getPathToRoot(filePath.substr(filePath.indexOf(dirName))), 'proto', protoFile.relativePath, protoFile.msgNamespace);
     };
     /**
      * Generate message result js file (e.g *_pb.js) import path.
@@ -251,6 +255,9 @@ var Proto;
      */
     Proto.genFullOutputServicePath = function (protoFile, service, method) {
         return LibPath.join(protoFile.outputPath, 'services', protoFile.relativePath, protoFile.svcNamespace, service.name, exports.lcfirst(method.name) + '.ts');
+    };
+    Proto.genFullOutputClientPath = function (protoFile) {
+        return LibPath.join(protoFile.outputPath, 'clients', protoFile.relativePath, `MS${exports.ucfirst(LibPath.basename(protoFile.fileName, '.proto'))}Client.ts`);
     };
     /**
      * Generate full service stub code output dir.
@@ -441,3 +448,4 @@ var Swagger;
     }
     Swagger.parseSwaggerDefinitionMap = parseSwaggerDefinitionMap;
 })(Swagger = exports.Swagger || (exports.Swagger = {}));
+//# sourceMappingURL=lib.js.map

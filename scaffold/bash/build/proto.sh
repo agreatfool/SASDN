@@ -58,6 +58,12 @@ if [ "${IS_MICROSERVICE}" = true ] ; then
     sasdn rpcs \
     --proto=${PROTO_ROOT} \
     --output=${OUTPUT} \
-    --import=${PROTO_3RD} \
+    --import=${PROTO_3RD} 
     --exclude=${PROTO_3RD}/google,${PROTO_ROOT}/demo
 fi
+
+echo "Generate grpc client code ..."
+sasdn client \
+-- import=${PROTO_3RD} \
+-- output=${OUTPUT} \
+-- exclude=${PROTO_3RD}/google
