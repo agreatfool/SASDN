@@ -92,21 +92,26 @@ if you use `--zipkin` option, you need to know:
 - SASDN use [sasdn-zipkin](https://www.npmjs.com/package/sasdn-zipkin) to create zipkin traceing chain. if you want to use zipkin, you should read it carefully.
 - sasdn-zipkin need some config to connect to remote collector and receive callback of other services. SASDN use process.ENV to config this options, e.g:
   ```
-  ZIPKIN_URL= node scaffold/build/MSOrder.js
+  export ZIPKIN_URL = {your remote collector address}
+  export USER = {your service name}
+  export USER_PORT = {your service port}
+  export ORDER = {your connect service name}
+  export ORDER_ADDRESS = {your connect service address}
+  export ORDER_PORT = {your connect service port}
   ```
 
   ```
-  /** {process.env.ZIPKIN_URL} is url which push message to Kafka
-   *  {process.env.USER} is your serviceName
-   *  {process.env.USER_PORT} is your servicePort
+  /** {process.env.ZIPKIN_URL} is you remote collector address
+   *  {process.env.USER} is your service name
+   *  {process.env.USER_PORT} is your service port
    */
   GrpcImpl.init(process.env.ZIPKIN_URL, {
       serviceName: process.env.USER,
       port: process.env.USER_PORT
   });
-  /** {process.env.ORDER} is which service you should connect
-   *  {process.env.ORDER_ADDRESS} service address
-   *  {process.env.ORDER_PORT} service port
+  /** {process.env.ORDER} is your connect service name
+   *  {process.env.ORDER_ADDRESS} is your connect service address
+   *  {process.env.ORDER_PORT} is your connect service port
    */
   GrpcImpl.setReceiverServiceInfo({
       serviceName: process.env.ORDER,
