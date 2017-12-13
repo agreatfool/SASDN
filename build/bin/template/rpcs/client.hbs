@@ -37,7 +37,7 @@ export default class {{{this.className}}} {
             ctx
         );
         {{else}}
-        const proxyClient = new {{{this.clientName}}}Client(
+        this.client = new {{{this.clientName}}}Client(
             `${options.host}:${options.port}`, 
             grpc.credentials.createInsecure()
         );
