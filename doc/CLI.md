@@ -87,10 +87,14 @@ sasdn client [options]
     -h, --help             output usage information
 ```
 
-if you use `--zipkin` option, you need know:
+if you use `--zipkin` option, you need to know:
 
-- SASDN use [sasdn-zipkin](https://www.npmjs.com/package/sasdn-zipkin) to create zipkin traceing chain. if you want to use zipkin, you should read it carefully!!!
-- sasdn-zipkin need some config to connect to Kafka and receive other service callback. SASDN use ENV to config this options, For example:
+- SASDN use [sasdn-zipkin](https://www.npmjs.com/package/sasdn-zipkin) to create zipkin traceing chain. if you want to use zipkin, you should read it carefully.
+- sasdn-zipkin need some config to connect to remote collector and receive callback of other services. SASDN use process.ENV to config this options, e.g:
+  ```
+  ZIPKIN_URL= node scaffold/build/MSOrder.js
+  ```
+
   ```
   /** {process.env.ZIPKIN_URL} is url which push message to Kafka
    *  {process.env.USER} is your serviceName
