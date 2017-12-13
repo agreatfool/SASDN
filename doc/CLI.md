@@ -93,11 +93,13 @@ if you use `--zipkin` option, you need to know:
 - sasdn-zipkin need some config to connect to remote collector and receive callback of other services. SASDN use process.ENV to config this options, e.g:
   ```
   export ZIPKIN_URL = {your remote collector address}
-  export USER = {your service name}
-  export USER_PORT = {your service port}
-  export ORDER = {your connect service name}
-  export ORDER_ADDRESS = {your connect service address}
-  export ORDER_PORT = {your connect service port}
+  export USER = {name of your service}
+  export USER_PORT = {port of your service}
+  export ORDER = {service name you connect}
+  export ORDER_ADDRESS = {service address you connect}
+  export ORDER_PORT = {service port you connect}
+  
+  node ...
   ```
 
   ```
@@ -109,9 +111,9 @@ if you use `--zipkin` option, you need to know:
       serviceName: process.env.USER,
       port: process.env.USER_PORT
   });
-  /** {process.env.ORDER} is your connect service name
-   *  {process.env.ORDER_ADDRESS} is your connect service address
-   *  {process.env.ORDER_PORT} is your connect service port
+  /** {process.env.ORDER} is service name you connect 
+   *  {process.env.ORDER_ADDRESS} is service address you connect 
+   *  {process.env.ORDER_PORT} is service port you connect 
    */
   GrpcImpl.setReceiverServiceInfo({
       serviceName: process.env.ORDER,
