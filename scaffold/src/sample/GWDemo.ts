@@ -1,10 +1,10 @@
 import * as LibPath from 'path';
 import * as Koa from 'koa';
 import * as koaBodyParser from 'koa-bodyparser';
-import {KoaInstrumentation} from 'zipkin-instrumentation-koa';
+import { KoaImpl } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
-import {ConfigHelper} from '../helper/ConfigHelper';
-import {TracerHelper} from '../helper/TracerHelper';
+import { ConfigHelper } from '../helper/ConfigHelper';
+import { TracerHelper } from '../helper/TracerHelper';
 
 export default class GWDemo {
     private _initialized: boolean;
@@ -23,9 +23,14 @@ export default class GWDemo {
         await TracerHelper.instance().init();
         await RouterLoader.instance().init();
 
+        KoaImpl.init(process.env.ZIPKIN_URL, {
+            serviceName: 'api-gateway',
+            port: 9090
+        });
+
         const app = new Koa();
-        app.use(KoaInstrumentation.middleware(TracerHelper.instance().getTraceInfo()));
-        app.use(koaBodyParser({formLimit: '2048kb'})); // post body parser
+        app.use(new KoaImpl().createMiddleware());
+        app.use(koaBodyParser({ formLimit: '2048kb' })); // post body parser
         app.use(RouterLoader.instance().getRouter().routes());
         this.app = app;
 

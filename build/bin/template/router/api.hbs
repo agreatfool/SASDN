@@ -73,6 +73,9 @@ class {{info.apiName}} extends GatewayApiBase {
     }
 
     public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<{{ info.responseTypeStr }}.AsObject> {
+        {{#if info.injectedCode}}
+        {{{info.injectedCode}}}
+        {{/if}}
         return Promise.resolve((new {{ info.responseTypeStr }}()).toObject());
     }
 
