@@ -86,3 +86,33 @@ sasdn client [options]
     -z, --zipkin           need add zipkin plugin
     -h, --help             output usage information
 ```
+
+if you use `--zipkin` option, you need know:
+
+- SASDN use [sasdn-zipkin](https://www.npmjs.com/package/sasdn-zipkin) to create zipkin traceing chain. if you want to use zipkin, you should read it carefully!!!
+- sasdn-zipkin need some config to connect to Kafka and receive other service callback. SASDN use ENV to config this options, For example:
+  ```
+  /** {process.env.ZIPKIN_URL} is url which push message to Kafka
+   *  {process.env.USER} is your serviceName
+   *  {process.env.USER_PORT} is your servicePort
+   */
+  GrpcImpl.init(process.env.ZIPKIN_URL, {
+      serviceName: process.env.USER,
+      port: process.env.USER_PORT
+  });
+  /** {process.env.ORDER} is which service you should connect
+   *  {process.env.ORDER_ADDRESS} service address
+   *  {process.env.ORDER_PORT} service port
+   */
+  GrpcImpl.setReceiverServiceInfo({
+      serviceName: process.env.ORDER,
+      host: process.env.ORDER_ADDRESS,
+      port: process.env.ORDER_PORT
+  });
+
+  const proxyClient = new GrpcImpl().createClient(
+      new UserServiceClient(`${options.host}:${options.port}`, grpc.credentials.createInsecure()), 
+      ctx
+  );
+
+  ```
