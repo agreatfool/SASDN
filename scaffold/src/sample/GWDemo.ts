@@ -3,8 +3,6 @@ import * as Koa from 'koa';
 import * as koaBodyParser from 'koa-bodyparser';
 import { KoaImpl } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
-import { ConfigHelper } from '../helper/ConfigHelper';
-import { TracerHelper } from '../helper/TracerHelper';
 
 export default class GWDemo {
     private _initialized: boolean;
@@ -19,8 +17,6 @@ export default class GWDemo {
             ? LibPath.join(__dirname, '..', '..', 'config.dev.json')
             : LibPath.join(__dirname, '..', '..', 'config.json');
 
-        await ConfigHelper.instance().init(configPath);
-        await TracerHelper.instance().init();
         await RouterLoader.instance().init();
 
         KoaImpl.init(process.env.ZIPKIN_URL, {
@@ -44,10 +40,9 @@ export default class GWDemo {
             return;
         }
 
-        const options = ConfigHelper.instance().getOption();
-        const host = options.host;
-        const port = options.port + 1;
-        this.app.listen(port, options.host, () => {
+        const host:string = process.env.DEMO_ADDRESS;
+        const port:number = parseInt(process.env.DEMO_PORT);
+        this.app.listen(port, host, () => {
             console.log(`API Gateway Start, Address: ${host}:${port}!`);
         });
     }

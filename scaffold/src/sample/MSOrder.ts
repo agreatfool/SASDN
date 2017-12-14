@@ -2,8 +2,6 @@ import * as LibPath from 'path';
 import { RpcApplication } from 'sasdn';
 import { GrpcImpl } from 'sasdn-zipkin';
 import { registerServices } from '../services/Register';
-import { ConfigHelper } from '../helper/ConfigHelper';
-import { TracerHelper } from '../helper/TracerHelper';
 
 export default class MSOrder {
     private _initialized: boolean;
@@ -17,9 +15,6 @@ export default class MSOrder {
         const configPath = (isDev)
             ? LibPath.join(__dirname, '..', '..', 'config.dev.json')
             : LibPath.join(__dirname, '..', '..', 'config.json');
-
-        await ConfigHelper.instance().init(configPath);
-        await TracerHelper.instance().init();
 
         GrpcImpl.init(process.env.ZIPKIN_URL, {
             serviceName: process.env.ORDER,
@@ -42,7 +37,8 @@ export default class MSOrder {
 
         registerServices(this.app);
 
-        const options = ConfigHelper.instance().getOption();
-        this.app.bind(`${options.host}:${options.port}`).start();
+        const host = process.env.ORDER_ADDRESS;
+        const port = process.env.ORDER_PORT;
+        this.app.bind(`${host}:${port}`).start();
     }
 }

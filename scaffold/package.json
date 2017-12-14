@@ -5,10 +5,40 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "apitest": "jest --collectCoverage false --testRegex /src/router/RouterAPITest.ts"
+    "apitest": "jest --collectCoverage false --testRegex /src/router/RouterAPITest.ts",
+    "deploy": "better-npm-run deploy",
+    "dev": "better-npm-run dev"
+  },
+  "betterScripts": {
+    "deploy": {
+      "command": "gulp typescript && gulp protoc-copy",
+      "env": {
+        "DEBUG": "SASDN:*",
+        "DEMO": "Demo",
+        "DEMO_ADDRESS": "127.0.0.1",
+        "DEMO_PORT": "9090",
+        "ORDER": "Order",
+        "ORDER_ADDRESS": "127.0.0.1",
+        "ORDER_PORT": "9091"
+      }
+    },
+    "dev": {
+      "command": "npm run deploy && node index.js",
+      "env": {
+        "NODE_ENV": "development",
+        "DEBUG": "SASDN:*",
+        "DEMO": "Demo",
+        "DEMO_ADDRESS": "127.0.0.1",
+        "DEMO_PORT": "9090",
+        "ORDER": "Order",
+        "ORDER_ADDRESS": "127.0.0.1",
+        "ORDER_PORT": "9090"
+      }
+    }
   },
   "license": "MIT",
   "dependencies": {
+    "better-npm-run": "0.1.0",
     "sasdn": "1.1.5",
     "sasdn-zipkin": "1.0.3"
   },
@@ -23,7 +53,7 @@
     "@types/node": "8.0.31",
     "@types/supertest": "2.0.3",
     "grpc-tsd": "1.0.8",
-    "grpc_tools_node_protoc_ts": "1.0.10",
+    "grpc_tools_node_protoc_ts": "1.0.16",
     "gulp": "3.9.1",
     "gulp-copy": "1.0.0",
     "gulp-shell": "0.6.3",
@@ -37,7 +67,7 @@
     "protobufjs": "6.7.3",
     "supertest": "3.0.0",
     "ts-jest": "21.0.0",
-    "typescript": "2.3.4",
+    "typescript": "2.6.2",
     "zipkin": "0.7.3",
     "zipkin-context-cls": "0.6.1",
     "zipkin-instrumentation-grpcjs": "0.0.3",

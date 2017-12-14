@@ -1,22 +1,32 @@
 import * as grpc from 'grpc';
-import {GatewayContext, RpcContext} from 'sasdn';
-import {GrpcInstrumentation} from 'zipkin-instrumentation-grpcjs';
+import { GatewayContext, RpcContext } from 'sasdn';
 
-import {OrderServiceClient} from '../../proto/order/order_grpc_pb';
-import {GetOrderRequest, Order,} from '../../proto/order/order_pb';
-import {TracerHelper} from '../../helper/TracerHelper';
-import {ConfigHelper} from "../../helper/ConfigHelper";
+import { OrderServiceClient } from '../../proto/order/order_grpc_pb';
+import { GetOrderRequest, Order, } from '../../proto/order/order_pb';
 
 export default class MSClientOrder {
     public client: OrderServiceClient;
 
     constructor(ctx?: GatewayContext | RpcContext) {
-        const options = ConfigHelper.instance().getOption();
+        const host = process.env.ORDER_ADDRESS;
+        const port = process.env.ORDER_PORT;
 
-        this.client = GrpcInstrumentation.proxyClient(
-            new OrderServiceClient(`${options.host}:${options.port}`, grpc.credentials.createInsecure()),
-            ctx,
-            TracerHelper.instance().getTraceInfo(true, 'order')
+        GrpcImpl.init(process.env.ZIPKIN_URL, {
+            serviceName: process.env.DEMO,
+            port: process.env.DEMO_PORT
+        });
+        GrpcImpl.setReceiverServiceInfo({
+            serviceName: process.env.ORDER,
+            host: process.env.ORDER_ADDRESS,
+            port: process.env.ORDER_PORT
+        });
+
+        this.client = new GrpcImpl().createClient(
+            new OrderServiceClient(
+                `${process.env.ORDER_ADDRESS}:${process.env.ORDER_PORT}`,
+                grpc.credentials.createInsecure()
+            ),
+            ctx
         );
     }
 
