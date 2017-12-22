@@ -38,4 +38,6 @@ jspm_packages
 
 .idea
 
+.DS_Store
+
 test
