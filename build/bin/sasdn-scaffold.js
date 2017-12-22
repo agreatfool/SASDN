@@ -133,6 +133,32 @@ class ScaffoldCLI {
                 const indexPath = LibPath.join(outputDir, 'src', 'index.ts');
                 const protoPath = LibPath.join(outputDir, 'proto', 'demo', 'demo.proto');
                 const pbPath = LibPath.join(outputDir, 'src', 'proto', 'demo');
+                const gwRemoveList = [
+                    gwIndexPath,
+                    routerPath,
+                    gwProtoPath,
+                    gwPbPath,
+                    gwLogicPath,
+                    gwEnterPath,
+                ];
+                const gwRenameList = [
+                    [msIndexPath, indexPath],
+                    [msProtoPath, protoPath],
+                    [msPbPath, pbPath],
+                ];
+                const msRemoveList = [
+                    msIndexPath,
+                    servicesPath,
+                    msProtoPath,
+                    msPbPath,
+                    msLogicPath,
+                    msEnterPath,
+                ];
+                const msRenameList = [
+                    [gwIndexPath, indexPath],
+                    [gwProtoPath, protoPath],
+                    [gwPbPath, pbPath],
+                ];
                 if (MICROSERVICE) {
                     let spmConfigPath = LibPath.join(outputDir, 'spm.json');
                     let spmConfig = this._getPackageConfig(spmConfigPath);
@@ -140,26 +166,20 @@ class ScaffoldCLI {
                     spmConfig.version = this._input.version;
                     spmConfig.description = this._input.description;
                     yield LibFs.writeFile(spmConfigPath, Buffer.from(JSON.stringify(spmConfig, null, 2)));
-                    yield LibFsExtra.remove(gwIndexPath);
-                    yield LibFsExtra.rename(msIndexPath, indexPath);
-                    yield LibFsExtra.remove(routerPath);
-                    yield LibFsExtra.remove(gwProtoPath);
-                    yield LibFsExtra.rename(msProtoPath, protoPath);
-                    yield LibFsExtra.remove(gwPbPath);
-                    yield LibFsExtra.rename(msPbPath, pbPath);
-                    yield LibFsExtra.remove(gwLogicPath);
-                    yield LibFsExtra.remove(gwEnterPath);
+                    for (const path of gwRemoveList) {
+                        yield LibFsExtra.remove(path);
+                    }
+                    for (const renamePath of gwRenameList) {
+                        yield LibFsExtra.rename.apply(this, renamePath);
+                    }
                 }
                 else if (GATEWAY) {
-                    yield LibFsExtra.remove(msIndexPath);
-                    yield LibFsExtra.rename(gwIndexPath, indexPath);
-                    yield LibFsExtra.remove(servicesPath);
-                    yield LibFsExtra.remove(msProtoPath);
-                    yield LibFsExtra.rename(gwProtoPath, protoPath);
-                    yield LibFsExtra.remove(msPbPath);
-                    yield LibFsExtra.rename(gwPbPath, pbPath);
-                    yield LibFsExtra.remove(msLogicPath);
-                    yield LibFsExtra.remove(msEnterPath);
+                    for (const path of msRemoveList) {
+                        yield LibFsExtra.remove(path);
+                    }
+                    for (const renamePath of msRenameList) {
+                        yield LibFsExtra.rename.apply(this, renamePath);
+                    }
                 }
             }
             catch (e) {

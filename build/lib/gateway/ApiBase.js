@@ -23,8 +23,11 @@ class GatewayApiBase {
                 yield next();
             }
             catch (e) {
-                const errorJson = `{"code":10004,"message":${e.toString()}}`;
-                ctx.body = JSON.stringify(errorJson, null, 2);
+                const errorObject = {
+                    code: -1,
+                    message: 'Invalid Params'
+                };
+                ctx.body = JSON.stringify(errorObject);
             }
         });
     }
