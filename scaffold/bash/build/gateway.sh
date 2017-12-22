@@ -8,7 +8,7 @@ PROTO_ROOT=${ROOT}/proto
 PROTO_3RD=${ROOT}/spm_protos
 OUTPUT=${ROOT}/src
 
-IS_GATEWAY=true
+IS_GATEWAY=false
 IS_MICROSERVICE=true
 
 echo "***********************"
@@ -58,7 +58,7 @@ if [ "${IS_MICROSERVICE}" = true ] ; then
     sasdn rpcs \
     --proto=${PROTO_ROOT} \
     --output=${OUTPUT} \
-    --import=${PROTO_3RD} 
+    --import=${PROTO_3RD} \
     --exclude=${PROTO_3RD}/google,${PROTO_ROOT}/demo
 fi
 
@@ -67,4 +67,4 @@ sasdn client \
 --proto=${PROTO_ROOT} \
 --import=${PROTO_3RD} \
 --output=${OUTPUT} \
---exclude=${PROTO_3RD}/google, ${PROTO_ROOT}/demo
+--exclude=${PROTO_3RD}/google,${PROTO_ROOT}/demo

@@ -1,6 +1,6 @@
 import {GatewayContext, MiddlewareNext} from 'sasdn';
 import {Order, GetOrderRequest,} from '../../proto/order/order_pb';
-import MSClientOrder from '../../sample/client/MSClientOrder';
+import MSClientOrder from '../../clients/order/MSClientOrder';
 
 interface RequestParams {
     body: GetOrderRequest.AsObject;

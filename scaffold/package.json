@@ -13,13 +13,7 @@
     "deploy": {
       "command": "gulp typescript && gulp protoc-copy",
       "env": {
-        "DEBUG": "SASDN:*",
-        "DEMO": "Demo",
-        "DEMO_ADDRESS": "127.0.0.1",
-        "DEMO_PORT": "9090",
-        "ORDER": "Order",
-        "ORDER_ADDRESS": "127.0.0.1",
-        "ORDER_PORT": "9091"
+        "DEBUG": "SASDN:*"
       }
     },
     "dev": {
@@ -28,11 +22,11 @@
         "NODE_ENV": "development",
         "DEBUG": "SASDN:*",
         "DEMO": "Demo",
-        "DEMO_ADDRESS": "127.0.0.1",
+        "DEMO_ADDRESS": "0.0.0.0",
         "DEMO_PORT": "9090",
         "ORDER": "Order",
-        "ORDER_ADDRESS": "127.0.0.1",
-        "ORDER_PORT": "9090"
+        "ORDER_ADDRESS": "0.0.0.0",
+        "ORDER_PORT": "9091"
       }
     }
   },
@@ -40,6 +34,7 @@
   "dependencies": {
     "better-npm-run": "0.1.0",
     "sasdn": "1.1.5",
+    "mockjs": "1.0.1-beta3",
     "sasdn-zipkin": "1.0.3"
   },
   "devDependencies": {

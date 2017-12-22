@@ -48,7 +48,8 @@ export abstract class GatewayApiBase {
                 await joiValidate(aggregatedParams, joiSchemaMap, {allowUnknown: true});
                 await next();
             } catch (e) {
-                ctx.body = e.toString();
+                const errorJson = `{"code":10004,"message":${e.toString()}}`;
+                ctx.body = JSON.stringify(errorJson, null, 2);
             }
         };
     }

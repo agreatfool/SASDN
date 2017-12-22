@@ -9,7 +9,7 @@ message GetDemoOrderRequest {
     int64 order_id = 1;
 }
 
-// gPRC-getway Test
+// gPRC-Gateway Demo
 service DemoApiService {
     rpc GetDemoOrderApi (GetDemoOrderRequest) returns (order.Order) {
         option (google.api.http) = {
