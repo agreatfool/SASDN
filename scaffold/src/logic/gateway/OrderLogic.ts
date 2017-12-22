@@ -1,6 +1,6 @@
 import {GatewayContext, MiddlewareNext} from 'sasdn';
 import {Order, GetOrderRequest,} from '../../proto/order/order_pb';
-import MSClientOrder from '../../clients/order/MSClientOrder';
+import MSOrderClient from '../../clients/order/MSOrderClient';
 
 interface RequestParams {
     body: GetOrderRequest.AsObject;
@@ -20,7 +20,7 @@ export namespace OrderLogic {
         request.setOrderId(orderId);
 
         // connect && query
-        const orderClient = new MSClientOrder(ctx);
+        const orderClient = new MSOrderClient(ctx);
         const order = await orderClient.getOrder(request);
 
         // return
