@@ -130,6 +130,7 @@ class ScaffoldCLI {
       packageConfig.description = this._input.description;
       await LibFs.writeFile(packageConfigPath, Buffer.from(JSON.stringify(packageConfig, null, 2)));
 
+
       const gwProtoPath = LibPath.join(outputDir, 'proto', 'demo', 'demo_gw.proto');
       const gwLogicPath = LibPath.join(outputDir, 'src', 'logic', 'gateway');
       const gwIndexPath = LibPath.join(outputDir, 'src', 'GWIndex.ts');
@@ -148,6 +149,36 @@ class ScaffoldCLI {
       const protoPath = LibPath.join(outputDir, 'proto', 'demo', 'demo.proto');
       const pbPath = LibPath.join(outputDir, 'src', 'proto', 'demo');
 
+      const gwRemoveList = [
+        gwIndexPath,
+        routerPath,
+        gwProtoPath,
+        gwPbPath,
+        gwLogicPath,
+        gwEnterPath,
+      ];
+
+      const gwRenameList = [
+        [msIndexPath, indexPath],
+        [msProtoPath, protoPath],
+        [msPbPath, pbPath],
+      ];
+
+      const msRemoveList = [
+        msIndexPath,
+        servicesPath,
+        msProtoPath,
+        msPbPath,
+        msLogicPath,
+        msEnterPath,
+      ];
+
+      const msRenameList = [
+        [gwIndexPath, indexPath],
+        [gwProtoPath, protoPath],
+        [gwPbPath, pbPath],
+      ];
+
       if (MICROSERVICE) {
         let spmConfigPath = LibPath.join(outputDir, 'spm.json');
         let spmConfig = this._getPackageConfig(spmConfigPath);
@@ -157,42 +188,21 @@ class ScaffoldCLI {
 
         await LibFs.writeFile(spmConfigPath, Buffer.from(JSON.stringify(spmConfig, null, 2)));
 
-        await LibFsExtra.remove(gwIndexPath);
+        for(const path of gwRemoveList) {
+          await LibFsExtra.remove(path);
+        }
 
-        await LibFsExtra.rename(msIndexPath, indexPath);
-
-        await LibFsExtra.remove(routerPath);
-
-        await LibFsExtra.remove(gwProtoPath);
-
-        await LibFsExtra.rename(msProtoPath, protoPath);
-
-        await LibFsExtra.remove(gwPbPath);
-
-        await LibFsExtra.rename(msPbPath, pbPath);
-
-        await LibFsExtra.remove(gwLogicPath);
-
-        await LibFsExtra.remove(gwEnterPath);
-
+        for(const renamePath of gwRenameList) {
+          await LibFsExtra.rename.apply(this, renamePath);
+        }
       } else if (GATEWAY) {
-        await LibFsExtra.remove(msIndexPath);
+        for(const path of msRemoveList) {
+          await LibFsExtra.remove(path);
+        }
 
-        await LibFsExtra.rename(gwIndexPath, indexPath);
-
-        await LibFsExtra.remove(servicesPath);
-
-        await LibFsExtra.remove(msProtoPath);
-
-        await LibFsExtra.rename(gwProtoPath, protoPath);
-
-        await LibFsExtra.remove(msPbPath);
-
-        await LibFsExtra.rename(gwPbPath, pbPath);
-
-        await LibFsExtra.remove(msLogicPath);
-
-        await LibFsExtra.remove(msEnterPath);
+        for(const renamePath of msRenameList) {
+          await LibFsExtra.rename.apply(this, renamePath);
+        }
       }
     } catch (e) {
       throw e;
