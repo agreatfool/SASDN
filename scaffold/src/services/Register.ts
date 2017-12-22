@@ -3,8 +3,6 @@ import {IServerCall, RpcImplCallback} from "grpc";
 import {RpcApplication, WrappedHandler} from "sasdn";
 
 import {
-} from "../proto/demo/demo_grpc_pb";
-import {
     OrderServiceService,
 } from "../proto/order/order_grpc_pb";
 

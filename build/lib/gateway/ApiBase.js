@@ -23,7 +23,11 @@ class GatewayApiBase {
                 yield next();
             }
             catch (e) {
-                ctx.body = e.toString();
+                const errorObject = {
+                    code: -1,
+                    message: 'Invalid Params'
+                };
+                ctx.body = JSON.stringify(errorObject);
             }
         });
     }
@@ -91,3 +95,4 @@ class GatewayApiBase {
     }
 }
 exports.GatewayApiBase = GatewayApiBase;
+//# sourceMappingURL=ApiBase.js.map

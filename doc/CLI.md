@@ -66,7 +66,13 @@ sasdn gateway [options]
 Generate demo Micro Service from scaffold files.
 
 ```
-sasdn scaffold
+sasdn scaffold [options]
+
+  Options:
+
+    -g, --gateway          scaffold create gateway code
+    -m, --microservice     scaffold create microservice code
+    -h, --help             output usage information
 ```
 
 

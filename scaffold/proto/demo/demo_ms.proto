@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+import "order/order.proto";
+
+package demo;
+
+message GetDemoOrderRequest {
+    int64 order_id = 1;
+}
+
+// gPRC-MicroService Demo
+service DemoApiService {
+    rpc GetDemoOrder (GetDemoOrderRequest) returns (order.Order) {}
+}

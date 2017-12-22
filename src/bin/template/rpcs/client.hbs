@@ -12,15 +12,11 @@ import {
     {{this}},
     {{/each}}
 } from "{{this.allMethodImportPath}}";
-import {TracerHelper} from '../../helper/TracerHelper';
-import {ConfigHelper} from "../../helper/ConfigHelper";
 
 export default class {{{this.className}}} {
     public client: {{{this.clientName}}}Client;
 
     constructor(ctx?: GatewayContext | RpcContext) {
-        const options = ConfigHelper.instance().getOption();
-
         {{#if this.useZipkin}}
         GrpcImpl.init(process.env.ZIPKIN_URL, {
             serviceName: process.env.{{this.packageName}},
@@ -32,8 +28,8 @@ export default class {{{this.className}}} {
             port: process.env.{{this.ucProtoName}}_PORT
         });
 
-        const proxyClient = new GrpcImpl().createClient(
-            new {{{this.clientName}}}Client(`${options.host}:${options.port}`, grpc.credentials.createInsecure()), 
+        this.client = new GrpcImpl().createClient(
+            new {{{this.clientName}}}Client(`${process.env.{{this.packageName}}_ADDRESS}:${process.env.{{this.packageName}}_PORT}`, grpc.credentials.createInsecure()), 
             ctx
         );
         {{else}}
