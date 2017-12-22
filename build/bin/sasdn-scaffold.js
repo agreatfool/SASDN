@@ -11,8 +11,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const LibFs = require("mz/fs");
 const LibFsExtra = require("fs-extra");
 const LibPath = require("path");
+const program = require("commander");
 const prompt = require("prompt");
 const lib_1 = require("./lib/lib");
+const pkg = require('../../package.json');
+program.version(pkg.version)
+    .option('-g, --gateway', 'scaffold create gateway code')
+    .option('-m, --microservice', 'scaffold create microservice code')
+    .parse(process.argv);
+const GATEWAY = program.gateway !== undefined;
+const MICROSERVICE = program.microservice !== undefined;
 prompt.start();
 prompt.get([
     {
@@ -23,7 +31,7 @@ prompt.get([
     {
         name: 'version',
         required: true,
-        default: '0.0.0',
+        default: '0.0.1',
         message: 'Wrong project version',
         conform: (value) => {
             let versions = value.split('.');
@@ -60,6 +68,12 @@ class ScaffoldCLI {
     _validate() {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('ScaffoldCLI validate.');
+            if (GATEWAY && MICROSERVICE) {
+                throw new Error('only choose one from --gateway or --microservice');
+            }
+            if (!GATEWAY && !MICROSERVICE) {
+                throw new Error('must choose one from --gateway or --microservice');
+            }
         });
     }
     _genScaffold() {
@@ -104,12 +118,49 @@ class ScaffoldCLI {
                 packageConfig.version = this._input.version;
                 packageConfig.description = this._input.description;
                 yield LibFs.writeFile(packageConfigPath, Buffer.from(JSON.stringify(packageConfig, null, 2)));
-                let spmConfigPath = LibPath.join(outputDir, 'spm.json');
-                let spmConfig = this._getPackageConfig(spmConfigPath);
-                spmConfig.name = this._input.name;
-                spmConfig.version = this._input.version;
-                spmConfig.description = this._input.description;
-                yield LibFs.writeFile(spmConfigPath, Buffer.from(JSON.stringify(spmConfig, null, 2)));
+                const gwProtoPath = LibPath.join(outputDir, 'proto', 'demo', 'demo_gw.proto');
+                const gwLogicPath = LibPath.join(outputDir, 'src', 'logic', 'gateway');
+                const gwIndexPath = LibPath.join(outputDir, 'src', 'GWIndex.ts');
+                const gwPbPath = LibPath.join(outputDir, 'src', 'proto', 'demo_gw');
+                const gwEnterPath = LibPath.join(outputDir, 'src', 'entrance', 'GWDemo.ts');
+                const msProtoPath = LibPath.join(outputDir, 'proto', 'demo', 'demo_ms.proto');
+                const msLogicPath = LibPath.join(outputDir, 'src', 'logic', 'order');
+                const msIndexPath = LibPath.join(outputDir, 'src', 'MSIndex.ts');
+                const msPbPath = LibPath.join(outputDir, 'src', 'proto', 'demo_ms');
+                const msEnterPath = LibPath.join(outputDir, 'src', 'entrance', 'MSOrder.ts');
+                const servicesPath = LibPath.join(outputDir, 'src', 'services');
+                const routerPath = LibPath.join(outputDir, 'src', 'router');
+                const indexPath = LibPath.join(outputDir, 'src', 'index.ts');
+                const protoPath = LibPath.join(outputDir, 'proto', 'demo', 'demo.proto');
+                const pbPath = LibPath.join(outputDir, 'src', 'proto', 'demo');
+                if (MICROSERVICE) {
+                    let spmConfigPath = LibPath.join(outputDir, 'spm.json');
+                    let spmConfig = this._getPackageConfig(spmConfigPath);
+                    spmConfig.name = this._input.name;
+                    spmConfig.version = this._input.version;
+                    spmConfig.description = this._input.description;
+                    yield LibFs.writeFile(spmConfigPath, Buffer.from(JSON.stringify(spmConfig, null, 2)));
+                    yield LibFsExtra.remove(gwIndexPath);
+                    yield LibFsExtra.rename(msIndexPath, indexPath);
+                    yield LibFsExtra.remove(routerPath);
+                    yield LibFsExtra.remove(gwProtoPath);
+                    yield LibFsExtra.rename(msProtoPath, protoPath);
+                    yield LibFsExtra.remove(gwPbPath);
+                    yield LibFsExtra.rename(msPbPath, pbPath);
+                    yield LibFsExtra.remove(gwLogicPath);
+                    yield LibFsExtra.remove(gwEnterPath);
+                }
+                else if (GATEWAY) {
+                    yield LibFsExtra.remove(msIndexPath);
+                    yield LibFsExtra.rename(gwIndexPath, indexPath);
+                    yield LibFsExtra.remove(servicesPath);
+                    yield LibFsExtra.remove(msProtoPath);
+                    yield LibFsExtra.rename(gwProtoPath, protoPath);
+                    yield LibFsExtra.remove(msPbPath);
+                    yield LibFsExtra.rename(gwPbPath, pbPath);
+                    yield LibFsExtra.remove(msLogicPath);
+                    yield LibFsExtra.remove(msEnterPath);
+                }
             }
             catch (e) {
                 throw e;
@@ -120,3 +171,4 @@ class ScaffoldCLI {
         return JSON.parse(LibFs.readFileSync(path).toString());
     }
 }
+//# sourceMappingURL=sasdn-scaffold.js.map

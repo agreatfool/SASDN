@@ -23,7 +23,8 @@ class GatewayApiBase {
                 yield next();
             }
             catch (e) {
-                ctx.body = e.toString();
+                const errorJson = `{"code":10004,"message":${e.toString()}}`;
+                ctx.body = JSON.stringify(errorJson, null, 2);
             }
         });
     }
@@ -91,3 +92,4 @@ class GatewayApiBase {
     }
 }
 exports.GatewayApiBase = GatewayApiBase;
+//# sourceMappingURL=ApiBase.js.map
