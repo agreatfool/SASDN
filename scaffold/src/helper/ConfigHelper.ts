@@ -3,10 +3,11 @@ const debug = require('debug')('SASDN:Config');
 
 export const enum ConfigKey {
   Gateway = 'GATEWAY',
-  Order = "ORDER",
-  Zipkin = "ZIPKIN",
-  AllowDomain = 'ALLOWDOMAIN',
-  CookieDomain = "COOKIEDOMAIN"
+  Order = 'ORDER',
+  Zipkin = 'ZIPKIN',
+  Kafkaqueue = 'KAFKA',
+  AllowDomain = 'ALLOW_DOMAIN',
+  CookieDomain = 'COOKIE_DOMAIN'
 }
 
 export class ConfigHelper {
