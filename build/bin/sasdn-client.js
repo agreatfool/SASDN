@@ -131,7 +131,7 @@ class ClientCLI {
                 let protoClientInfo = {
                     packageName: this._packageName.toUpperCase(),
                     protoName: protoName,
-                    ucProtoName: protoName.toUpperCase(),
+                    ucProtoName: ucBaseName,
                     className: `MS${ucBaseName}Client`,
                     protoFile: protoInfo.protoFile,
                     protoImportPath: lib_1.Proto.genProtoClientImportPath(protoInfo.protoFile).replace(/\\/g, '/'),
