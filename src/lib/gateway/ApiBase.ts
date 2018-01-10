@@ -50,7 +50,7 @@ export abstract class GatewayApiBase {
         await next();
       } catch (e) {
         const errorObject = {
-          code: -1,
+          code: 1001001,
           message: 'Invalid Params'
         };
         ctx.body = JSON.stringify(errorObject);
