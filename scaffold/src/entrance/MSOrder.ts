@@ -1,10 +1,10 @@
 import { RpcApplication } from 'sasdn';
 import { GrpcImpl } from 'sasdn-zipkin';
-import { ConfigHelper, ConfigKey } from '../../helper/ConfigHelper';
+import { ConfigHelper, ConfigKey } from '../helper/ConfigHelper';
 import { registerServices } from '../services/Register';
 import * as LibPath from "path";
 import { LEVEL } from 'sasdn-log';
-import { LoggerHelper, TOPIC } from '../../helper/LoggerHelper';
+import { LoggerHelper, TOPIC } from '../helper/LoggerHelper';
 
 const debug = require('debug')('SASDN:MSDemo');
 

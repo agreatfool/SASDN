@@ -1,7 +1,7 @@
 import * as grpc from 'grpc';
 import { GatewayContext, RpcContext } from 'sasdn';
 import { GrpcImpl } from 'sasdn-zipkin';
-import { ConfigHelper, ConfigKey } from '../../../helper/ConfigHelper';
+import { ConfigHelper, ConfigKey } from '../../helper/ConfigHelper';
 import { OrderServiceClient } from '../../proto/order/order_grpc_pb';
 import { GetOrderRequest, Order, } from '../../proto/order/order_pb';
 

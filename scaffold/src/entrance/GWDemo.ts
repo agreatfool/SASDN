@@ -2,10 +2,10 @@ import * as Koa from 'koa';
 import * as koaBodyParser from 'koa-bodyparser';
 import { KoaImpl, ZIPKIN_EVENT } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
-import { ConfigHelper, ConfigKey } from '../../helper/ConfigHelper';
+import { ConfigHelper, ConfigKey } from '../helper/ConfigHelper';
 import * as LibPath from "path";
 import { LEVEL } from 'sasdn-log';
-import { LoggerHelper, TOPIC } from '../../helper/LoggerHelper';
+import { LoggerHelper, TOPIC } from '../helper/LoggerHelper';
 
 const debug = require('debug')('SASDN:GWDemo');
 
