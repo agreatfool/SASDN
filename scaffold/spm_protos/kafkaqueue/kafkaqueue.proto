@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package kafkaqueue;
+
+message SendRequest {
+    string topic = 1;
+    repeated string messages = 2;
+}
+
+message SendResponse {
+    bool result = 1;
+}
+
+service KafkaQueueService {
+    rpc Send (SendRequest) returns (SendResponse) {}
+}
