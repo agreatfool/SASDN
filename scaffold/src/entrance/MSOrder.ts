@@ -2,7 +2,6 @@ import { RpcApplication } from 'sasdn';
 import { GrpcImpl } from 'sasdn-zipkin';
 import { Config, ConnectKey } from '../lib/Config';
 import { registerServices } from '../services/Register';
-import * as LibPath from "path";
 import { LEVEL } from 'sasdn-log';
 import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
