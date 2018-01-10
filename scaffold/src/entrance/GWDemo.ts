@@ -2,11 +2,11 @@ import * as Koa from 'koa';
 import * as koaBodyParser from 'koa-bodyparser';
 import { KoaImpl, ZIPKIN_EVENT } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
-import { ConfigHelper, ConfigKey } from '../helper/ConfigHelper';
+import { Config, ConnectKey } from '../lib/Config';
 import * as LibPath from "path";
 import { LEVEL } from 'sasdn-log';
-import { LoggerHelper, TOPIC } from '../helper/LoggerHelper';
-
+import { Logger, TOPIC } from '../lib/Logger';
+import * as LibDotEnv from 'dotenv';
 const debug = require('debug')('SASDN:GWDemo');
 
 export default class GWDemo {
@@ -18,26 +18,26 @@ export default class GWDemo {
   }
 
   public async init(isDev: boolean = false): Promise<any> {
-    let configPath: string;
     if (isDev) {
-      configPath = LibPath.join(__dirname, '..', '..', 'config.dev.json');
-    } else {
-      configPath = LibPath.join(__dirname, '..', '..', 'config.json');
+      const loadEnv = LibDotEnv.config();
+      if(loadEnv.error) {
+        return Promise.reject(loadEnv.error);
+      }
     }
 
-    await ConfigHelper.instance.init(configPath);
+    await Config.instance.init();
 
-    await LoggerHelper.instance.initalize({
+    await Logger.instance.initalize({
       kafkaTopic: TOPIC.BUSINESS,
-      loggerName: ConfigHelper.instance.getConfig(ConfigKey.Gateway),
+      loggerName: Config.instance.getConfig(ConnectKey.Gateway),
       loggerLevel: LEVEL.INFO
     });
 
     await RouterLoader.instance().init();
 
-    KoaImpl.init(ConfigHelper.instance.getAddress(ConfigKey.Zipkin), {
-      serviceName: ConfigHelper.instance.getConfig(ConfigKey.Gateway),
-      port: ConfigHelper.instance.getPort(ConfigKey.Gateway)
+    KoaImpl.init(Config.instance.getAddress(ConnectKey.Zipkin), {
+      serviceName: Config.instance.getConfig(ConnectKey.Gateway),
+      port: Config.instance.getPort(ConnectKey.Gateway)
     });
 
     const ZipkinImpl = new KoaImpl();
@@ -65,7 +65,7 @@ export default class GWDemo {
     }
 
     const host: string = '0.0.0.0';
-    const port: number = ConfigHelper.instance.getPort(ConfigKey.Gateway);
+    const port: number = Config.instance.getPort(ConnectKey.Gateway);
     this.app.listen(port, host, () => {
       debug(`API Gateway Start, Address: ${host}:${port}!`);
     });

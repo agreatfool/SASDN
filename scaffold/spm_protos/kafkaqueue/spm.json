@@ -1,7 +1,7 @@
 {
   "name": "kafkaqueue",
   "version": "1.0.0",
-  "description": "Shinezone KafkaQueue-MircoService",
+  "description": "KafkaQueue-MircoService",
   "dependencies": {
   }
 }

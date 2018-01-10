@@ -1,7 +1,7 @@
 import * as grpc from 'grpc';
 import { GatewayContext, RpcContext } from 'sasdn';
 import { GrpcImpl } from 'sasdn-zipkin';
-import { ConfigHelper, ConfigKey } from '../../helper/ConfigHelper';
+import { Config, ConnectKey } from '../../lib/Config';
 import { OrderServiceClient } from '../../proto/order/order_grpc_pb';
 import { GetOrderRequest, Order, } from '../../proto/order/order_pb';
 
@@ -10,14 +10,14 @@ export default class MSOrderClient {
 
   constructor(ctx?: GatewayContext | RpcContext) {
     GrpcImpl.setReceiverServiceInfo({
-      serviceName: ConfigHelper.instance.getConfig(ConfigKey.Order),
-      host: ConfigHelper.instance.getHost(ConfigKey.Order),
-      port: ConfigHelper.instance.getPort(ConfigKey.Order),
+      serviceName: Config.instance.getConfig(ConnectKey.Order),
+      host: Config.instance.getHost(ConnectKey.Order),
+      port: Config.instance.getPort(ConnectKey.Order),
     });
 
     this.client = new GrpcImpl().createClient(
       new OrderServiceClient(
-        ConfigHelper.instance.getAddress(ConfigKey.Order),
+        Config.instance.getAddress(ConnectKey.Order),
         grpc.credentials.createInsecure()
       ),
       ctx
