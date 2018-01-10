@@ -1,7 +1,9 @@
 import * as Koa from 'koa';
 import * as koaBodyParser from 'koa-bodyparser';
-import { KoaImpl } from 'sasdn-zipkin';
+import { KoaImpl, ZIPKIN_EVENT } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
+import { ConfigHelper, ConfigKey } from '../../helper/ConfigHelper';
+import * as LibPath from "path";
 
 const debug = require('debug')('SASDN:GWDemo');
 
@@ -14,17 +16,34 @@ export default class GWDemo {
   }
 
   public async init(isDev: boolean = false): Promise<any> {
+    let configPath: string;
+    if (isDev) {
+      configPath = LibPath.join(__dirname, '..', '..', 'config.dev.json');
+    } else {
+      configPath = LibPath.join(__dirname, '..', '..', 'config.json');
+    }
+
+    await ConfigHelper.instance.init(configPath);
+
     await RouterLoader.instance().init();
 
-    KoaImpl.init(process.env.ZIPKIN_URL, {
-      serviceName: 'api-gateway',
-      port: 9090
+    KoaImpl.init(ConfigHelper.instance.getAddress(ConfigKey.Zipkin), {
+      serviceName: ConfigHelper.instance.getConfig(ConfigKey.Gateway),
+      port: ConfigHelper.instance.getPort(ConfigKey.Gateway)
     });
 
+    const ZipkinImpl = new KoaImpl();
     const app = new Koa();
-    app.use(new KoaImpl().createMiddleware());
+    app.use(ZipkinImpl.createMiddleware());
     app.use(koaBodyParser({ formLimit: '2048kb' })); // post body parser
     app.use(RouterLoader.instance().getRouter().routes());
+    app.use(async (ctx, next) => {
+      ZipkinImpl.setCustomizedRecords(ZIPKIN_EVENT.SERVER_SEND, {
+        httpRequest: JSON.stringify(ctx.request.body),
+        httpResponse: JSON.stringify(ctx.body)
+      });
+      await next();
+    });
     this.app = app;
 
     this._initialized = true;
@@ -37,8 +56,8 @@ export default class GWDemo {
       return;
     }
 
-    const host: string = process.env.DEMO_ADDRESS;
-    const port: number = parseInt(process.env.DEMO_PORT);
+    const host: string = '0.0.0.0';
+    const port: number = ConfigHelper.instance.getPort(ConfigKey.Gateway);
     this.app.listen(port, host, () => {
       debug(`API Gateway Start, Address: ${host}:${port}!`);
     });

@@ -20,13 +20,7 @@
       "command": "npm run deploy && node index.js",
       "env": {
         "NODE_ENV": "development",
-        "DEBUG": "SASDN:*",
-        "DEMO": "Demo",
-        "DEMO_ADDRESS": "0.0.0.0",
-        "DEMO_PORT": "9090",
-        "ORDER": "Order",
-        "ORDER_ADDRESS": "0.0.0.0",
-        "ORDER_PORT": "9091"
+        "DEBUG": "SASDN:*"
       }
     }
   },
@@ -35,11 +29,11 @@
     "better-npm-run": "0.1.0",
     "sasdn": "1.1.5",
     "mockjs": "1.0.1-beta3",
-    "sasdn-zipkin": "1.0.3"
+    "sasdn-zipkin": "^1.0.6",
+    "sasdn-log": "^1.0.1"
   },
   "devDependencies": {
     "@types/google-protobuf": "3.2.5",
-    "@types/handlebars": "4.0.32",
     "@types/jest": "20.0.8",
     "@types/koa": "2.0.39",
     "@types/koa-bodyparser": "3.0.23",
@@ -62,12 +56,7 @@
     "protobufjs": "6.7.3",
     "supertest": "3.0.0",
     "ts-jest": "21.0.0",
-    "typescript": "2.6.2",
-    "zipkin": "0.7.3",
-    "zipkin-context-cls": "0.6.1",
-    "zipkin-instrumentation-grpcjs": "0.0.3",
-    "zipkin-instrumentation-koa": "0.0.1",
-    "zipkin-transport-http": "0.7.3"
+    "typescript": "2.6.2"
   },
   "jest": {
     "collectCoverage": true,
