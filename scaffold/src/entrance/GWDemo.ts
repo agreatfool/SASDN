@@ -4,6 +4,8 @@ import { KoaImpl, ZIPKIN_EVENT } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
 import { ConfigHelper, ConfigKey } from '../../helper/ConfigHelper';
 import * as LibPath from "path";
+import { LEVEL } from 'sasdn-log';
+import { LoggerHelper, TOPIC } from '../../helper/LoggerHelper';
 
 const debug = require('debug')('SASDN:GWDemo');
 
@@ -24,6 +26,12 @@ export default class GWDemo {
     }
 
     await ConfigHelper.instance.init(configPath);
+
+    await LoggerHelper.instance.initalize({
+      kafkaTopic: TOPIC.BUSINESS,
+      loggerName: ConfigHelper.instance.getConfig(ConfigKey.Gateway),
+      loggerLevel: LEVEL.INFO
+    });
 
     await RouterLoader.instance().init();
 

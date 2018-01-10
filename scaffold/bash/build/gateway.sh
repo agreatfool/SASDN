@@ -67,4 +67,5 @@ sasdn client \
 --proto=${PROTO_ROOT} \
 --import=${PROTO_3RD} \
 --output=${OUTPUT} \
+--zipkin \
 --exclude=${PROTO_3RD}/google,${PROTO_ROOT}/demo

@@ -3,6 +3,8 @@ import { GrpcImpl } from 'sasdn-zipkin';
 import { ConfigHelper, ConfigKey } from '../../helper/ConfigHelper';
 import { registerServices } from '../services/Register';
 import * as LibPath from "path";
+import { LEVEL } from 'sasdn-log';
+import { LoggerHelper, TOPIC } from '../../helper/LoggerHelper';
 
 const debug = require('debug')('SASDN:MSDemo');
 
@@ -23,6 +25,11 @@ export default class MSOrder {
     }
 
     await ConfigHelper.instance.init(configPath);
+    await LoggerHelper.instance.initalize({
+      kafkaTopic: TOPIC.BUSINESS,
+      loggerName: ConfigHelper.instance.getConfig(ConfigKey.Gateway),
+      loggerLevel: LEVEL.INFO
+    });
 
     GrpcImpl.init(ConfigHelper.instance.getAddress(ConfigKey.Zipkin), {
       serviceName: ConfigHelper.instance.getConfig(ConfigKey.Order),
