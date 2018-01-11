@@ -1,18 +1,14 @@
 const debug = require('debug')('SASDN:Config');
 
-export class ConnectKey {
-  public static Gateway:string = 'GATEWAY';
-  public static Order:string = 'ORDER';
-  public static Kafkaqueue:string = 'KAFKA';
-  public static Zipkin:string = 'ZIPKIN';
-}
+export class ConfigConst {
+  public static CONNECT_GATEWAY: string = 'GATEWAY';
+  public static CONNECT_ORDER: string = 'ORDER';
+  public static CONNECT_KAFKAQUEUE: string = 'KAFKA';
+  public static CONNECT_ZIPKIN: string = 'ZIPKIN';
 
-export class SingleKey {
-  public static AllowDomain:string = 'ALLOW_DOMAIN';
-  public static CookieDomain:string = 'COOKIE_DOMAIN';
+  public static ALLOWDOMAIN: string = 'ALLOW_DOMAIN';
+  public static COOKIEDOMAIN: string = 'COOKIE_DOMAIN';
 }
-
-export type ConfigKey = ConnectKey | SingleKey;
 
 export class Config {
   private static _instance: Config;
@@ -31,19 +27,16 @@ export class Config {
     this._initialized = false;
   }
 
-  public async init(): Promise<any> {
-    for(const key of Object.keys(ConnectKey)) {
-      [`${ConnectKey[key]}`,`${ConnectKey[key]}_HOST`, `${ConnectKey[key]}_PORT`].map(value => {
-        const envValue = process.env[value];
-        if(!envValue) {
-          throw new Error(`[Config] Invalid value, key:${value}`);
-        }
-        this._configMap[value] = envValue;
-      });
-    }
-    for(const key of Object.keys(SingleKey)) {
-      const value = SingleKey[key];
-      this._configMap[value] = process.env[value];
+  public async initalize(): Promise<any> {
+    for (const key of Object.keys(ConfigConst)) {
+      if (key.indexOf('CONNECT') >= 0) {
+        [`${ConfigConst[key]}`, `${ConfigConst[key]}_HOST`, `${ConfigConst[key]}_PORT`].map(realKey => {
+          this._readEnv(realKey);
+        });
+      } else {
+        const realKey = ConfigConst[key];
+        this._readEnv(realKey);
+      }
     }
 
     this._initialized = true;
@@ -51,16 +44,24 @@ export class Config {
     return Promise.resolve();
   }
 
-  public getConfig(key: ConfigKey): string {
+  private _readEnv(key: string) {
+    const envValue = process.env[key];
+    if (!envValue) {
+      throw new Error(`[Config] Invalid value, key:${key}`);
+    }
+    this._configMap[key] = envValue;
+  }
+
+  public getConfig(key: ConfigConst): string {
     if (!this._initialized) {
-      throw new Error('[Config] Config Instance has not initialized!');
+      throw new Error('[Config] Config Instance has not been initialized!');
     }
     return this._configMap[key.toString()];
   }
 
-  public getAddress(connName: ConnectKey): string {
+  public getAddress(connName: ConfigConst): string {
     if (!this._initialized) {
-      throw new Error('[Config] Config Instance has not initialized!');
+      throw new Error('[Config] Config Instance has not been initialized!');
     }
     const host = this._configMap[`${connName}_HOST`];
     const port = this._configMap[`${connName}_PORT`] || '';
@@ -69,17 +70,17 @@ export class Config {
     return address;
   }
 
-  public getHost(connName: ConnectKey): string {
+  public getHost(connName: ConfigConst): string {
     if (!this._initialized) {
-      throw new Error('[Config] Config Instance has not initialized!');
+      throw new Error('[Config] Config Instance has not been initialized!');
     }
     const host = this._configMap[`${connName}_HOST`];
     return host;
   }
 
-  public getPort(connName: ConnectKey): number {
+  public getPort(connName: ConfigConst): number {
     if (!this._initialized) {
-      throw new Error('[Config] Config Instance has not initialized!');
+      throw new Error('[Config] Config Instance has not been initialized!');
     }
     const port = this._configMap[`${connName}_PORT`];
     return parseInt(port);

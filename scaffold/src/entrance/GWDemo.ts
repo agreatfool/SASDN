@@ -2,10 +2,11 @@ import * as Koa from 'koa';
 import * as koaBodyParser from 'koa-bodyparser';
 import { KoaImpl, ZIPKIN_EVENT } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
-import { Config, ConnectKey } from '../lib/Config';
+import { Config, ConfigConst } from '../lib/Config';
 import { LEVEL } from 'sasdn-log';
 import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
+
 const debug = require('debug')('SASDN:GWDemo');
 
 export default class GWDemo {
@@ -19,24 +20,24 @@ export default class GWDemo {
   public async init(isDev: boolean = false): Promise<any> {
     if (isDev) {
       const loadEnv = LibDotEnv.config();
-      if(loadEnv.error) {
+      if (loadEnv.error) {
         return Promise.reject(loadEnv.error);
       }
     }
 
-    await Config.instance.init();
+    await Config.instance.initalize();
 
     await Logger.instance.initalize({
       kafkaTopic: TOPIC.BUSINESS,
-      loggerName: Config.instance.getConfig(ConnectKey.Gateway),
+      loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
       loggerLevel: LEVEL.INFO
     });
 
     await RouterLoader.instance().init();
 
-    KoaImpl.init(Config.instance.getAddress(ConnectKey.Zipkin), {
-      serviceName: Config.instance.getConfig(ConnectKey.Gateway),
-      port: Config.instance.getPort(ConnectKey.Gateway)
+    KoaImpl.init(Config.instance.getAddress(ConfigConst.CONNECT_ZIPKIN), {
+      serviceName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
+      port: Config.instance.getPort(ConfigConst.CONNECT_GATEWAY)
     });
 
     const ZipkinImpl = new KoaImpl();
@@ -64,7 +65,7 @@ export default class GWDemo {
     }
 
     const host: string = '0.0.0.0';
-    const port: number = Config.instance.getPort(ConnectKey.Gateway);
+    const port: number = Config.instance.getPort(ConfigConst.CONNECT_GATEWAY);
     this.app.listen(port, host, () => {
       debug(`API Gateway Start, Address: ${host}:${port}!`);
     });

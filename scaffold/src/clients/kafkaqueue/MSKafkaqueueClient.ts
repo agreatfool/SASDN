@@ -1,6 +1,6 @@
 import * as grpc from 'grpc';
 import { GatewayContext, RpcContext } from "sasdn";
-import { Config, ConnectKey } from '../../lib/Config';
+import { Config, ConfigConst } from '../../lib/Config';
 import { GrpcImpl } from 'sasdn-zipkin';
 
 import {
@@ -16,14 +16,14 @@ export default class MSKafkaqueueClient {
 
   constructor(ctx?: GatewayContext | RpcContext) {
     GrpcImpl.setReceiverServiceInfo({
-      serviceName: Config.instance.getConfig(ConnectKey.Kafkaqueue),
-      host: Config.instance.getHost(ConnectKey.Kafkaqueue),
-      port: Config.instance.getPort(ConnectKey.Kafkaqueue)
+      serviceName: Config.instance.getConfig(ConfigConst.CONNECT_KAFKAQUEUE),
+      host: Config.instance.getHost(ConfigConst.CONNECT_KAFKAQUEUE),
+      port: Config.instance.getPort(ConfigConst.CONNECT_KAFKAQUEUE)
     });
 
     this.client = new GrpcImpl().createClient(
       new KafkaQueueServiceClient(
-        Config.instance.getAddress(ConnectKey.Kafkaqueue),
+        Config.instance.getAddress(ConfigConst.CONNECT_KAFKAQUEUE),
         grpc.credentials.createInsecure()
       ),
       ctx

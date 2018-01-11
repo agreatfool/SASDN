@@ -1,6 +1,6 @@
 import * as grpc from 'grpc';
 import {{curlyLeft}} GatewayContext, RpcContext {{curlyRight}} from "sasdn";
-import { Config, ConnectKey } from '../../lib/Config';
+import { Config, ConfigConst } from '../../lib/Config';
 {{#if this.useZipkin}}
 import { GrpcImpl } from 'sasdn-zipkin';
 {{/if}}
@@ -20,21 +20,21 @@ export default class {{{this.className}}} {
   constructor(ctx?: GatewayContext | RpcContext) {
 {{#if this.useZipkin}}
     GrpcImpl.setReceiverServiceInfo({
-      serviceName: Config.instance.getConfig(ConnectKey.{{this.ucProtoName}}),
-      host: Config.instance.getHost(ConnectKey.{{this.ucProtoName}}),
-      port: Config.instance.getPort(ConnectKey.{{this.ucProtoName}})
+      serviceName: Config.instance.getConfig(ConfigConst.CONNECT_{{this.ucProtoName}}),
+      host: Config.instance.getHost(ConfigConst.CONNECT_{{this.ucProtoName}}),
+      port: Config.instance.getPort(ConfigConst.CONNECT_{{this.ucProtoName}})
     });
 
     this.client = new GrpcImpl().createClient(
       new {{{this.clientName}}}Client(
-        Config.instance.getAddress(ConnectKey.{{this.ucProtoName}}),
+        Config.instance.getAddress(ConfigConst.CONNECT_{{this.ucProtoName}}),
         grpc.credentials.createInsecure()
       ),
       ctx
     );
 {{else}}
     this.client = new {{{this.clientName}}}Client(
-      Config.instance.getAddress(ConnectKey.{{this.ucProtoName}}),
+      ConfigHelper.instance.getAddress(ConfigConst.CONNECT_{{this.ucProtoName}}),
       grpc.credentials.createInsecure()
     );
 {{/if}}

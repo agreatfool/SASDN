@@ -37,7 +37,7 @@ export class Exception extends Error {
     }
 
     const formatCode = `000${code}`;
-    const realCode = code === 10001 ? 10001 : formatCode.substr(formatCode.length-3);
+    const realCode = code === 10001 ? 10001 : formatCode.substr(formatCode.length - 3);
     return JSON.stringify({
       code: `${ExceptionMajor}${ExceptionMinor}${realCode}`,
       message: message
