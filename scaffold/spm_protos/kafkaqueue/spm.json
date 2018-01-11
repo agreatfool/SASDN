@@ -1,0 +1,7 @@
+{
+  "name": "kafkaqueue",
+  "version": "1.0.0",
+  "description": "KafkaQueue-MircoService",
+  "dependencies": {
+  }
+}

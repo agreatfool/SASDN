@@ -1,7 +1,11 @@
 import * as Koa from 'koa';
 import * as koaBodyParser from 'koa-bodyparser';
-import { KoaImpl } from 'sasdn-zipkin';
+import { KoaImpl, ZIPKIN_EVENT } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
+import { Config, ConfigConst } from '../lib/Config';
+import { LEVEL } from 'sasdn-log';
+import { Logger, TOPIC } from '../lib/Logger';
+import * as LibDotEnv from 'dotenv';
 
 const debug = require('debug')('SASDN:GWDemo');
 
@@ -14,17 +18,40 @@ export default class GWDemo {
   }
 
   public async init(isDev: boolean = false): Promise<any> {
-    await RouterLoader.instance().init();
+    if (isDev) {
+      const loadEnv = LibDotEnv.config();
+      if (loadEnv.error) {
+        return Promise.reject(loadEnv.error);
+      }
+    }
 
-    KoaImpl.init(process.env.ZIPKIN_URL, {
-      serviceName: 'api-gateway',
-      port: 9090
+    await Config.instance.initalize();
+
+    await Logger.instance.initalize({
+      kafkaTopic: TOPIC.BUSINESS,
+      loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
+      loggerLevel: LEVEL.INFO
     });
 
+    await RouterLoader.instance().init();
+
+    KoaImpl.init(Config.instance.getAddress(ConfigConst.CONNECT_ZIPKIN), {
+      serviceName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
+      port: Config.instance.getPort(ConfigConst.CONNECT_GATEWAY)
+    });
+
+    const ZipkinImpl = new KoaImpl();
     const app = new Koa();
-    app.use(new KoaImpl().createMiddleware());
+    app.use(ZipkinImpl.createMiddleware());
     app.use(koaBodyParser({ formLimit: '2048kb' })); // post body parser
     app.use(RouterLoader.instance().getRouter().routes());
+    app.use(async (ctx, next) => {
+      ZipkinImpl.setCustomizedRecords(ZIPKIN_EVENT.SERVER_SEND, {
+        httpRequest: JSON.stringify(ctx.request.body),
+        httpResponse: JSON.stringify(ctx.body)
+      });
+      await next();
+    });
     this.app = app;
 
     this._initialized = true;
@@ -37,8 +64,8 @@ export default class GWDemo {
       return;
     }
 
-    const host: string = process.env.DEMO_ADDRESS;
-    const port: number = parseInt(process.env.DEMO_PORT);
+    const host: string = '0.0.0.0';
+    const port: number = Config.instance.getPort(ConfigConst.CONNECT_GATEWAY);
     this.app.listen(port, host, () => {
       debug(`API Gateway Start, Address: ${host}:${port}!`);
     });

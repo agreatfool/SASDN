@@ -1,55 +1,55 @@
 import * as grpc from 'grpc';
-import {{curlyLeft}}GatewayContext, RpcContext{{curlyRight}} from "sasdn";
+import {{curlyLeft}} GatewayContext, RpcContext {{curlyRight}} from "sasdn";
+import { Config, ConfigConst } from '../../lib/Config';
 {{#if this.useZipkin}}
-import {GrpcImpl} from 'sasdn-zipkin';
+import { GrpcImpl } from 'sasdn-zipkin';
 {{/if}}
 
 import {
-    {{this.clientName}}Client,
+  {{this.clientName}}Client,
 } from "{{{this.protoImportPath}}}";
 import {
-    {{#each this.allMethodImportModule}}
-    {{this}},
-    {{/each}}
+{{#each this.allMethodImportModule}}
+  {{this}},
+{{/each}}
 } from "{{this.allMethodImportPath}}";
 
 export default class {{{this.className}}} {
-    public client: {{{this.clientName}}}Client;
+  public client: {{{this.clientName}}}Client;
 
-    constructor(ctx?: GatewayContext | RpcContext) {
-        {{#if this.useZipkin}}
-        GrpcImpl.init(process.env.ZIPKIN_URL, {
-            serviceName: process.env.{{this.packageName}},
-            port: process.env.{{this.packageName}}_PORT
-        });
-        GrpcImpl.setReceiverServiceInfo({
-            serviceName: process.env.{{this.ucProtoName}},
-            host: process.env.{{this.ucProtoName}}_ADDRESS,
-            port: process.env.{{this.ucProtoName}}_PORT
-        });
+  constructor(ctx?: GatewayContext | RpcContext) {
+{{#if this.useZipkin}}
+    GrpcImpl.setReceiverServiceInfo({
+      serviceName: Config.instance.getConfig(ConfigConst.CONNECT_{{this.ucProtoName}}),
+      host: Config.instance.getHost(ConfigConst.CONNECT_{{this.ucProtoName}}),
+      port: Config.instance.getPort(ConfigConst.CONNECT_{{this.ucProtoName}})
+    });
 
-        this.client = new GrpcImpl().createClient(
-            new {{{this.clientName}}}Client(`${process.env.{{this.packageName}}_ADDRESS}:${process.env.{{this.packageName}}_PORT}`, grpc.credentials.createInsecure()), 
-            ctx
-        );
-        {{else}}
-        this.client = new {{{this.clientName}}}Client(
-            `${options.host}:${options.port}`, 
-            grpc.credentials.createInsecure()
-        );
-        {{/if}}
-    }
+    this.client = new GrpcImpl().createClient(
+      new {{{this.clientName}}}Client(
+        Config.instance.getAddress(ConfigConst.CONNECT_{{this.ucProtoName}}),
+        grpc.credentials.createInsecure()
+      ),
+      ctx
+    );
+{{else}}
+    this.client = new {{{this.clientName}}}Client(
+      ConfigHelper.instance.getAddress(ConfigConst.CONNECT_{{this.ucProtoName}}),
+      grpc.credentials.createInsecure()
+    );
+{{/if}}
+  }
 
-    {{#each methodList}}
-    public {{{this.methodName}}}(request: {{{this.requestTypeStr}}}): Promise<{{{this.responseTypeStr}}}> {
-        return new Promise((resolve, reject) => {
-            this.client.{{{this.methodName}}}(request, (err, res: {{{this.responseTypeStr}}}) => {
-                if (err) {
-                    return reject(err);
-                }
-                return resolve(res);
-            });
-        });
-    }
-    {{/each}}
+{{#each methodList}}
+  public {{{this.methodName}}}(request: {{{this.requestTypeStr}}}): Promise<{{{this.responseTypeStr}}}> {
+    return new Promise((resolve, reject) => {
+      this.client.{{{this.methodName}}}(request, (err, res: {{{this.responseTypeStr}}}) => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve(res);
+      });
+    });
+  }
+{{/each}}
 }
