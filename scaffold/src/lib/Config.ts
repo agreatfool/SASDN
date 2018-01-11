@@ -6,8 +6,8 @@ export class ConfigConst {
   public static CONNECT_KAFKAQUEUE: string = 'KAFKA';
   public static CONNECT_ZIPKIN: string = 'ZIPKIN';
 
-  public static ALLOWDOMAIN: string = 'ALLOW_DOMAIN';
-  public static COOKIEDOMAIN: string = 'COOKIE_DOMAIN';
+  public static ALLOW_DOMAIN: string = 'ALLOW_DOMAIN';
+  public static COOKIE_DOMAIN: string = 'COOKIE_DOMAIN';
 }
 
 export class Config {
