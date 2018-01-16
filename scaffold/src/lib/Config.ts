@@ -2,12 +2,18 @@ const debug = require('debug')('SASDN:Config');
 
 export class ConfigConst {
   public static CONNECT_GATEWAY: string = 'GATEWAY';
-  public static CONNECT_ORDER: string = 'ORDER';
+  public static CONNECT_ORDER: string = 'MS_ORDER';
   public static CONNECT_KAFKAQUEUE: string = 'KAFKA';
   public static CONNECT_ZIPKIN: string = 'ZIPKIN';
+  public static CONNECT_DEMO_MYSQL: string = 'DEMO_MYSQL';
 
   public static ALLOW_DOMAIN: string = 'ALLOW_DOMAIN';
   public static COOKIE_DOMAIN: string = 'COOKIE_DOMAIN';
+  public static DATABASE_USER: string = 'DATABASE_USER';
+  public static DATABASE_PASSWORD: string = 'DATABASE_PASSWORD';
+  public static DATABASE0: string = 'DATABASE0';
+  public static DATABASE1: string = 'DATABASE1';
+  public static DATABASE2: string = 'DATABASE2';
 }
 
 export class Config {
