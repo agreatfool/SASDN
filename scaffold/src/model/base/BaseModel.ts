@@ -64,10 +64,10 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @param {string[]} shardKeyList
    * @returns {Promise<void>}
    */
-  public async insertMany(paramsList: DeepPartial<E>[], shardKeyList?: string[]): Promise<void> {
+  public async insertMulti(paramsList: DeepPartial<E>[], shardKeyList?: string[]): Promise<void> {
     // 不分表的情况
     if (!shardKeyList || shardKeyList.length === 0) {
-      await this._insertMany(this._Entity, paramsList);
+      await this._insertMulti(this._Entity, paramsList);
       // 分表的情况
     } else {
       const entityMap = new Map();
@@ -82,7 +82,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         }
       }
       for (const i of entityMap) {
-        await this._insertMany.apply(this, i);
+        await this._insertMulti.apply(this, i);
       }
     }
   }
@@ -133,7 +133,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         }
       }
       const tempQuery = this._genFindTempQuery(params);
-      const result = await tempQuery.getMany(tempQuery);
+      const result = await tempQuery.getMulti(tempQuery);
       return result;
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
@@ -168,7 +168,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         }
       }
       const tempQuery = this._genFindTempQuery(params);
-      const result = await tempQuery.printSql().getManyAndCount(tempQuery);
+      const result = await tempQuery.printSql().getMultiAndCount(tempQuery);
       return result;
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
@@ -193,7 +193,7 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @param {string[]} entityNameList
    * @returns {Promise<void>}
    */
-  public async updateMany(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>, entityNameList?: string[]): Promise<void> {
+  public async updateMulti(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>, entityNameList?: string[]): Promise<void> {
     // 不分表的情况
     if (!entityNameList || entityNameList.length === 0) {
       await this._update(this._Entity, queryParams, updateParams);
@@ -226,7 +226,7 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @param {string[]} entityNameList
    * @returns {Promise<void>}
    */
-  public async deleteMany(params: DeepPartial<E>, entityNameList?: string[]): Promise<void> {
+  public async deleteMulti(params: DeepPartial<E>, entityNameList?: string[]): Promise<void> {
     // 不分表的情况
     if (!entityNameList || entityNameList.length === 0) {
       await this._delete(this._Entity, params);
@@ -278,7 +278,7 @@ export class BaseModel<E extends BaseOrmEntity> {
     return tempQuery;
   }
 
-  private async _insertMany(Entity: any, paramsList: DeepPartial<E>[]): Promise<void> {
+  private async _insertMulti(Entity: any, paramsList: DeepPartial<E>[]): Promise<void> {
     const qb = Entity.createQueryBuilder();
     try {
       await qb
