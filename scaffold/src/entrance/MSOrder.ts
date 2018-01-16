@@ -1,10 +1,12 @@
 import { RpcApplication } from 'sasdn';
 import { GrpcImpl } from 'sasdn-zipkin';
+import { DatabaseFactory, DatabaseOptions } from 'sasdn-database';
 import { Config, ConfigConst } from '../lib/Config';
 import { registerServices } from '../services/Register';
 import { LEVEL } from 'sasdn-log';
 import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
+import { DatabaseOption } from '../model/DatabaseOptions';
 
 const debug = require('debug')('SASDN:MSDemo');
 
@@ -35,6 +37,8 @@ export default class MSOrder {
       serviceName: Config.instance.getConfig(ConfigConst.CONNECT_ORDER),
       port: Config.instance.getPort(ConfigConst.CONNECT_ORDER)
     });
+
+    await DatabaseFactory.instance.initialize(DatabaseOption.getOptions());
 
     const app = new RpcApplication();
     app.use(new GrpcImpl().createMiddleware());
