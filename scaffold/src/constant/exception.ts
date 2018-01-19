@@ -1,4 +1,4 @@
-export const ExceptionName = 'Demo';       // self name
+export const ExceptionName = 'Demo';   // self name
 export const ExceptionMajor = '2';     // 1 arch 2 service 3 application
 export const ExceptionMinor = '001';   // service or application type
 export const ErrorCode = {
