@@ -135,7 +135,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         }
       }
       const tempQuery = this._genFindTempQuery(params);
-      const result = await tempQuery.getMany(tempQuery);
+      const result = await tempQuery.getMany();
       return result;
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
@@ -171,7 +171,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         }
       }
       const tempQuery = this._genFindTempQuery(params);
-      const result = await tempQuery.getManyAndCount(tempQuery);
+      const result = await tempQuery.getManyAndCount();
       return result;
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
