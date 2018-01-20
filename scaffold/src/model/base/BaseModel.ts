@@ -90,17 +90,14 @@ export class BaseModel<E extends BaseOrmEntity> {
   /**
    *
    * @param {DeepPartial<E extends BaseOrmEntity>} params
-   * @returns {Promise<E extends BaseOrmEntity>}
+   * @returns {Promise<E extends BaseOrmEntity | undefined>}
    */
-  public async findOne(params: DeepPartial<E>): Promise<E> {
+  public async findOne(params: DeepPartial<E>): Promise<E | undefined> {
     let result: E;
     try {
       result = await this._Entity.findOne(params);
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
-    }
-    if (!result) {
-      throw new Exception(4, `params: ${JSON.stringify(params)}`);
     }
     return result;
   }
@@ -200,7 +197,7 @@ export class BaseModel<E extends BaseOrmEntity> {
     const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     // 不分表的情况
     if (!metaData) {
-      await this.update(queryParams, updateParams);
+      await this._update(this._Entity, queryParams, updateParams);
       // 分表的情况
     } else {
       const shardCount = metaData.shardCount;
@@ -208,7 +205,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         for (let i = 0; i < shardCount; i++) {
           let entityName = `${this._entityName}_${i}`;
           let Entity = DatabaseFactory.instance.getEntity(entityName);
-          await this.update(queryParams, updateParams);
+          await this._update(Entity, queryParams, updateParams);
         }
       } else {
         // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
@@ -220,7 +217,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         for (let tableIndex of [...new Set(tableIndexList)]) {
           let entityName = `${this._entityName}_${tableIndex}`;
           let Entity = DatabaseFactory.instance.getEntity(entityName);
-          await this.update(queryParams, updateParams);
+          await this._update(Entity, queryParams, updateParams);
         }
       }
     }
@@ -246,7 +243,7 @@ export class BaseModel<E extends BaseOrmEntity> {
     const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     // 不分表的情况
     if (!metaData) {
-      await this.delete(params);
+      await this._delete(this._Entity, params);
       // 分表的情况
     } else {
       let shardCount = metaData.shardCount;
@@ -254,7 +251,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         for (let i = 0; i < shardCount; i++) {
           let entityName = `${this._entityName}_${i}`;
           let Entity = DatabaseFactory.instance.getEntity(entityName);
-          await this.delete(params);
+          await this._delete(Entity, params);
         }
       } else {
         // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
@@ -266,7 +263,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         for (let tableIndex of [...new Set(tableIndexList)]) {
           let entityName = `${this._entityName}_${tableIndex}`;
           let Entity = DatabaseFactory.instance.getEntity(entityName);
-          await this.delete(params);
+          await this._delete(Entity, params);
         }
       }
     }
@@ -332,7 +329,7 @@ export class BaseModel<E extends BaseOrmEntity> {
     }
   }
 
-  private async _delete(Entity: any, params: DeepPartial<E>): Promise<void> {
+  protected async _delete(Entity: any, params: DeepPartial<E>): Promise<void> {
     let tempQuery: any = Entity
       .createQueryBuilder()
       .delete();

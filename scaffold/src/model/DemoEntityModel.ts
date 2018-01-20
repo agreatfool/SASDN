@@ -109,18 +109,18 @@ export class DemoEntityModel extends BaseModel<DemoEntity> {
     }
   }
 
-  public async delete(params: DeepPartial<DemoEntity>): Promise<void> {
-    const entity = (DemoEntity as any).create(params);
+  protected async _delete(Entity: any, params: DeepPartial<DemoEntity>): Promise<void> {
+    const entity = (Entity as any).create(params);
     if(!entity.hasId()) {
       // 没有主键，批量删除的话在使用缓存的情况下必须先查询一次
       const findResult = await this.find(params, 0);
       for(const delEntity of findResult) {
-        await Cache.delSingle(DemoEntity, delEntity);
+        await Cache.delSingle(Entity, delEntity);
       }
     } else {
       // 有主键，只会更新一条
-      await Cache.delSingle(DemoEntity, entity);
+      await Cache.delSingle(Entity, entity);
     }
-    await super.delete(params);
+    await super._delete(Entity, params);
   }
 }
