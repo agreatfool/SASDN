@@ -9,9 +9,12 @@ import {
 } from '../proto/memcached/memcached_pb';
 import MSMemcachedClient from '../clients/memcached/MSMemcachedClient';
 
+// 7 days
+const DEFAULT_CACHE_EXPIRE = 604800;
+
 export namespace Cache {
   export async function setSingle(entity: BaseOrmEntity, expire?: number): Promise<boolean> {
-    expire = expire || 25200;
+    expire = expire || DEFAULT_CACHE_EXPIRE;
     if (!entity.hasId()) {
       Logger.instance.logger.warn(`Cache set failed, ${entity.constructor.name} has not given primary key`);
       return false;
@@ -67,7 +70,7 @@ export namespace Cache {
   }
 
   export async function setMulti(entities: BaseOrmEntity[], expire?: number): Promise<boolean> {
-    expire = expire || 25200;
+    expire = expire || DEFAULT_CACHE_EXPIRE;
     // means to package as one cache
     for (const entity of entities) {
       setSingle(entity, expire).catch(_=>_);
@@ -77,7 +80,7 @@ export namespace Cache {
   }
 
   export async function setMultiWithKey(entities: BaseOrmEntity[], key: string, expire?: number): Promise<boolean> {
-    expire = expire || 25200;
+    expire = expire || DEFAULT_CACHE_EXPIRE;
     // means to package as one cache
     const stringify = JSON.stringify(entities);
     const totalLength = key.length + stringify.length;
@@ -96,7 +99,7 @@ export namespace Cache {
     return (await client.memSet(setReq)).getResult();
   }
 
-  export async function getMutliWithKey<T extends BaseOrmEntity>(Entity: ObjectType<T>, key: string): Promise<T[]> {
+  export async function getMutliWithKey<T extends BaseOrmEntity>(Entity: ObjectType<T>, key: string): Promise<T[] | boolean> {
     const getReq = new GetRequest();
     getReq.setKey(key);
 
@@ -104,7 +107,7 @@ export namespace Cache {
     const memResult = await client.memGet(getReq);
     const foundCache = memResult.getResult();
     if(!foundCache) {
-      return [];
+      return false;
     }
     const result: T[] = [];
     const parseList = JSON.parse(foundCache);

@@ -1,5 +1,5 @@
-import { BaseOrmEntity, DatabaseFactory } from 'sasdn-database';
-import { Exception } from '../../lib/Exception';
+import { BaseOrmEntity, DatabaseFactory, EntityStorage } from 'sasdn-database';
+import { Exception } from '../lib/Exception';
 import { TypeOrmImpl } from 'sasdn-zipkin';
 import { DeepPartial } from 'typeorm/browser/common/DeepPartial';
 
@@ -42,7 +42,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         .insert()
         .values(params)
         .execute();
-      const entity = new this._Entity.create(params);
+      const entity = this._Entity.create(params);
       // 如果是自增主键，则从 result 中获取主键，并且添加到 entity 中
       if (!this._Entity.hasId(entity)) {
         const primaryKey = result.insertId;
@@ -111,7 +111,9 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @returns {Promise<E[]>}
    */
   public async find(params?: FindOptions<E> | DeepPartial<E>): Promise<E[]> {
-    if (this._shardKey) {
+    // 有 metaData 说明分表了
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
+    if (metaData) {
       throw new Exception(5, ``);
     }
     try {
@@ -133,7 +135,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         }
       }
       const tempQuery = this._genFindTempQuery(params);
-      const result = await tempQuery.getMulti(tempQuery);
+      const result = await tempQuery.getMany(tempQuery);
       return result;
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
@@ -146,7 +148,8 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @returns {Promise<[E[] , number]>}
    */
   public async findAndCount(params?: FindOptions<E> | DeepPartial<E>): Promise<[E[], number]> {
-    if (this._shardKey) {
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
+    if (metaData) {
       throw new Exception(5, ``);
     }
     try {
@@ -168,7 +171,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         }
       }
       const tempQuery = this._genFindTempQuery(params);
-      const result = await tempQuery.printSql().getMultiAndCount(tempQuery);
+      const result = await tempQuery.getManyAndCount(tempQuery);
       return result;
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
@@ -187,25 +190,38 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   /**
-   * 如果分表，需要传入 entityNameList(即需要执行批量更新操作的表的 entityName 列表)
+   *如果分表，需要传入 tableIndexList(即需要执行批量更新操作的表的 index 列表, 如 [0, 1, 2, 3])
    * @param {DeepPartial<E extends BaseOrmEntity>} queryParams
    * @param {DeepPartial<E extends BaseOrmEntity>} updateParams
-   * @param {string[]} entityNameList
+   * @param {number[]} tableIndexList
    * @returns {Promise<void>}
    */
-  public async updateMulti(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>, entityNameList?: string[]): Promise<void> {
+  public async updateMulti(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>, tableIndexList?: number[]): Promise<void> {
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     // 不分表的情况
-    if (!entityNameList || entityNameList.length === 0) {
-      await this._update(this._Entity, queryParams, updateParams);
+    if (!metaData) {
+      await this.update(queryParams, updateParams);
       // 分表的情况
     } else {
-      const EntitySet = new Set();
-      for (const entityName of entityNameList) {
-        const Entity = DatabaseFactory.instance.getEntity(entityName);
-        EntitySet.add(Entity);
-      }
-      for (const Entity of EntitySet) {
-        await this._update(Entity, queryParams, updateParams);
+      const shardCount = metaData.shardCount;
+      if (!tableIndexList || tableIndexList.length === 0) {
+        for (let i = 0; i < shardCount; i++) {
+          let entityName = `${this._entityName}_${i}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          await this.update(queryParams, updateParams);
+        }
+      } else {
+        // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
+        for (let tableIndex of tableIndexList) {
+          if (tableIndex < 0 || tableIndex > shardCount) {
+            throw new Exception(6, `${tableIndex} not in [0, ${shardCount}]`);
+          }
+        }
+        for (let tableIndex of [...new Set(tableIndexList)]) {
+          let entityName = `${this._entityName}_${tableIndex}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          await this.update(queryParams, updateParams);
+        }
       }
     }
   }
@@ -221,24 +237,37 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   /**
-   * 如果分表，需要传入 entityNameList(即需要执行批量删除操作的表的 entityName 列表)
+   * 如果分表，需要传入 tableIndexList(即需要执行批量删除操作的表的 index 列表, 如 [0, 1, 2, 3])
    * @param {DeepPartial<E extends BaseOrmEntity>} params
-   * @param {string[]} entityNameList
+   * @param {string[]} tableIndexList
    * @returns {Promise<void>}
    */
-  public async deleteMulti(params: DeepPartial<E>, entityNameList?: string[]): Promise<void> {
+  public async deleteMulti(params: DeepPartial<E>, tableIndexList?: number[]): Promise<void> {
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     // 不分表的情况
-    if (!entityNameList || entityNameList.length === 0) {
-      await this._delete(this._Entity, params);
+    if (!metaData) {
+      await this.delete(params);
       // 分表的情况
     } else {
-      const EntitySet = new Set();
-      for (const entityName of entityNameList) {
-        const Entity = DatabaseFactory.instance.getEntity(entityName);
-        EntitySet.add(Entity);
-      }
-      for (const Entity of EntitySet) {
-        await this._delete(Entity, params);
+      let shardCount = metaData.shardCount;
+      if (!tableIndexList || tableIndexList.length === 0) {
+        for (let i = 0; i < shardCount; i++) {
+          let entityName = `${this._entityName}_${i}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          await this.delete(params);
+        }
+      } else {
+        // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
+        for (let tableIndex of tableIndexList) {
+          if (tableIndex < 0 || tableIndex > shardCount) {
+            throw new Exception(6, `${tableIndex} not in [0, ${shardCount}]`);
+          }
+        }
+        for (let tableIndex of [...new Set(tableIndexList)]) {
+          let entityName = `${this._entityName}_${tableIndex}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          await this.delete(params);
+        }
       }
     }
   }
