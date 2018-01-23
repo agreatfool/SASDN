@@ -9,7 +9,7 @@ PROTO_3RD=${ROOT}/spm_protos
 OUTPUT=${ROOT}/src
 
 IS_GATEWAY=true
-IS_MICROSERVICE=true
+IS_MICROSERVICE=false
 
 echo "***********************"
 echo "Working dir: ${ROOT}"
