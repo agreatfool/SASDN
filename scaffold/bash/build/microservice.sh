@@ -8,8 +8,8 @@ PROTO_ROOT=${ROOT}/proto
 PROTO_3RD=${ROOT}/spm_protos
 OUTPUT=${ROOT}/src
 
-IS_GATEWAY=true
-IS_MICROSERVICE=false
+IS_GATEWAY=false
+IS_MICROSERVICE=true
 
 echo "***********************"
 echo "Working dir: ${ROOT}"
