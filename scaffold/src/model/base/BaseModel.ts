@@ -1,4 +1,4 @@
-import { BaseOrmEntity, DatabaseFactory } from 'sasdn-database';
+import { BaseOrmEntity, DatabaseFactory, EntityStorage } from 'sasdn-database';
 import { Exception } from '../../lib/Exception';
 import { TypeOrmImpl } from 'sasdn-zipkin';
 import { DeepPartial } from 'typeorm/browser/common/DeepPartial';
@@ -7,6 +7,9 @@ export interface FindOptions<T> {
   where?: DeepPartial<T>;
   whereIn?: { [P in keyof T]?: any[]; };
   whereLike?: { [P in keyof T]?: string; };
+  orWhere?: DeepPartial<T>;
+  orWhereIn?: { [P in keyof T]?: any[]; };
+  orWhereLike?: { [P in keyof T]?: string; };
   order?: { [P in keyof T]?: 'ASC' | 'DESC' | 1 | -1; };
   offset?: number;
   limit?: number;
@@ -17,34 +20,34 @@ export interface FindOptions<T> {
  */
 export class BaseModel<E extends BaseOrmEntity> {
   // _Entity 是 SASDN-database 的 Entity 类
-  protected _Entity: any;
+  protected _EntityClass: any;
   protected _entityName: string;
   protected _shardKey: string;
 
   protected constructor(entityName: string, ctx?: object, shardKey?: string) {
     this._shardKey = shardKey;
     this._entityName = entityName;
-    this._Entity = DatabaseFactory.instance.getEntity(entityName, shardKey);
+    this._EntityClass = DatabaseFactory.instance.getEntity(entityName, shardKey);
     if (ctx) {
       DatabaseFactory.instance.updateZipkin(new TypeOrmImpl(), ctx);
     }
   }
 
   /**
-   *
+   *返回值是 Entity 的实例，在分表的情况下不知道 Entity 是什么，所以返回值类型是 any
    * @param {DeepPartial<E extends BaseOrmEntity>} params
-   * @returns {Promise<E extends BaseOrmEntity>}
+   * @returns {Promise<any>}
    */
-  public async insert(params: DeepPartial<E>): Promise<E> {
-    const qb = this._Entity.createQueryBuilder();
+  public async insert(params: DeepPartial<E>): Promise<any> {
+    const qb = this._EntityClass.createQueryBuilder();
     try {
       const result = await qb
         .insert()
         .values(params)
         .execute();
-      const entity = new this._Entity.create(params);
+      const entity = this._EntityClass.create(params);
       // 如果是自增主键，则从 result 中获取主键，并且添加到 entity 中
-      if (!this._Entity.hasId(entity)) {
+      if (!this._EntityClass.hasId(entity)) {
         const primaryKey = result.insertId;
         entity.id = primaryKey;
       }
@@ -67,7 +70,7 @@ export class BaseModel<E extends BaseOrmEntity> {
   public async insertMulti(paramsList: DeepPartial<E>[], shardKeyList?: string[]): Promise<void> {
     // 不分表的情况
     if (!shardKeyList || shardKeyList.length === 0) {
-      await this._insertMulti(this._Entity, paramsList);
+      await this._insertMulti(this._EntityClass, paramsList);
       // 分表的情况
     } else {
       const entityMap = new Map();
@@ -88,91 +91,99 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   /**
-   *
+   *返回值是 Entity 的实例或 undefined(找不到的情况下)，在分表的情况下不知道 Entity 是什么，所以返回值类型是 any
    * @param {DeepPartial<E extends BaseOrmEntity>} params
    * @returns {Promise<E extends BaseOrmEntity>}
    */
-  public async findOne(params: DeepPartial<E>): Promise<E> {
-    let result: E;
+  public async findOne(params: DeepPartial<E>): Promise<any> {
+    let result: any;
     try {
-      result = await this._Entity.findOne(params);
+      result = await this._EntityClass.findOne(params);
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
-    }
-    if (!result) {
-      throw new Exception(4, `params: ${JSON.stringify(params)}`);
     }
     return result;
   }
 
   /**
-   * 分表的时候不能用这个操作
+   * 返回值是 Entity 的实例数组或 空数组(找不到的情况下)，在分表的情况下不知道 Entity 是什么，所以返回值类型是 any[]
    * @param {FindOptions<E extends BaseOrmEntity> | DeepPartial<E extends BaseOrmEntity>} params
-   * @returns {Promise<E[]>}
+   * @param {number[]} tableIndexList
+   * @returns {Promise<any[]>}
    */
-  public async find(params?: FindOptions<E> | DeepPartial<E>): Promise<E[]> {
-    if (this._shardKey) {
-      throw new Exception(5, ``);
-    }
-    try {
-      if (!params) {
-        const result = await this._Entity.find();
-        return result;
-      }
-      if (!((<FindOptions<E>>params).offset || (<FindOptions<E>>params).limit || (<FindOptions<E>>params).whereIn || (<FindOptions<E>>params).whereLike)) {
-        const result = await this._Entity.find(params);
-        return result;
-      }
-      if ((<FindOptions<E>>params).whereIn) {
-        const whereInKeys = Object.keys((<FindOptions<E>>params).whereIn);
-        for (const key of whereInKeys) {
-          const value = (<FindOptions<E>>params).whereIn[key];
-          if (value.length === 0) {
-            return [];
+  public async find(params?: FindOptions<E> | DeepPartial<E>, tableIndexList?: number[]): Promise<any[]> {
+    // 有 metaData 说明分表了
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
+    let result: any[] = [];
+    if (!metaData) {
+      result = await this._find(this._EntityClass, params);
+    } else {
+      const shardCount = metaData.shardCount;
+      if (!tableIndexList || tableIndexList.length === 0) {
+        for (let i = 0; i < shardCount; i++) {
+          let entityName = `${this._entityName}_${i}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          let tempResult = await this._find(Entity, params);
+          result = [...result, ...tempResult];
+        }
+      } else {
+        // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
+        for (let tableIndex of tableIndexList) {
+          if (tableIndex < 0 || tableIndex > shardCount) {
+            throw new Exception(6, `${tableIndex} not in [0, ${shardCount}]`);
           }
         }
+        for (let tableIndex of [...new Set(tableIndexList)]) {
+          let entityName = `${this._entityName}_${tableIndex}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          let tempResult = await this._find(Entity, params);
+          result = [...result, ...tempResult];
+        }
       }
-      const tempQuery = this._genFindTempQuery(params);
-      const result = await tempQuery.getMulti(tempQuery);
-      return result;
-    } catch (err) {
-      throw new Exception(2, `${err.toString()}`);
     }
+    return result;
   }
 
   /**
-   * 分表的时候不能用这个操作
+   * 返回值是 Entity 的实例数组或 空数组(找不到的情况下)，在分表的情况下不知道 Entity 是什么，所以返回值类型是 any[]
    * @param {FindOptions<E extends BaseOrmEntity> | DeepPartial<E extends BaseOrmEntity>} params
-   * @returns {Promise<[E[] , number]>}
+   * @param {number[]} tableIndexList
+   * @returns {Promise<[any[] , number]>}
    */
-  public async findAndCount(params?: FindOptions<E> | DeepPartial<E>): Promise<[E[], number]> {
-    if (this._shardKey) {
-      throw new Exception(5, ``);
-    }
-    try {
-      if (!params) {
-        const result = await this._Entity.find();
-        return result;
-      }
-      if (!((<FindOptions<E>>params).offset || (<FindOptions<E>>params).limit || (<FindOptions<E>>params).whereIn || (<FindOptions<E>>params).whereLike)) {
-        const result = await this._Entity.findAndCount(params);
-        return result;
-      }
-      if ((<FindOptions<E>>params).whereIn) {
-        const whereInKeys = Object.keys((<FindOptions<E>>params).whereIn);
-        for (const key of whereInKeys) {
-          const value = (<FindOptions<E>>params).whereIn[key];
-          if (value.length === 0) {
-            return [[], 0];
+  public async findAndCount(params?: FindOptions<E> | DeepPartial<E>, tableIndexList?: number[]): Promise<[any[], number]> {
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
+    let result: [any[], number] = [[], 0];
+    if (!metaData) {
+      result = await this._findAndCount(this._EntityClass, params);
+    } else {
+      const shardCount = metaData.shardCount;
+      if (!tableIndexList || tableIndexList.length === 0) {
+        for (let i = 0; i < shardCount; i++) {
+          let entityName = `${this._entityName}_${i}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          let tempResult = await this._findAndCount(Entity, params);
+          let entityList = [...result[0], ...tempResult[0]];
+          let count = entityList.length;
+          result = [entityList, count];
+        }
+      } else {
+        // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
+        for (let tableIndex of tableIndexList) {
+          if (tableIndex < 0 || tableIndex > shardCount) {
+            throw new Exception(6, `${tableIndex} not in [0, ${shardCount}]`);
           }
         }
+        for (let tableIndex of [...new Set(tableIndexList)]) {
+          let entityName = `${this._entityName}_${tableIndex}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          let tempResult = await this._findAndCount(Entity, params);
+          let entityList = [...result[0], ...tempResult[0]];
+          let count = entityList.length;
+          result = [entityList, count];
+        }
       }
-      const tempQuery = this._genFindTempQuery(params);
-      const result = await tempQuery.printSql().getMultiAndCount(tempQuery);
-      return result;
-    } catch (err) {
-      throw new Exception(2, `${err.toString()}`);
     }
+    return result;
   }
 
   /**
@@ -183,29 +194,42 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @returns {Promise<void>}
    */
   public async update(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>): Promise<void> {
-    await this._update(this._Entity, queryParams, updateParams);
+    await this._update(this._EntityClass, queryParams, updateParams);
   }
 
   /**
-   * 如果分表，需要传入 entityNameList(即需要执行批量更新操作的表的 entityName 列表)
+   *如果分表，需要传入 tableIndexList(即需要执行批量更新操作的表的 index 列表, 如 [0, 1, 2, 3])
    * @param {DeepPartial<E extends BaseOrmEntity>} queryParams
    * @param {DeepPartial<E extends BaseOrmEntity>} updateParams
-   * @param {string[]} entityNameList
+   * @param {number[]} tableIndexList
    * @returns {Promise<void>}
    */
-  public async updateMulti(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>, entityNameList?: string[]): Promise<void> {
+  public async updateMulti(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>, tableIndexList?: number[]): Promise<void> {
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     // 不分表的情况
-    if (!entityNameList || entityNameList.length === 0) {
-      await this._update(this._Entity, queryParams, updateParams);
+    if (!metaData) {
+      await this._update(this._EntityClass, queryParams, updateParams);
       // 分表的情况
     } else {
-      const EntitySet = new Set();
-      for (const entityName of entityNameList) {
-        const Entity = DatabaseFactory.instance.getEntity(entityName);
-        EntitySet.add(Entity);
-      }
-      for (const Entity of EntitySet) {
-        await this._update(Entity, queryParams, updateParams);
+      const shardCount = metaData.shardCount;
+      if (!tableIndexList || tableIndexList.length === 0) {
+        for (let i = 0; i < shardCount; i++) {
+          let entityName = `${this._entityName}_${i}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          await this._update(Entity, queryParams, updateParams);
+        }
+      } else {
+        // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
+        for (let tableIndex of tableIndexList) {
+          if (tableIndex < 0 || tableIndex > shardCount) {
+            throw new Exception(6, `${tableIndex} not in [0, ${shardCount}]`);
+          }
+        }
+        for (let tableIndex of [...new Set(tableIndexList)]) {
+          let entityName = `${this._entityName}_${tableIndex}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          await this._update(Entity, queryParams, updateParams);
+        }
       }
     }
   }
@@ -217,63 +241,94 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @returns {Promise<void>}
    */
   public async delete(params: DeepPartial<E>): Promise<void> {
-    await this._delete(this._Entity, params);
+    await this._delete(this._EntityClass, params);
   }
 
   /**
-   * 如果分表，需要传入 entityNameList(即需要执行批量删除操作的表的 entityName 列表)
+   * 如果分表，需要传入 tableIndexList(即需要执行批量删除操作的表的 index 列表, 如 [0, 1, 2, 3])
    * @param {DeepPartial<E extends BaseOrmEntity>} params
-   * @param {string[]} entityNameList
+   * @param {string[]} tableIndexList
    * @returns {Promise<void>}
    */
-  public async deleteMulti(params: DeepPartial<E>, entityNameList?: string[]): Promise<void> {
+  public async deleteMulti(params: DeepPartial<E>, tableIndexList?: number[]): Promise<void> {
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     // 不分表的情况
-    if (!entityNameList || entityNameList.length === 0) {
-      await this._delete(this._Entity, params);
+    if (!metaData) {
+      await this._delete(this._EntityClass, params);
       // 分表的情况
     } else {
-      const EntitySet = new Set();
-      for (const entityName of entityNameList) {
-        const Entity = DatabaseFactory.instance.getEntity(entityName);
-        EntitySet.add(Entity);
-      }
-      for (const Entity of EntitySet) {
-        await this._delete(Entity, params);
+      let shardCount = metaData.shardCount;
+      if (!tableIndexList || tableIndexList.length === 0) {
+        for (let i = 0; i < shardCount; i++) {
+          let entityName = `${this._entityName}_${i}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          await this._delete(Entity, params);
+        }
+      } else {
+        // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
+        for (let tableIndex of tableIndexList) {
+          if (tableIndex < 0 || tableIndex > shardCount) {
+            throw new Exception(6, `${tableIndex} not in [0, ${shardCount}]`);
+          }
+        }
+        for (let tableIndex of [...new Set(tableIndexList)]) {
+          let entityName = `${this._entityName}_${tableIndex}`;
+          let Entity = DatabaseFactory.instance.getEntity(entityName);
+          await this._delete(Entity, params);
+        }
       }
     }
   }
 
-  private _genFindTempQuery(params: FindOptions<E> | DeepPartial<E>): any {
-    let tempQuery: any = this._Entity.createQueryBuilder('item');
-    if ((<FindOptions<E>>params).where) {
-      const whereOptions = Object.keys((<FindOptions<E>>params).where);
+  private _genFindTempQuery(Entity: any, params: FindOptions<E> | DeepPartial<E>): any {
+    let tempQuery: any = this._EntityClass.createQueryBuilder('item');
+    if ((params as FindOptions<E>).where) {
+      const whereOptions = Object.keys((params as FindOptions<E>).where);
       for (const w of whereOptions) {
-        tempQuery = tempQuery.andWhere(`item.${w} = :${w}`, { [w]: (<FindOptions<E>>params).where[w] });
+        tempQuery = tempQuery.andWhere(`item.${w} = :${w}`, { [w]: (params as FindOptions<E>).where[w] });
       }
     }
-    if ((<FindOptions<E>>params).whereIn) {
-      const whereInOptions = Object.keys((<FindOptions<E>>params).whereIn);
+    if ((params as FindOptions<E>).whereIn) {
+      const whereInOptions = Object.keys((params as FindOptions<E>).whereIn);
       for (const w of whereInOptions) {
-        tempQuery = tempQuery.andWhere(`item.${w} IN (:${w})`, { [w]: (<FindOptions<E>>params).whereIn[w] });
+        tempQuery = tempQuery.andWhere(`item.${w} IN (:${w})`, { [w]: (params as FindOptions<E>).whereIn[w] });
       }
     }
-    if ((<FindOptions<E>>params).whereLike) {
-      const whereLikeOptions = Object.keys((<FindOptions<E>>params).whereLike);
+    if ((params as FindOptions<E>).whereLike) {
+      const whereLikeOptions = Object.keys((params as FindOptions<E>).whereLike);
       for (const w of whereLikeOptions) {
-        tempQuery = tempQuery.andWhere(`item.${w} LIKE :${w}`, { [w]: `%${(<FindOptions<E>>params).whereLike[w]}%` });
+        tempQuery = tempQuery.andWhere(`item.${w} LIKE :${w}`, { [w]: `%${(params as FindOptions<E>).whereLike[w]}%` });
       }
     }
-    if ((<FindOptions<E>>params).order) {
-      const orderKeys = Object.keys((<FindOptions<E>>params).order);
+    if ((params as FindOptions<E>).orWhere) {
+      const whereOptions = Object.keys((params as FindOptions<E>).where);
+      for (const w of whereOptions) {
+        tempQuery = tempQuery.orWhere(`item.${w} = :${w}`, { [w]: (params as FindOptions<E>).where[w] });
+      }
+    }
+    if ((params as FindOptions<E>).orWhereIn) {
+      const whereInOptions = Object.keys((params as FindOptions<E>).whereIn);
+      for (const w of whereInOptions) {
+        tempQuery = tempQuery.orWhere(`item.${w} IN (:${w})`, { [w]: (params as FindOptions<E>).whereIn[w] });
+      }
+    }
+    if ((params as FindOptions<E>).orWhereLike) {
+      const whereLikeOptions = Object.keys((params as FindOptions<E>).whereLike);
+      for (const w of whereLikeOptions) {
+        tempQuery = tempQuery.orWhere(`item.${w} LIKE :${w}`, { [w]: `%${(params as FindOptions<E>).whereLike[w]}%` });
+      }
+    }
+    if ((params as FindOptions<E>).order) {
+      const orderKeys = Object.keys((params as FindOptions<E>).order);
       const options: object = {};
-      orderKeys.map(k => options[`item.${k}`] = (<FindOptions<E>>params).order[k]);
+      orderKeys.map(k => options[`item.${k}`] = (params as FindOptions<E>).order[k]);
       tempQuery = tempQuery.orderBy(options);
     }
-    if ((<FindOptions<E>>params).offset) {
-      tempQuery = tempQuery.offset((<FindOptions<E>>params).offset);
+    if ((params as FindOptions<E>).offset) {
+      tempQuery = tempQuery.offset((params as FindOptions<E>).offset);
     }
-    if ((<FindOptions<E>>params).limit) {
-      tempQuery = tempQuery.limit((<FindOptions<E>>params).limit);
+    if ((params as FindOptions<E>).limit) {
+      tempQuery = tempQuery.limit((params as FindOptions<E>).limit);
     }
     return tempQuery;
   }
@@ -295,7 +350,7 @@ export class BaseModel<E extends BaseOrmEntity> {
     }
   }
 
-  private async _update(Entity: any, queryParams: DeepPartial<E>, updateParams: DeepPartial<E>): Promise<void> {
+  protected async _update(Entity: any, queryParams: DeepPartial<E>, updateParams: DeepPartial<E>): Promise<void> {
     try {
       await Entity.update(queryParams, updateParams);
     } catch (err) {
@@ -303,7 +358,7 @@ export class BaseModel<E extends BaseOrmEntity> {
     }
   }
 
-  private async _delete(Entity: any, params: DeepPartial<E>): Promise<void> {
+  protected async _delete(Entity: any, params: DeepPartial<E>): Promise<void> {
     let tempQuery: any = Entity
       .createQueryBuilder()
       .delete();
@@ -317,5 +372,93 @@ export class BaseModel<E extends BaseOrmEntity> {
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
     }
+  }
+
+  protected async _find(Entity: any, params?: FindOptions<E> | DeepPartial<E>): Promise<any[]> {
+    try {
+      if (!params) {
+        const result = await Entity.find();
+        return result;
+      }
+      if (!((params as FindOptions<E>).offset || (params as FindOptions<E>).limit || (params as FindOptions<E>).whereIn
+          || (params as FindOptions<E>).whereLike || (params as FindOptions<E>).orWhere || (params as FindOptions<E>).orWhereIn
+          || (params as FindOptions<E>).orWhereLike)) {
+        const result = await Entity.find(params);
+        return result;
+      }
+      if ((params as FindOptions<E>).whereIn) {
+        const whereInKeys = Object.keys((params as FindOptions<E>).whereIn);
+        for (const key of whereInKeys) {
+          const value = (params as FindOptions<E>).whereIn[key];
+          if (value.length === 0) {
+            return [];
+          }
+        }
+      }
+      if ((params as FindOptions<E>).orWhereIn) {
+        const whereInKeys = Object.keys((params as FindOptions<E>).orWhereIn);
+        for (const key of whereInKeys) {
+          const value = (params as FindOptions<E>).orWhereIn[key];
+          if (value.length === 0) {
+            delete (params as FindOptions<E>).orWhereIn[key];
+          }
+        }
+      }
+      const tempQuery = this._genFindTempQuery(Entity, params);
+      const result = await tempQuery.getMany();
+      return result;
+    } catch (err) {
+      throw new Exception(2, `${err.toString()}`);
+    }
+  }
+
+  protected async _findAndCount(Entity: any, params?: FindOptions<E> | DeepPartial<E>): Promise<[any[], number]> {
+    try {
+      if (!params) {
+        const result = await Entity.findAndCount();
+        return result;
+      }
+      if (!((params as FindOptions<E>).offset || (params as FindOptions<E>).limit || (params as FindOptions<E>).whereIn
+          || (params as FindOptions<E>).whereLike || (params as FindOptions<E>).orWhere || (params as FindOptions<E>).orWhereIn
+          || (params as FindOptions<E>).orWhereLike)) {
+        const result = await Entity.findAndCount(params);
+        return result;
+      }
+      if ((params as FindOptions<E>).whereIn) {
+        const whereInKeys = Object.keys((params as FindOptions<E>).whereIn);
+        for (const key of whereInKeys) {
+          const value = (params as FindOptions<E>).whereIn[key];
+          if (value.length === 0) {
+            return [[], 0];
+          }
+        }
+      }
+      if ((params as FindOptions<E>).orWhereIn) {
+        const whereInKeys = Object.keys((params as FindOptions<E>).orWhereIn);
+        for (const key of whereInKeys) {
+          const value = (params as FindOptions<E>).orWhereIn[key];
+          if (value.length === 0) {
+            delete (params as FindOptions<E>).orWhereIn[key];
+          }
+        }
+      }
+      const tempQuery = this._genFindTempQuery(Entity, params);
+      const result = await tempQuery.getManyAndCount();
+      return result;
+    } catch (err) {
+      throw new Exception(2, `${err.toString()}`);
+    }
+  }
+
+  protected _isFindOptions(obj: any): obj is FindOptions<any> {
+    const possibleOptions: FindOptions<any> = obj;
+    return possibleOptions &&
+      (
+        possibleOptions.where instanceof Object ||
+        typeof possibleOptions.where === 'string' ||
+        possibleOptions.order instanceof Object ||
+        typeof (possibleOptions as FindOptions<any>).offset === 'number' ||
+        typeof (possibleOptions as FindOptions<any>).limit === 'number'
+      );
   }
 }

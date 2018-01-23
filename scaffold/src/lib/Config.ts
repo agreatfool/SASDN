@@ -3,6 +3,7 @@ const debug = require('debug')('SASDN:Config');
 export class ConfigConst {
   public static CONNECT_GATEWAY: string = 'GATEWAY';
   public static CONNECT_ORDER: string = 'MS_ORDER';
+  public static CONNECT_MEMCACHED: string = 'MS_MEMCACHED';
   public static CONNECT_KAFKAQUEUE: string = 'KAFKA';
   public static CONNECT_ZIPKIN: string = 'ZIPKIN';
   public static CONNECT_DEMO_MYSQL: string = 'DEMO_MYSQL';
