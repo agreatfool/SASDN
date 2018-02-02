@@ -84,7 +84,7 @@ export namespace Cache {
     // means to package as one cache
     const stringify = JSON.stringify(entities);
     const totalLength = key.length + stringify.length;
-    // max length 1024
+    // max length 900K
     if (totalLength > (900 * 1024)) {
       Logger.instance.warn(`Cache setMultiWithKey failed, exceed maximum length`);
       return false;
