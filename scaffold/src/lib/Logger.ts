@@ -85,7 +85,7 @@ export class Logger {
     this._log(message, LEVEL.DEBUG, options);
   }
 
-  public trace(message: string, options?: LogOptions): void {
+  public verbose(message: string, options?: LogOptions): void {
     this._log(message, LEVEL.TRACE, options);
   }
 }
