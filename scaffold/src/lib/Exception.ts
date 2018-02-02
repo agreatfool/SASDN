@@ -38,9 +38,7 @@ export class Exception extends Error {
     }
 
     const formatCode = `000${code}`;
-    // `${code}`.length === 5 means the exception is old exception or comes from Error (10001)
-    // and other code fill 0
-    const realCode = `${code}`.length === 5 ? code : formatCode.substr(formatCode.length - 3);
+    const realCode = formatCode.substr(formatCode.length - 3);
     let result = JSON.stringify({
       code: `${ExceptionMajor}${ExceptionMinor}${realCode}`,
       message: message,

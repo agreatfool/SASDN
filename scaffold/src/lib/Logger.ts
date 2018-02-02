@@ -61,31 +61,31 @@ export class Logger {
     return Promise.resolve();
   }
 
-  public log(message: string, level: LEVEL = LEVEL.INFO, options?: LogOptions): void {
+  private _log(message: string, level: LEVEL = LEVEL.INFO, options?: LogOptions): void {
     this._logger.log(message, level, options);
   }
 
   public fatal(message: string, options?: LogOptions): void {
-    this.log(message, LEVEL.FATAL, options);
+    this._log(message, LEVEL.FATAL, options);
   }
 
   public error(message: string, options?: LogOptions): void {
-    this.log(message, LEVEL.ERROR, options);
+    this._log(message, LEVEL.ERROR, options);
   }
 
   public warn(message: string, options?: LogOptions): void {
-    this.log(message, LEVEL.WARN, options);
+    this._log(message, LEVEL.WARN, options);
   }
 
   public info(message: string, options?: LogOptions): void {
-    this.log(message, LEVEL.INFO, options);
+    this._log(message, LEVEL.INFO, options);
   }
 
   public debug(message: string, options?: LogOptions): void {
-    this.log(message, LEVEL.DEBUG, options);
+    this._log(message, LEVEL.DEBUG, options);
   }
 
   public trace(message: string, options?: LogOptions): void {
-    this.log(message, LEVEL.TRACE, options);
+    this._log(message, LEVEL.TRACE, options);
   }
 }
