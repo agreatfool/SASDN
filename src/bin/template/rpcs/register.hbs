@@ -1,20 +1,20 @@
-///<reference path="../../node_modules/grpc-tsd/src/grpc.d.ts"/>
-import {IServerCall, RpcImplCallback} from "grpc";
-import {RpcApplication, WrappedHandler} from "sasdn";
+///<reference path='../../node_modules/grpc-tsd/src/grpc.d.ts'/>
+import {IServerCall, RpcImplCallback} from 'grpc';
+import {RpcApplication, WrappedHandler} from 'sasdn';
 
 {{#each infos}}
 import {
   {{#each this.services}}
   {{@key}}Service,
   {{/each}}
-} from "{{{this.protoServiceImportPath}}}";
+} from '{{{this.protoServiceImportPath}}}';
 {{/each}}
 {{#each infos}}
 
   {{#each this.services}}
 
     {{#each this}}
-import {{curlyLeft}}{{{this.methodName}}}Handler{{curlyRight}} from "./{{#eq ../../this.protoFile.relativePath "."}}{{else}}{{../../this.protoFile.relativePath}}/{{/eq}}{{../../this.protoFile.svcNamespace}}/{{@../key}}/{{{this.methodName}}}";
+import {{curlyLeft}}{{{this.methodName}}}Handler{{curlyRight}} from './{{#eq ../../this.protoFile.relativePath '.'}}{{else}}{{../../this.protoFile.relativePath}}/{{/eq}}{{../../this.protoFile.svcNamespace}}/{{@../key}}/{{{this.methodName}}}';
     {{/each}}
   {{/each}}
 {{/each}}

@@ -1,5 +1,5 @@
 import * as grpc from 'grpc';
-import {{curlyLeft}} GatewayContext, RpcContext {{curlyRight}} from "sasdn";
+import {{curlyLeft}} GatewayContext, RpcContext {{curlyRight}} from 'sasdn';
 import { Config, ConfigConst } from '../../lib/Config';
 {{#if this.useZipkin}}
 import { GrpcImpl } from 'sasdn-zipkin';
@@ -7,12 +7,12 @@ import { GrpcImpl } from 'sasdn-zipkin';
 
 import {
   {{this.clientName}}Client,
-} from "{{{this.protoImportPath}}}";
+} from '{{{this.protoImportPath}}}';
 import {
 {{#each this.allMethodImportModule}}
   {{this}},
 {{/each}}
-} from "{{this.allMethodImportPath}}";
+} from '{{this.allMethodImportPath}}';
 
 export default class {{{this.className}}} {
   public client: {{{this.clientName}}}Client;

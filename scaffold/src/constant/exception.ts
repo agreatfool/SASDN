@@ -1,7 +1,7 @@
-export const ModuleName = 'Demo';      // self name
-export const ExceptionMajor = '2';     // 1 arch 2 service 3 application
-export const ExceptionMinor = '001';   // service or application type
-export const ErrorCode = {
+export const MODULE_NAME = 'Demo';      // self name
+export const EXCEPTION_MAJOR = '2';     // 1 arch 2 service 3 application
+export const EXCEPTION_MINOR = '001';   // service or application type
+export const ERROR_CODE = {
   1: '[%m] Successful',
   2: '[%m] Database error! %s.',
   3: '[%m] Item already exists: %s',

@@ -1,4 +1,4 @@
-import { ErrorCode, ModuleName, ExceptionMajor, ExceptionMinor } from '../constant/exception';
+import { ERROR_CODE, MODULE_NAME, EXCEPTION_MAJOR, EXCEPTION_MINOR } from '../constant/exception';
 
 type ParamsType = string | number | Array<string | number>;
 type ParamsTypes = Array<ParamsType>;
@@ -17,14 +17,14 @@ export class Exception extends Error {
   public static getExtMsg(code: number, params: ParamsType | ParamsTypes = null, moduleName ?: string) {
 
     let message: string;
-    if (ErrorCode.hasOwnProperty(code)) {
-      message = ErrorCode[code];
+    if (ERROR_CODE.hasOwnProperty(code)) {
+      message = ERROR_CODE[code];
     } else {
       message = `[%m]ErrorCode does not exist, Code:${code}.`;
     }
 
     // replace module name
-    message = message.replace('%m', (moduleName) ? moduleName : ModuleName);
+    message = message.replace('%m', (moduleName) ? moduleName : MODULE_NAME);
 
     // replace params
     if (params != null) {
@@ -40,7 +40,7 @@ export class Exception extends Error {
     const formatCode = `000${code}`;
     const realCode = formatCode.substr(formatCode.length - 3);
     let result = JSON.stringify({
-      code: `${ExceptionMajor}${ExceptionMinor}${realCode}`,
+      code: `${EXCEPTION_MAJOR}${EXCEPTION_MINOR}${realCode}`,
       message: message,
     });
 
