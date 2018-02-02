@@ -1,6 +1,5 @@
 import MSOrder from './entrance/MSOrder';
-
-const debug = require('debug')('SASDN:MSDemo');
+import { Logger } from './lib/Logger';
 
 const server = new MSOrder();
 server.init(process.env.NODE_ENV === 'development')
@@ -8,13 +7,13 @@ server.init(process.env.NODE_ENV === 'development')
     server.start();
   })
   .catch((err) => {
-    debug(`MicroService init failed error = ${err}`);
+    Logger.instance.error(`MicroService init failed error = ${err}`);
   });
 
 process.on('uncaughtException', (error) => {
-  debug(`process on uncaughtException error = ${error}`);
+  Logger.instance.error(`process on uncaughtException error = ${error}`);
 });
 
 process.on('unhandledRejection', (error) => {
-  debug(`process on unhandledRejection error = ${error}`);
+  Logger.instance.error(`process on unhandledRejection error = ${error}`);
 });

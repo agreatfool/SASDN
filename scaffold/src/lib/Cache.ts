@@ -16,7 +16,7 @@ export namespace Cache {
   export async function setSingle(entity: BaseOrmEntity, expire?: number): Promise<boolean> {
     expire = expire || DEFAULT_CACHE_EXPIRE;
     if (!entity.hasId()) {
-      Logger.instance.logger.warn(`Cache set failed, ${entity.constructor.name} has not given primary key`);
+      Logger.instance.warn(`Cache set failed, ${entity.constructor.name} has not given primary key`);
       return false;
     }
     const cacheKey = `${entity.constructor.name}:${(entity.constructor as any).getId(entity)}`;
@@ -32,7 +32,7 @@ export namespace Cache {
   export async function getSingle<T extends BaseOrmEntity>(Entity: ObjectType<T>, options: DeepPartial<T>): Promise<T | boolean> {
     const entity = (Entity as any).create(options);
     if (!entity.hasId()) {
-      Logger.instance.logger.warn(`Cache get failed, ${Entity.name} has not given primary key`);
+      Logger.instance.warn(`Cache get failed, ${Entity.name} has not given primary key`);
       return false;
     }
 
@@ -45,7 +45,7 @@ export namespace Cache {
     const result = (await client.memGet(getReq)).getResult();
     if (result) {
       const parse = JSON.parse(result);
-      if(parse) {
+      if (parse) {
         return (Entity as any).create(parse) as T;
       }
     }
@@ -55,7 +55,7 @@ export namespace Cache {
   export async function delSingle<T extends BaseOrmEntity>(Entity: ObjectType<T>, options: DeepPartial<T>): Promise<boolean> {
     const entity = (Entity as any).create(options);
     if (!entity.hasId()) {
-      Logger.instance.logger.warn(`Cache delete failed, ${Entity.name} has not given primary key`);
+      Logger.instance.warn(`Cache delete failed, ${Entity.name} has not given primary key`);
       return false;
     }
 
@@ -73,7 +73,7 @@ export namespace Cache {
     expire = expire || DEFAULT_CACHE_EXPIRE;
     // means to package as one cache
     for (const entity of entities) {
-      setSingle(entity, expire).catch(_=>_);
+      setSingle(entity, expire).catch(_ => _);
     }
 
     return true;
@@ -85,8 +85,8 @@ export namespace Cache {
     const stringify = JSON.stringify(entities);
     const totalLength = key.length + stringify.length;
     // max length 1024
-    if (totalLength > 900) {
-      Logger.instance.logger.warn(`Cache setMultiWithKey failed, exceed maximum length`);
+    if (totalLength > (900 * 1024)) {
+      Logger.instance.warn(`Cache setMultiWithKey failed, exceed maximum length`);
       return false;
     }
 
@@ -106,7 +106,7 @@ export namespace Cache {
     const client = new MSMemcachedClient();
     const memResult = await client.memGet(getReq);
     const foundCache = memResult.getResult();
-    if(!foundCache) {
+    if (!foundCache) {
       return false;
     }
     const result: T[] = [];
@@ -114,7 +114,7 @@ export namespace Cache {
     if (parseList) {
       for (const entity of parseList) {
         const constructor = (Entity as any).create(entity);
-        parseList.push(constructor as T);
+        result.push(constructor as T);
       }
     }
     return result;

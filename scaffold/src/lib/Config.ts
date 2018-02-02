@@ -1,4 +1,4 @@
-const debug = require('debug')('SASDN:Config');
+import { Logger } from './Logger';
 
 export class ConfigConst {
   public static CONNECT_GATEWAY: string = 'GATEWAY';
@@ -73,7 +73,7 @@ export class Config {
     const host = this._configMap[`${connName}_HOST`];
     const port = this._configMap[`${connName}_PORT`] || '';
     const address = host + (port ? `:${port}` : '');
-    debug(`get address = ${address}, and conn = ${connName}`);
+    Logger.instance.error(`get address = ${address}, and conn = ${connName}`);
     return address;
   }
 
