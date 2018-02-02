@@ -57,7 +57,7 @@ export class Exception extends Error {
     try {
       return JSON.parse(err.message);
     } catch (e) {
-      return Exception.parseErrorMsg(new Exception(1001002, err.message));
+      return Exception.parseErrorMsg(new Exception(6, err.message));
     }
   }
 
