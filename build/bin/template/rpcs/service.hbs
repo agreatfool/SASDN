@@ -5,15 +5,15 @@ import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from "{{{@ke
 {{/each}}
 
 export const {{{methodName}}}Handler: RpcMiddleware = async (ctx: RpcContext, next: MiddlewareNext) => {
-    let call: {{{callTypeStr}}} = ctx.call as {{{callTypeStr}}};
+  let call: {{{callTypeStr}}} = ctx.call as {{{callTypeStr}}};
 {{#if hasCallback}}
-    let callback: RpcImplCallback = ctx.callback;
+  let callback: RpcImplCallback = ctx.callback;
 {{/if}}
 {{#if hasRequest}}
-    let request = call.request as {{{requestTypeStr}}};
+  let request = call.request as {{{requestTypeStr}}};
 {{/if}}
 
-    await next();
+  await next();
 
-    return Promise.resolve();
+  return Promise.resolve();
 };

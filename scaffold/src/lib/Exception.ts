@@ -1,19 +1,20 @@
-import { ErrorCode, ExceptionName, ExceptionMajor, ExceptionMinor } from '../constant/exception';
+import { ErrorCode, ModuleName, ExceptionMajor, ExceptionMinor } from '../constant/exception';
 
 type ParamsType = string | number | Array<string | number>;
+type ParamsTypes = Array<ParamsType>;
 
 export class Exception extends Error {
   public name: string;
   public code: number;
   public message: string;
 
-  public constructor(code: number, params: ParamsType | ParamsType[] = null, exceptionName ?: string) {
+  public constructor(code: number, params: ParamsType | ParamsTypes = null, moduleName ?: string) {
     super();
     this.code = code;
-    this.message = this.getExtMsg(code, params, exceptionName);
+    this.message = Exception.getExtMsg(code, params, moduleName);
   }
 
-  public getExtMsg(code: number, params: ParamsType | ParamsType[] = null, exceptionName ?: string) {
+  public static getExtMsg(code: number, params: ParamsType | ParamsTypes = null, moduleName ?: string) {
 
     let message: string;
     if (ErrorCode.hasOwnProperty(code)) {
@@ -23,11 +24,11 @@ export class Exception extends Error {
     }
 
     // replace module name
-    message = message.replace('%m', (exceptionName) ? exceptionName : ExceptionName);
+    message = message.replace('%m', (moduleName) ? moduleName : ModuleName);
 
     // replace params
     if (params != null) {
-      if (typeof params != 'object') {
+      if (typeof params !== 'object') {
         params = [params];
       }
 
@@ -37,13 +38,21 @@ export class Exception extends Error {
     }
 
     const formatCode = `000${code}`;
-    // code 10001 means the exception comes from Error
+    // `${code}`.length === 5 means the exception is old exception or comes from Error (10001)
     // and other code fill 0
-    const realCode = code === 10001 ? 10001 : formatCode.substr(formatCode.length - 3);
-    return JSON.stringify({
+    const realCode = `${code}`.length === 5 ? code : formatCode.substr(formatCode.length - 3);
+    let result = JSON.stringify({
       code: `${ExceptionMajor}${ExceptionMinor}${realCode}`,
-      message: message
+      message: message,
     });
+
+    // add message length
+    let len = message.length;
+    let trueLen = Exception.getRealLen(message);
+    for (let i = 0; i < trueLen - len; i++) {
+      result += '  ';
+    }
+    return result;
   }
 
   public static parseErrorMsg(err: Error) {
@@ -52,5 +61,9 @@ export class Exception extends Error {
     } catch (e) {
       return Exception.parseErrorMsg(new Exception(10001, err.message));
     }
+  }
+
+  public static getRealLen(str) {
+    return str.replace(/[^\x00-\xff]/g, '__').length;
   }
 }

@@ -5,509 +5,509 @@ const config = require(LibPath.join(__dirname, '..', '..', `config.json`));
 
 describe('Router API Request Test', async () => {
 {{#each infos}}
-    test('{{this.apiName}}, params: right', async () => {
-        const res = await request(`http://127.0.0.1:${config.port}`)
-            .post('{{this.uri}}')
-            .query({
-    {{#each this.requestParameters}}
-        {{#equal this.name 'body'}}
-        {{else}}
-            {{#equal this.type 'number'}}
-                {{hump this.name}}: 1,
-            {{/equal}}
-            {{#equal this.type 'boolean'}}
-                {{hump this.name}}: 1,
-            {{/equal}}
-            {{#equal this.type 'string'}}
-                {{hump this.name}}: '1',
-            {{/equal}}
+  test('{{this.apiName}}, params: right', async () => {
+    const res = await request(`http://127.0.0.1:${config.port}`)
+      .post('{{this.uri}}')
+      .query({
+  {{#each this.requestParameters}}
+    {{#equal this.name 'body'}}
+    {{else}}
+      {{#equal this.type 'number'}}
+        {{hump this.name}}: 1,
+      {{/equal}}
+      {{#equal this.type 'boolean'}}
+        {{hump this.name}}: 1,
+      {{/equal}}
+      {{#equal this.type 'string'}}
+        {{hump this.name}}: '1',
+      {{/equal}}
+    {{/equal}}
+  {{/each}}
+      })
+      .send({
+{{#each this.requestParameters}}
+  {{#equal this.name 'body'}}
+    {{#each this.schema}}
+      {{#equal this.type 'number'}}
+        {{hump this.name}}: 1,
+      {{/equal}}
+      {{#equal this.type 'boolean'}}
+        {{hump this.name}}: true,
+      {{/equal}}
+      {{#equal this.type 'string'}}
+        {{hump this.name}}: '1',
+      {{/equal}}
+    {{#equal this.type 'array'}}
+      {{#equal this.items.type 'number'}}
+        {{hump this.name}}List: [1],
+      {{/equal}}
+      {{#equal this.items.type 'boolean'}}
+        {{hump this.name}}List: [true],
+      {{/equal}}
+      {{#equal this.items.type 'string'}}
+        {{hump this.name}}List: ['1'],
+      {{/equal}}
+      {{#equal this.items.type 'array'}}
+        {{hump this.name}}List: [[]],
+      {{/equal}}
+      {{#if this.items.$ref}}
+        {{hump this.name}}List: [{
+      {{#each this.items.schema}}
+        {{#equal this.type 'number'}}
+          {{hump this.name}}: 1,
         {{/equal}}
+        {{#equal this.type 'boolean'}}
+          {{hump this.name}}: true,
+        {{/equal}}
+        {{#equal this.type 'string'}}
+          {{hump this.name}}: '1',
+        {{/equal}}
+        {{#equal this.type 'array'}}
+          {{hump this.name}}List: [],
+        {{/equal}}
+        {{#equal this.type 'object'}}
+          {{#if this.schema}}
+            {{hump this.name}}: {},
+          {{/if}}
+          {{#if this.additionalProperties}}
+            {{hump this.name}}Map: [],
+          {{/if}}
+        {{/equal}}
+      {{/each}}
+        }],
+      {{/if}}
+    {{/equal}}
+    {{#equal this.type 'object'}}
+      {{#if this.schema}}
+        {{hump this.name}}: {
+      {{#each this.schema}}
+        {{#equal this.type 'number'}}
+          {{hump this.name}}: 1,
+        {{/equal}}
+        {{#equal this.type 'boolean'}}
+          {{hump this.name}}: true,
+        {{/equal}}
+        {{#equal this.type 'string'}}
+          {{hump this.name}}: '1',
+        {{/equal}}
+        {{#equal this.type 'array'}}
+          {{hump this.name}}List: [],
+        {{/equal}}
+        {{#equal this.type 'object'}}
+          {{#if this.schema}}
+            {{hump this.name}}: {},
+          {{/if}}
+          {{#if this.additionalProperties}}
+            {{hump this.name}}Map: [['1',
+            {{~#if this.additionalProperties.type~}}
+              {{~#equal this.additionalProperties.type 'number'}} 1{{/equal~}}
+              {{~#equal this.additionalProperties.type 'boolean'}} true{{/equal~}}
+              {{~#equal this.additionalProperties.type 'string'}} '1'{{/equal~}}
+            {{/if~}}
+            {{~#if this.additionalProperties.$ref}} {}{{/if~}}
+            ]],
+          {{/if}}
+        {{/equal}}
+      {{/each}}
+        },
+      {{/if}}
+      {{#if this.additionalProperties}}
+        {{hump this.name}}Map: [['1',
+        {{~#if this.additionalProperties.type~}}
+          {{~#equal this.additionalProperties.type 'number'}} 1{{/equal~}}
+          {{~#equal this.additionalProperties.type 'boolean'}} true{{/equal~}}
+          {{~#equal this.additionalProperties.type 'string'}} '1'{{/equal~}}
+        {{/if~}}
+        {{~#if this.additionalProperties.$ref}} {}{{/if~}}
+        ]],
+      {{/if}}
+    {{/equal}}
     {{/each}}
-            })
-            .send({
-{{#each this.requestParameters}}
+  {{else}}
+  {{/equal}}
+{{/each}}
+      })
+      .set('Content-Type', 'application/json');
+    expect(res.text).toEqual('{}');
+  });
+
+  test('{{this.apiName}}, params: wrong', async () => {
+    const res = await request(`http://127.0.0.1:${config.port}`)
+      .post('{{this.uri}}')
+      .query({
+  {{#each this.requestParameters}}
     {{#equal this.name 'body'}}
-        {{#each this.schema}}
-            {{#equal this.type 'number'}}
-                {{hump this.name}}: 1,
-            {{/equal}}
-            {{#equal this.type 'boolean'}}
-                {{hump this.name}}: true,
-            {{/equal}}
-            {{#equal this.type 'string'}}
-                {{hump this.name}}: '1',
-            {{/equal}}
+    {{else}}
+      {{#equal this.type 'number'}}
+        {{hump this.name}}: -1,
+      {{/equal}}
+      {{#equal this.type 'boolean'}}
+        {{hump this.name}}: -1,
+      {{/equal}}
+      {{#equal this.type 'string'}}
+        {{hump this.name}}: '-1',
+      {{/equal}}
+    {{/equal}}
+  {{/each}}
+      })
+      .send({
+{{#each this.requestParameters}}
+  {{#equal this.name 'body'}}
+    {{#each this.schema}}
+      {{#equal this.type 'number'}}
+        {{hump this.name}}: -1,
+      {{/equal}}
+      {{#equal this.type 'boolean'}}
+        {{hump this.name}}: 'true',
+      {{/equal}}
+      {{#equal this.type 'string'}}
+        {{hump this.name}}: '-1',
+      {{/equal}}
+    {{#equal this.type 'array'}}
+      {{#equal this.items.type 'number'}}
+        {{hump this.name}}List: [-1],
+      {{/equal}}
+      {{#equal this.items.type 'boolean'}}
+        {{hump this.name}}List: ['true'],
+      {{/equal}}
+      {{#equal this.items.type 'string'}}
+        {{hump this.name}}List: ['-1'],
+      {{/equal}}
+      {{#equal this.items.type 'array'}}
+        {{hump this.name}}List: [[]],
+      {{/equal}}
+      {{#if this.items.$ref}}
+        {{hump this.name}}List: [{
+      {{#each this.items.schema}}
+        {{#equal this.type 'number'}}
+          {{hump this.name}}: -1,
+        {{/equal}}
+        {{#equal this.type 'boolean'}}
+          {{hump this.name}}: 'true',
+        {{/equal}}
+        {{#equal this.type 'string'}}
+          {{hump this.name}}: '1',
+        {{/equal}}
         {{#equal this.type 'array'}}
-            {{#equal this.items.type 'number'}}
-                {{hump this.name}}List: [1],
-            {{/equal}}
-            {{#equal this.items.type 'boolean'}}
-                {{hump this.name}}List: [true],
-            {{/equal}}
-            {{#equal this.items.type 'string'}}
-                {{hump this.name}}List: ['1'],
-            {{/equal}}
-            {{#equal this.items.type 'array'}}
-                {{hump this.name}}List: [[]],
-            {{/equal}}
-            {{#if this.items.$ref}}
-                {{hump this.name}}List: [{
-            {{#each this.items.schema}}
-                {{#equal this.type 'number'}}
-                    {{hump this.name}}: 1,
-                {{/equal}}
-                {{#equal this.type 'boolean'}}
-                    {{hump this.name}}: true,
-                {{/equal}}
-                {{#equal this.type 'string'}}
-                    {{hump this.name}}: '1',
-                {{/equal}}
-                {{#equal this.type 'array'}}
-                    {{hump this.name}}List: [],
-                {{/equal}}
-                {{#equal this.type 'object'}}
-                    {{#if this.schema}}
-                        {{hump this.name}}: {},
-                    {{/if}}
-                    {{#if this.additionalProperties}}
-                        {{hump this.name}}Map: [],
-                    {{/if}}
-                {{/equal}}
-            {{/each}}
-                }],
-            {{/if}}
+          {{hump this.name}}List: [],
         {{/equal}}
         {{#equal this.type 'object'}}
-            {{#if this.schema}}
-                {{hump this.name}}: {
-            {{#each this.schema}}
-                {{#equal this.type 'number'}}
-                    {{hump this.name}}: 1,
-                {{/equal}}
-                {{#equal this.type 'boolean'}}
-                    {{hump this.name}}: true,
-                {{/equal}}
-                {{#equal this.type 'string'}}
-                    {{hump this.name}}: '1',
-                {{/equal}}
-                {{#equal this.type 'array'}}
-                    {{hump this.name}}List: [],
-                {{/equal}}
-                {{#equal this.type 'object'}}
-                    {{#if this.schema}}
-                        {{hump this.name}}: {},
-                    {{/if}}
-                    {{#if this.additionalProperties}}
-                        {{hump this.name}}Map: [['1',
-                        {{~#if this.additionalProperties.type~}}
-                            {{~#equal this.additionalProperties.type 'number'}} 1{{/equal~}}
-                            {{~#equal this.additionalProperties.type 'boolean'}} true{{/equal~}}
-                            {{~#equal this.additionalProperties.type 'string'}} '1'{{/equal~}}
-                        {{/if~}}
-                        {{~#if this.additionalProperties.$ref}} {}{{/if~}}
-                        ]],
-                    {{/if}}
-                {{/equal}}
-            {{/each}}
-                },
-            {{/if}}
-            {{#if this.additionalProperties}}
-                {{hump this.name}}Map: [['1',
-                {{~#if this.additionalProperties.type~}}
-                    {{~#equal this.additionalProperties.type 'number'}} 1{{/equal~}}
-                    {{~#equal this.additionalProperties.type 'boolean'}} true{{/equal~}}
-                    {{~#equal this.additionalProperties.type 'string'}} '1'{{/equal~}}
-                {{/if~}}
-                {{~#if this.additionalProperties.$ref}} {}{{/if~}}
-                ]],
-            {{/if}}
+          {{#if this.schema}}
+            {{hump this.name}}: {},
+          {{/if}}
+          {{#if this.additionalProperties}}
+            {{hump this.name}}Map: [],
+          {{/if}}
         {{/equal}}
-        {{/each}}
-    {{else}}
+      {{/each}}
+        }],
+      {{/if}}
     {{/equal}}
-{{/each}}
-            })
-            .set('Content-Type', 'application/json');
-        expect(res.text).toEqual('{}');
-    });
-
-    test('{{this.apiName}}, params: wrong', async () => {
-        const res = await request(`http://127.0.0.1:${config.port}`)
-            .post('{{this.uri}}')
-            .query({
-    {{#each this.requestParameters}}
-        {{#equal this.name 'body'}}
-        {{else}}
-            {{#equal this.type 'number'}}
-                {{hump this.name}}: -1,
-            {{/equal}}
-            {{#equal this.type 'boolean'}}
-                {{hump this.name}}: -1,
-            {{/equal}}
-            {{#equal this.type 'string'}}
-                {{hump this.name}}: '-1',
-            {{/equal}}
+    {{#equal this.type 'object'}}
+      {{#if this.schema}}
+        {{hump this.name}}: {
+      {{#each this.schema}}
+        {{#equal this.type 'number'}}
+          {{hump this.name}}: -1,
         {{/equal}}
+        {{#equal this.type 'boolean'}}
+          {{hump this.name}}: 'true',
+        {{/equal}}
+        {{#equal this.type 'string'}}
+          {{hump this.name}}: '-1',
+        {{/equal}}
+        {{#equal this.type 'array'}}
+          {{hump this.name}}List: [],
+        {{/equal}}
+        {{#equal this.type 'object'}}
+          {{#if this.schema}}
+            {{hump this.name}}: {},
+          {{/if}}
+          {{#if this.additionalProperties}}
+            {{hump this.name}}Map: [['1',
+            {{~#if this.additionalProperties.type~}}
+              {{~#equal this.additionalProperties.type 'number'}} -1{{/equal~}}
+              {{~#equal this.additionalProperties.type 'boolean'}} 'true'{{/equal~}}
+              {{~#equal this.additionalProperties.type 'string'}} '-1'{{/equal~}}
+            {{/if~}}
+            {{~#if this.additionalProperties.$ref}} {}{{/if~}}
+            ]],
+          {{/if}}
+        {{/equal}}
+      {{/each}}
+        },
+      {{/if}}
+      {{#if this.additionalProperties}}
+        {{hump this.name}}Map: [['1',
+        {{~#if this.additionalProperties.type~}}
+          {{~#equal this.additionalProperties.type 'number'}} -1{{/equal~}}
+          {{~#equal this.additionalProperties.type 'boolean'}} 'true'{{/equal~}}
+          {{~#equal this.additionalProperties.type 'string'}} '-1'{{/equal~}}
+        {{/if~}}
+        {{~#if this.additionalProperties.$ref}} {}{{/if~}}
+        ]],
+      {{/if}}
+    {{/equal}}
     {{/each}}
-            })
-            .send({
-{{#each this.requestParameters}}
-    {{#equal this.name 'body'}}
-        {{#each this.schema}}
-            {{#equal this.type 'number'}}
-                {{hump this.name}}: -1,
-            {{/equal}}
-            {{#equal this.type 'boolean'}}
-                {{hump this.name}}: 'true',
-            {{/equal}}
-            {{#equal this.type 'string'}}
-                {{hump this.name}}: '-1',
-            {{/equal}}
-        {{#equal this.type 'array'}}
-            {{#equal this.items.type 'number'}}
-                {{hump this.name}}List: [-1],
-            {{/equal}}
-            {{#equal this.items.type 'boolean'}}
-                {{hump this.name}}List: ['true'],
-            {{/equal}}
-            {{#equal this.items.type 'string'}}
-                {{hump this.name}}List: ['-1'],
-            {{/equal}}
-            {{#equal this.items.type 'array'}}
-                {{hump this.name}}List: [[]],
-            {{/equal}}
-            {{#if this.items.$ref}}
-                {{hump this.name}}List: [{
-            {{#each this.items.schema}}
-                {{#equal this.type 'number'}}
-                    {{hump this.name}}: -1,
-                {{/equal}}
-                {{#equal this.type 'boolean'}}
-                    {{hump this.name}}: 'true',
-                {{/equal}}
-                {{#equal this.type 'string'}}
-                    {{hump this.name}}: '1',
-                {{/equal}}
-                {{#equal this.type 'array'}}
-                    {{hump this.name}}List: [],
-                {{/equal}}
-                {{#equal this.type 'object'}}
-                    {{#if this.schema}}
-                        {{hump this.name}}: {},
-                    {{/if}}
-                    {{#if this.additionalProperties}}
-                        {{hump this.name}}Map: [],
-                    {{/if}}
-                {{/equal}}
-            {{/each}}
-                }],
-            {{/if}}
-        {{/equal}}
-        {{#equal this.type 'object'}}
-            {{#if this.schema}}
-                {{hump this.name}}: {
-            {{#each this.schema}}
-                {{#equal this.type 'number'}}
-                    {{hump this.name}}: -1,
-                {{/equal}}
-                {{#equal this.type 'boolean'}}
-                    {{hump this.name}}: 'true',
-                {{/equal}}
-                {{#equal this.type 'string'}}
-                    {{hump this.name}}: '-1',
-                {{/equal}}
-                {{#equal this.type 'array'}}
-                    {{hump this.name}}List: [],
-                {{/equal}}
-                {{#equal this.type 'object'}}
-                    {{#if this.schema}}
-                        {{hump this.name}}: {},
-                    {{/if}}
-                    {{#if this.additionalProperties}}
-                        {{hump this.name}}Map: [['1',
-                        {{~#if this.additionalProperties.type~}}
-                            {{~#equal this.additionalProperties.type 'number'}} -1{{/equal~}}
-                            {{~#equal this.additionalProperties.type 'boolean'}} 'true'{{/equal~}}
-                            {{~#equal this.additionalProperties.type 'string'}} '-1'{{/equal~}}
-                        {{/if~}}
-                        {{~#if this.additionalProperties.$ref}} {}{{/if~}}
-                        ]],
-                    {{/if}}
-                {{/equal}}
-            {{/each}}
-                },
-            {{/if}}
-            {{#if this.additionalProperties}}
-                {{hump this.name}}Map: [['1',
-                {{~#if this.additionalProperties.type~}}
-                    {{~#equal this.additionalProperties.type 'number'}} -1{{/equal~}}
-                    {{~#equal this.additionalProperties.type 'boolean'}} 'true'{{/equal~}}
-                    {{~#equal this.additionalProperties.type 'string'}} '-1'{{/equal~}}
-                {{/if~}}
-                {{~#if this.additionalProperties.$ref}} {}{{/if~}}
-                ]],
-            {{/if}}
-        {{/equal}}
-        {{/each}}
-    {{else}}
-    {{/equal}}
+  {{else}}
+  {{/equal}}
 {{/each}}
-            })
-            .set('Content-Type', 'application/json');
-        expect(res.text).toEqual('{}');
-    });
+      })
+      .set('Content-Type', 'application/json');
+    expect(res.text).toEqual('{}');
+  });
 
-    test('{{this.apiName}}, params: null', async () => {
-        const res = await request(`http://127.0.0.1:${config.port}`)
-            .post('{{this.uri}}')
-            .query({
-        {{#each this.requestParameters}}
-            {{#equal this.name 'body'}}
-            {{else}}
-                {{#equal this.type 'number'}}
-                    {{hump this.name}}: null,
-                {{/equal}}
-                {{#equal this.type 'boolean'}}
-                    {{hump this.name}}: null,
-                {{/equal}}
-                {{#equal this.type 'string'}}
-                    {{hump this.name}}: null,
-                {{/equal}}
-            {{/equal}}
-        {{/each}}
-            })
-            .send({
-{{#each this.requestParameters}}
-    {{#equal this.name 'body'}}
-        {{#each this.schema}}
-            {{#equal this.type 'number'}}
-                {{hump this.name}}: null,
-            {{/equal}}
-            {{#equal this.type 'boolean'}}
-                {{hump this.name}}: null,
-            {{/equal}}
-            {{#equal this.type 'string'}}
-                {{hump this.name}}: null,
-            {{/equal}}
-        {{#equal this.type 'array'}}
-            {{#equal this.items.type 'number'}}
-                {{hump this.name}}List: null,
-            {{/equal}}
-            {{#equal this.items.type 'boolean'}}
-                {{hump this.name}}List: null,
-            {{/equal}}
-            {{#equal this.items.type 'string'}}
-                {{hump this.name}}List: null,
-            {{/equal}}
-            {{#equal this.items.type 'array'}}
-                {{hump this.name}}List: null,
-            {{/equal}}
-            {{#if this.items.$ref}}
-                {{hump this.name}}List: [{
-            {{#each this.items.schema}}
-                {{#equal this.type 'number'}}
-                    {{hump this.name}}: null,
-                {{/equal}}
-                {{#equal this.type 'boolean'}}
-                    {{hump this.name}}: null,
-                {{/equal}}
-                {{#equal this.type 'string'}}
-                    {{hump this.name}}: null,
-                {{/equal}}
-                {{#equal this.type 'array'}}
-                    {{hump this.name}}List: null,
-                {{/equal}}
-                {{#equal this.type 'object'}}
-                    {{#if this.schema}}
-                        {{hump this.name}}: null,
-                    {{/if}}
-                    {{#if this.additionalProperties}}
-                        {{hump this.name}}Map: null,
-                    {{/if}}
-                {{/equal}}
-            {{/each}}
-                }],
-            {{/if}}
-        {{/equal}}
-        {{#equal this.type 'object'}}
-            {{#if this.schema}}
-                {{hump this.name}}: {
-            {{#each this.schema}}
-                {{#equal this.type 'number'}}
-                    {{hump this.name}}: null,
-                {{/equal}}
-                {{#equal this.type 'boolean'}}
-                    {{hump this.name}}: 'null',
-                {{/equal}}
-                {{#equal this.type 'string'}}
-                    {{hump this.name}}: null,
-                {{/equal}}
-                {{#equal this.type 'array'}}
-                    {{hump this.name}}List: null,
-                {{/equal}}
-                {{#equal this.type 'object'}}
-                    {{#if this.schema}}
-                        {{hump this.name}}: null,
-                    {{/if}}
-                    {{#if this.additionalProperties}}
-                        {{hump this.name}}Map: [['1',
-                        {{~#if this.additionalProperties.type~}}
-                            {{~#equal this.additionalProperties.type 'number'}} null{{/equal~}}
-                            {{~#equal this.additionalProperties.type 'boolean'}} null{{/equal~}}
-                            {{~#equal this.additionalProperties.type 'string'}} null{{/equal~}}
-                        {{/if~}}
-                        {{~#if this.additionalProperties.$ref}} null{{/if~}}
-                        ]],
-                    {{/if}}
-                {{/equal}}
-            {{/each}}
-                },
-            {{/if}}
-            {{#if this.additionalProperties}}
-                {{hump this.name}}Map: [['1',
-                {{~#if this.additionalProperties.type~}}
-                    {{~#equal this.additionalProperties.type 'number'}} null{{/equal~}}
-                    {{~#equal this.additionalProperties.type 'boolean'}} null{{/equal~}}
-                    {{~#equal this.additionalProperties.type 'string'}} null{{/equal~}}
-                {{/if~}}
-                {{~#if this.additionalProperties.$ref}} null{{/if~}}
-                ]],
-            {{/if}}
-        {{/equal}}
-        {{/each}}
-    {{else}}
-    {{/equal}}
-{{/each}}
-            })
-            .set('Content-Type', 'application/json');
-        expect(res.text).toEqual('{}');
-    });
-
-    test('{{this.apiName}}, params: undefined', async () => {
-        const res = await request(`http://127.0.0.1:${config.port}`)
-            .post('{{this.uri}}')
-            .query({
+  test('{{this.apiName}}, params: null', async () => {
+    const res = await request(`http://127.0.0.1:${config.port}`)
+      .post('{{this.uri}}')
+      .query({
     {{#each this.requestParameters}}
-        {{#equal this.name 'body'}}
-        {{else}}
-            {{#equal this.type 'number'}}
-                {{hump this.name}}: undefined,
-            {{/equal}}
-            {{#equal this.type 'boolean'}}
-                {{hump this.name}}: undefined,
-            {{/equal}}
-            {{#equal this.type 'string'}}
-                {{hump this.name}}: undefined,
-            {{/equal}}
+      {{#equal this.name 'body'}}
+      {{else}}
+        {{#equal this.type 'number'}}
+          {{hump this.name}}: null,
         {{/equal}}
+        {{#equal this.type 'boolean'}}
+          {{hump this.name}}: null,
+        {{/equal}}
+        {{#equal this.type 'string'}}
+          {{hump this.name}}: null,
+        {{/equal}}
+      {{/equal}}
     {{/each}}
-            })
-            .send({
+      })
+      .send({
 {{#each this.requestParameters}}
-    {{#equal this.name 'body'}}
-        {{#each this.schema}}
-            {{#equal this.type 'number'}}
-                {{hump this.name}}: undefined,
-            {{/equal}}
-            {{#equal this.type 'boolean'}}
-                {{hump this.name}}: undefined,
-            {{/equal}}
-            {{#equal this.type 'string'}}
-                {{hump this.name}}: undefined,
-            {{/equal}}
+  {{#equal this.name 'body'}}
+    {{#each this.schema}}
+      {{#equal this.type 'number'}}
+        {{hump this.name}}: null,
+      {{/equal}}
+      {{#equal this.type 'boolean'}}
+        {{hump this.name}}: null,
+      {{/equal}}
+      {{#equal this.type 'string'}}
+        {{hump this.name}}: null,
+      {{/equal}}
+    {{#equal this.type 'array'}}
+      {{#equal this.items.type 'number'}}
+        {{hump this.name}}List: null,
+      {{/equal}}
+      {{#equal this.items.type 'boolean'}}
+        {{hump this.name}}List: null,
+      {{/equal}}
+      {{#equal this.items.type 'string'}}
+        {{hump this.name}}List: null,
+      {{/equal}}
+      {{#equal this.items.type 'array'}}
+        {{hump this.name}}List: null,
+      {{/equal}}
+      {{#if this.items.$ref}}
+        {{hump this.name}}List: [{
+      {{#each this.items.schema}}
+        {{#equal this.type 'number'}}
+          {{hump this.name}}: null,
+        {{/equal}}
+        {{#equal this.type 'boolean'}}
+          {{hump this.name}}: null,
+        {{/equal}}
+        {{#equal this.type 'string'}}
+          {{hump this.name}}: null,
+        {{/equal}}
         {{#equal this.type 'array'}}
-            {{#equal this.items.type 'number'}}
-                {{hump this.name}}List: undefined,
-            {{/equal}}
-            {{#equal this.items.type 'boolean'}}
-                {{hump this.name}}List: undefined,
-            {{/equal}}
-            {{#equal this.items.type 'string'}}
-                {{hump this.name}}List: undefined,
-            {{/equal}}
-            {{#equal this.items.type 'array'}}
-                {{hump this.name}}List: undefined,
-            {{/equal}}
-            {{#if this.items.$ref}}
-                {{hump this.name}}List: [{
-            {{#each this.items.schema}}
-                {{#equal this.type 'number'}}
-                    {{hump this.name}}: undefined,
-                {{/equal}}
-                {{#equal this.type 'boolean'}}
-                    {{hump this.name}}: undefined,
-                {{/equal}}
-                {{#equal this.type 'string'}}
-                    {{hump this.name}}: undefined,
-                {{/equal}}
-                {{#equal this.type 'array'}}
-                    {{hump this.name}}List: undefined,
-                {{/equal}}
-                {{#equal this.type 'object'}}
-                    {{#if this.schema}}
-                        {{hump this.name}}: undefined,
-                    {{/if}}
-                    {{#if this.additionalProperties}}
-                        {{hump this.name}}Map: undefined,
-                    {{/if}}
-                {{/equal}}
-            {{/each}}
-                }],
-            {{/if}}
+          {{hump this.name}}List: null,
         {{/equal}}
         {{#equal this.type 'object'}}
-            {{#if this.schema}}
-                {{hump this.name}}: {
-            {{#each this.schema}}
-                {{#equal this.type 'number'}}
-                    {{hump this.name}}: undefined,
-                {{/equal}}
-                {{#equal this.type 'boolean'}}
-                    {{hump this.name}}: undefined,
-                {{/equal}}
-                {{#equal this.type 'string'}}
-                    {{hump this.name}}: undefined,
-                {{/equal}}
-                {{#equal this.type 'array'}}
-                    {{hump this.name}}List: undefined,
-                {{/equal}}
-                {{#equal this.type 'object'}}
-                    {{#if this.schema}}
-                        {{hump this.name}}: undefined,
-                    {{/if}}
-                    {{#if this.additionalProperties}}
-                        {{hump this.name}}Map: [['1',
-                        {{~#if this.additionalProperties.type~}}
-                            {{~#equal this.additionalProperties.type 'number'}} undefined{{/equal~}}
-                            {{~#equal this.additionalProperties.type 'boolean'}} undefined{{/equal~}}
-                            {{~#equal this.additionalProperties.type 'string'}} undefined{{/equal~}}
-                        {{/if~}}
-                        {{~#if this.additionalProperties.$ref}} undefined{{/if~}}
-                        ]],
-                    {{/if}}
-                {{/equal}}
-            {{/each}}
-                },
-            {{/if}}
-            {{#if this.additionalProperties}}
-                {{hump this.name}}Map: [['1',
-                {{~#if this.additionalProperties.type~}}
-                    {{~#equal this.additionalProperties.type 'number'}} undefined{{/equal~}}
-                    {{~#equal this.additionalProperties.type 'boolean'}} undefined{{/equal~}}
-                    {{~#equal this.additionalProperties.type 'string'}} undefined{{/equal~}}
-                {{/if~}}
-                {{~#if this.additionalProperties.$ref}} undefined{{/if~}}
-                ]],
-            {{/if}}
+          {{#if this.schema}}
+            {{hump this.name}}: null,
+          {{/if}}
+          {{#if this.additionalProperties}}
+            {{hump this.name}}Map: null,
+          {{/if}}
         {{/equal}}
-        {{/each}}
-    {{else}}
+      {{/each}}
+        }],
+      {{/if}}
     {{/equal}}
+    {{#equal this.type 'object'}}
+      {{#if this.schema}}
+        {{hump this.name}}: {
+      {{#each this.schema}}
+        {{#equal this.type 'number'}}
+          {{hump this.name}}: null,
+        {{/equal}}
+        {{#equal this.type 'boolean'}}
+          {{hump this.name}}: 'null',
+        {{/equal}}
+        {{#equal this.type 'string'}}
+          {{hump this.name}}: null,
+        {{/equal}}
+        {{#equal this.type 'array'}}
+          {{hump this.name}}List: null,
+        {{/equal}}
+        {{#equal this.type 'object'}}
+          {{#if this.schema}}
+            {{hump this.name}}: null,
+          {{/if}}
+          {{#if this.additionalProperties}}
+            {{hump this.name}}Map: [['1',
+            {{~#if this.additionalProperties.type~}}
+              {{~#equal this.additionalProperties.type 'number'}} null{{/equal~}}
+              {{~#equal this.additionalProperties.type 'boolean'}} null{{/equal~}}
+              {{~#equal this.additionalProperties.type 'string'}} null{{/equal~}}
+            {{/if~}}
+            {{~#if this.additionalProperties.$ref}} null{{/if~}}
+            ]],
+          {{/if}}
+        {{/equal}}
+      {{/each}}
+        },
+      {{/if}}
+      {{#if this.additionalProperties}}
+        {{hump this.name}}Map: [['1',
+        {{~#if this.additionalProperties.type~}}
+          {{~#equal this.additionalProperties.type 'number'}} null{{/equal~}}
+          {{~#equal this.additionalProperties.type 'boolean'}} null{{/equal~}}
+          {{~#equal this.additionalProperties.type 'string'}} null{{/equal~}}
+        {{/if~}}
+        {{~#if this.additionalProperties.$ref}} null{{/if~}}
+        ]],
+      {{/if}}
+    {{/equal}}
+    {{/each}}
+  {{else}}
+  {{/equal}}
 {{/each}}
-            })
-            .set('Content-Type', 'application/json');
-        expect(res.text).toEqual('{}');
-    });
+      })
+      .set('Content-Type', 'application/json');
+    expect(res.text).toEqual('{}');
+  });
+
+  test('{{this.apiName}}, params: undefined', async () => {
+    const res = await request(`http://127.0.0.1:${config.port}`)
+      .post('{{this.uri}}')
+      .query({
+  {{#each this.requestParameters}}
+    {{#equal this.name 'body'}}
+    {{else}}
+      {{#equal this.type 'number'}}
+        {{hump this.name}}: undefined,
+      {{/equal}}
+      {{#equal this.type 'boolean'}}
+        {{hump this.name}}: undefined,
+      {{/equal}}
+      {{#equal this.type 'string'}}
+        {{hump this.name}}: undefined,
+      {{/equal}}
+    {{/equal}}
+  {{/each}}
+      })
+      .send({
+{{#each this.requestParameters}}
+  {{#equal this.name 'body'}}
+    {{#each this.schema}}
+      {{#equal this.type 'number'}}
+        {{hump this.name}}: undefined,
+      {{/equal}}
+      {{#equal this.type 'boolean'}}
+        {{hump this.name}}: undefined,
+      {{/equal}}
+      {{#equal this.type 'string'}}
+        {{hump this.name}}: undefined,
+      {{/equal}}
+    {{#equal this.type 'array'}}
+      {{#equal this.items.type 'number'}}
+        {{hump this.name}}List: undefined,
+      {{/equal}}
+      {{#equal this.items.type 'boolean'}}
+        {{hump this.name}}List: undefined,
+      {{/equal}}
+      {{#equal this.items.type 'string'}}
+        {{hump this.name}}List: undefined,
+      {{/equal}}
+      {{#equal this.items.type 'array'}}
+        {{hump this.name}}List: undefined,
+      {{/equal}}
+      {{#if this.items.$ref}}
+        {{hump this.name}}List: [{
+      {{#each this.items.schema}}
+        {{#equal this.type 'number'}}
+          {{hump this.name}}: undefined,
+        {{/equal}}
+        {{#equal this.type 'boolean'}}
+          {{hump this.name}}: undefined,
+        {{/equal}}
+        {{#equal this.type 'string'}}
+          {{hump this.name}}: undefined,
+        {{/equal}}
+        {{#equal this.type 'array'}}
+          {{hump this.name}}List: undefined,
+        {{/equal}}
+        {{#equal this.type 'object'}}
+          {{#if this.schema}}
+            {{hump this.name}}: undefined,
+          {{/if}}
+          {{#if this.additionalProperties}}
+            {{hump this.name}}Map: undefined,
+          {{/if}}
+        {{/equal}}
+      {{/each}}
+        }],
+      {{/if}}
+    {{/equal}}
+    {{#equal this.type 'object'}}
+      {{#if this.schema}}
+        {{hump this.name}}: {
+      {{#each this.schema}}
+        {{#equal this.type 'number'}}
+          {{hump this.name}}: undefined,
+        {{/equal}}
+        {{#equal this.type 'boolean'}}
+          {{hump this.name}}: undefined,
+        {{/equal}}
+        {{#equal this.type 'string'}}
+          {{hump this.name}}: undefined,
+        {{/equal}}
+        {{#equal this.type 'array'}}
+          {{hump this.name}}List: undefined,
+        {{/equal}}
+        {{#equal this.type 'object'}}
+          {{#if this.schema}}
+            {{hump this.name}}: undefined,
+          {{/if}}
+          {{#if this.additionalProperties}}
+            {{hump this.name}}Map: [['1',
+            {{~#if this.additionalProperties.type~}}
+              {{~#equal this.additionalProperties.type 'number'}} undefined{{/equal~}}
+              {{~#equal this.additionalProperties.type 'boolean'}} undefined{{/equal~}}
+              {{~#equal this.additionalProperties.type 'string'}} undefined{{/equal~}}
+            {{/if~}}
+            {{~#if this.additionalProperties.$ref}} undefined{{/if~}}
+            ]],
+          {{/if}}
+        {{/equal}}
+      {{/each}}
+        },
+      {{/if}}
+      {{#if this.additionalProperties}}
+        {{hump this.name}}Map: [['1',
+        {{~#if this.additionalProperties.type~}}
+          {{~#equal this.additionalProperties.type 'number'}} undefined{{/equal~}}
+          {{~#equal this.additionalProperties.type 'boolean'}} undefined{{/equal~}}
+          {{~#equal this.additionalProperties.type 'string'}} undefined{{/equal~}}
+        {{/if~}}
+        {{~#if this.additionalProperties.$ref}} undefined{{/if~}}
+        ]],
+      {{/if}}
+    {{/equal}}
+    {{/each}}
+  {{else}}
+  {{/equal}}
+{{/each}}
+      })
+      .set('Content-Type', 'application/json');
+    expect(res.text).toEqual('{}');
+  });
 {{/each}}
 
 });
