@@ -7,8 +7,7 @@ export const ErrorCode = {
   3: '[%m] Item already exists: %s',
   4: '[%m] Item not found',
   5: '[%m] Function cannot be used when table is sharded. %s',
+  6: '[%m] Unknown Error, %s',
 
   101: '[%m] Some Error',
-
-  10001: '[%m] Error: %s.',
 };

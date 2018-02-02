@@ -4,34 +4,34 @@ import {RpcApplication, WrappedHandler} from "sasdn";
 
 {{#each infos}}
 import {
-    {{#each this.services}}
-    {{@key}}Service,
-    {{/each}}
+  {{#each this.services}}
+  {{@key}}Service,
+  {{/each}}
 } from "{{{this.protoServiceImportPath}}}";
 {{/each}}
 {{#each infos}}
 
-    {{#each this.services}}
+  {{#each this.services}}
 
-        {{#each this}}
+    {{#each this}}
 import {{curlyLeft}}{{{this.methodName}}}Handler{{curlyRight}} from "./{{#eq ../../this.protoFile.relativePath "."}}{{else}}{{../../this.protoFile.relativePath}}/{{/eq}}{{../../this.protoFile.svcNamespace}}/{{@../key}}/{{{this.methodName}}}";
-        {{/each}}
     {{/each}}
+  {{/each}}
 {{/each}}
 
 export const registerServices = function (app: RpcApplication) {
 {{#each infos}}
-    {{#each this.services}}
+  {{#each this.services}}
 
-    app.server.addService({{@key}}Service, {
-        {{#each this}}
-        {{{this.methodName}}}: async (call: IServerCall{{#if this.hasCallback}}, callback: RpcImplCallback{{/if}}) => {
-            let wrappedHandler: WrappedHandler = app.wrapGrpcHandler({{{this.methodName}}}Handler);
-            wrappedHandler(call{{#if this.hasCallback}}, callback{{/if}}).then(_ => _);
-        },
-        {{/each}}
-    });
+  app.server.addService({{@key}}Service, {
+    {{#each this}}
+    {{{this.methodName}}}: async (call: IServerCall{{#if this.hasCallback}}, callback: RpcImplCallback{{/if}}) => {
+      let wrappedHandler: WrappedHandler = app.wrapGrpcHandler({{{this.methodName}}}Handler);
+      wrappedHandler(call{{#if this.hasCallback}}, callback{{/if}}).then(_ => _);
+    },
     {{/each}}
+  });
+  {{/each}}
 {{/each}}
 
 };

@@ -1,6 +1,6 @@
 import { SendRequest, SendResponse } from '../proto/kafkaqueue/kafkaqueue_pb';
 import MSKafkaqueueClient from '../clients/kafkaqueue/MSKafkaqueueClient';
-import { Logger as SasdnLogger, LogOptions, KafkaOptions } from 'sasdn-log';
+import { Logger as SasdnLogger, LogOptions, KafkaOptions, LEVEL } from 'sasdn-log';
 
 export enum TOPIC {
   SYSTEM = 'SystemTopic',
@@ -61,7 +61,31 @@ export class Logger {
     return Promise.resolve();
   }
 
-  public get logger(): SasdnLogger {
-    return this._logger;
+  private _log(message: string, level: LEVEL = LEVEL.INFO, options?: LogOptions): void {
+    this._logger.log(message, level, options);
+  }
+
+  public fatal(message: string, options?: LogOptions): void {
+    this._log(message, LEVEL.FATAL, options);
+  }
+
+  public error(message: string, options?: LogOptions): void {
+    this._log(message, LEVEL.ERROR, options);
+  }
+
+  public warn(message: string, options?: LogOptions): void {
+    this._log(message, LEVEL.WARN, options);
+  }
+
+  public info(message: string, options?: LogOptions): void {
+    this._log(message, LEVEL.INFO, options);
+  }
+
+  public debug(message: string, options?: LogOptions): void {
+    this._log(message, LEVEL.DEBUG, options);
+  }
+
+  public verbose(message: string, options?: LogOptions): void {
+    this._log(message, LEVEL.TRACE, options);
   }
 }
