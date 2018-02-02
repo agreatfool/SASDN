@@ -28,12 +28,12 @@ export default class MSOrder {
     await Logger.instance.initalize({
       kafkaTopic: TOPIC.BUSINESS,
       loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
-      loggerLevel: LEVEL.INFO
+      loggerLevel: LEVEL.INFO,
     });
 
     GrpcImpl.init(Config.instance.getAddress(ConfigConst.CONNECT_ZIPKIN), {
       serviceName: Config.instance.getConfig(ConfigConst.CONNECT_ORDER),
-      port: Config.instance.getPort(ConfigConst.CONNECT_ORDER)
+      port: Config.instance.getPort(ConfigConst.CONNECT_ORDER),
     });
 
     await DatabaseFactory.instance.initialize(DatabaseOption.getOptions());

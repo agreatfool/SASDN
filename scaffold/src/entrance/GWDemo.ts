@@ -39,7 +39,7 @@ export default class GWDemo {
 
     KoaImpl.init(Config.instance.getAddress(ConfigConst.CONNECT_ZIPKIN), {
       serviceName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
-      port: Config.instance.getPort(ConfigConst.CONNECT_GATEWAY)
+      port: Config.instance.getPort(ConfigConst.CONNECT_GATEWAY),
     });
 
     const ZipkinImpl = new KoaImpl();
@@ -50,7 +50,7 @@ export default class GWDemo {
     app.use(async (ctx, next) => {
       ZipkinImpl.setCustomizedRecords(ZIPKIN_EVENT.SERVER_SEND, {
         httpRequest: JSON.stringify(ctx.request.body),
-        httpResponse: JSON.stringify(ctx.body)
+        httpResponse: JSON.stringify(ctx.body),
       });
       await next();
     });

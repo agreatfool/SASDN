@@ -11,7 +11,7 @@ export interface FindOptions<T> {
   orWhereIn?: { [P in keyof T]?: any[]; };
   orWhereLike?: { [P in keyof T]?: string; };
   order?: { [P in keyof T]?: 'ASC' | 'DESC' | 1 | -1; };
-  offset?: number;
+  start?: number;
   limit?: number;
 }
 
@@ -22,9 +22,9 @@ export class BaseModel<E extends BaseOrmEntity> {
   // _Entity 是 SASDN-database 的 Entity 类
   protected _EntityClass: any;
   protected _entityName: string;
-  protected _shardKey: string;
+  protected _shardKey: string | number;
 
-  protected constructor(entityName: string, ctx?: object, shardKey?: string) {
+  protected constructor(entityName: string, ctx?: object, shardKey?: string | number) {
     this._shardKey = shardKey;
     this._entityName = entityName;
     this._EntityClass = DatabaseFactory.instance.getEntity(entityName, shardKey);
@@ -67,7 +67,7 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @param {string[]} shardKeyList
    * @returns {Promise<void>}
    */
-  public async insertMulti(paramsList: DeepPartial<E>[], shardKeyList?: string[]): Promise<void> {
+  public async insertMulti(paramsList: DeepPartial<E>[], shardKeyList?: (string | number)[]): Promise<void> {
     // 不分表的情况
     if (!shardKeyList || shardKeyList.length === 0) {
       await this._insertMulti(this._EntityClass, paramsList);
@@ -281,7 +281,7 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   private _genFindTempQuery(Entity: any, params: FindOptions<E> | DeepPartial<E>): any {
-    let tempQuery: any = Entity.createQueryBuilder('item');
+    let tempQuery: any = this._EntityClass.createQueryBuilder('item');
     if ((params as FindOptions<E>).where) {
       const whereOptions = Object.keys((params as FindOptions<E>).where);
       for (const w of whereOptions) {
@@ -324,8 +324,8 @@ export class BaseModel<E extends BaseOrmEntity> {
       orderKeys.map(k => options[`item.${k}`] = (params as FindOptions<E>).order[k]);
       tempQuery = tempQuery.orderBy(options);
     }
-    if ((params as FindOptions<E>).offset) {
-      tempQuery = tempQuery.offset((params as FindOptions<E>).offset);
+    if ((params as FindOptions<E>).start) {
+      tempQuery = tempQuery.offset((params as FindOptions<E>).start);
     }
     if ((params as FindOptions<E>).limit) {
       tempQuery = tempQuery.limit((params as FindOptions<E>).limit);
@@ -380,7 +380,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         const result = await Entity.find();
         return result;
       }
-      if (!((params as FindOptions<E>).offset || (params as FindOptions<E>).limit || (params as FindOptions<E>).whereIn
+      if (!((params as FindOptions<E>).start || (params as FindOptions<E>).limit || (params as FindOptions<E>).whereIn
           || (params as FindOptions<E>).whereLike || (params as FindOptions<E>).orWhere || (params as FindOptions<E>).orWhereIn
           || (params as FindOptions<E>).orWhereLike)) {
         const result = await Entity.find(params);
@@ -418,7 +418,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         const result = await Entity.findAndCount();
         return result;
       }
-      if (!((params as FindOptions<E>).offset || (params as FindOptions<E>).limit || (params as FindOptions<E>).whereIn
+      if (!((params as FindOptions<E>).start || (params as FindOptions<E>).limit || (params as FindOptions<E>).whereIn
           || (params as FindOptions<E>).whereLike || (params as FindOptions<E>).orWhere || (params as FindOptions<E>).orWhereIn
           || (params as FindOptions<E>).orWhereLike)) {
         const result = await Entity.findAndCount(params);
@@ -457,7 +457,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         possibleOptions.where instanceof Object ||
         typeof possibleOptions.where === 'string' ||
         possibleOptions.order instanceof Object ||
-        typeof (possibleOptions as FindOptions<any>).offset === 'number' ||
+        typeof (possibleOptions as FindOptions<any>).start === 'number' ||
         typeof (possibleOptions as FindOptions<any>).limit === 'number'
       );
   }
