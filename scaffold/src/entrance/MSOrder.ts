@@ -8,8 +8,6 @@ import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
 import { DatabaseOption } from '../model/DatabaseOptions';
 
-const debug = require('debug')('SASDN:MSDemo');
-
 export default class MSOrder {
   private _initialized: boolean;
   public app: RpcApplication;
@@ -59,6 +57,6 @@ export default class MSOrder {
     const host = '0.0.0.0';
     const port = Config.instance.getPort(ConfigConst.CONNECT_ORDER);
     this.app.bind(`${host}:${port}`).start();
-    debug(`MSDemo start, Address: ${host}:${port}!`);
+    Logger.instance.info(`MSDemo start, Address: ${host}:${port}!`);
   }
 }

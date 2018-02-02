@@ -9,8 +9,6 @@ import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
 import { DatabaseOption } from '../model/DatabaseOptions';
 
-const debug = require('debug')('SASDN:GWDemo');
-
 export default class GWDemo {
   private _initialized: boolean;
   public app: Koa;
@@ -71,7 +69,7 @@ export default class GWDemo {
     const host: string = '0.0.0.0';
     const port: number = Config.instance.getPort(ConfigConst.CONNECT_GATEWAY);
     this.app.listen(port, host, () => {
-      debug(`API Gateway Start, Address: ${host}:${port}!`);
+      Logger.instance.info(`API Gateway Start, Address: ${host}:${port}!`);
     });
   }
 }

@@ -1,10 +1,10 @@
-const debug = require('debug')('SASDN:Config');
+import { Logger } from './Logger';
 
 export class ConfigConst {
   public static CONNECT_GATEWAY: string = 'GATEWAY';
   public static CONNECT_ORDER: string = 'MS_ORDER';
   public static CONNECT_MEMCACHED: string = 'MS_MEMCACHED';
-  public static CONNECT_KAFKAQUEUE: string = 'KAFKA';
+  public static CONNECT_KAFKAQUEUE: string = 'MS_KAFKA';
   public static CONNECT_ZIPKIN: string = 'ZIPKIN';
   public static CONNECT_DEMO_MYSQL: string = 'DEMO_MYSQL';
 
@@ -73,7 +73,7 @@ export class Config {
     const host = this._configMap[`${connName}_HOST`];
     const port = this._configMap[`${connName}_PORT`] || '';
     const address = host + (port ? `:${port}` : '');
-    debug(`get address = ${address}, and conn = ${connName}`);
+    Logger.instance.error(`get address = ${address}, and conn = ${connName}`);
     return address;
   }
 
