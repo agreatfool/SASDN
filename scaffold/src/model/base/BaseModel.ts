@@ -281,7 +281,7 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   private _genFindTempQuery(Entity: any, params: FindOptions<E> | DeepPartial<E>): any {
-    let tempQuery: any = this._EntityClass.createQueryBuilder('item');
+    let tempQuery: any = Entity.createQueryBuilder('item');
     if ((params as FindOptions<E>).where) {
       const whereOptions = Object.keys((params as FindOptions<E>).where);
       for (const w of whereOptions) {
