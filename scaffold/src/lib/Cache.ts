@@ -119,4 +119,12 @@ export namespace Cache {
     }
     return result;
   }
+
+  export async function delMultiWithKey(key: string): Promise<boolean> {
+    const delReq = new DelRequest();
+    delReq.setKey(key);
+
+    const client = new MSMemcachedClient();
+    return (await client.memDel(delReq)).getResult();
+  }
 }
