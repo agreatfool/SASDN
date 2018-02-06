@@ -11,6 +11,10 @@ gulp.task('tpl-copy', function () {
   return gulp.src('src/bin/template/**/*').pipe(copy('build', {prefix: 1}));
 });
 
+gulp.task('parse-copy', function () {
+  return gulp.src('src/lib/protobufjs/*').pipe(copy('build', {prefix: 1}));
+});
+
 gulp.task('typescript', function () {
   let tsResult = gulp.src('src/**/*.ts').pipe(tsProject());
 
@@ -23,4 +27,5 @@ gulp.task('typescript', function () {
 gulp.task('watch', ['typescript', 'tpl-copy'], function () {
   gulp.watch('src/**/*.ts', ['typescript']);
   gulp.watch('src/bin/template/**/*', ['tpl-copy']);
+  gulp.watch('src/lib/protobufjs/*', ['parse-copy']);
 });

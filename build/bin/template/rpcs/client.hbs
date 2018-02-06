@@ -34,7 +34,7 @@ export default class {{{this.className}}} {
     );
 {{else}}
     this.client = new {{{this.clientName}}}Client(
-      ConfigHelper.instance.getAddress(ConfigConst.CONNECT_{{this.ucProtoName}}),
+      Config.instance.getAddress(ConfigConst.CONNECT_{{this.ucProtoName}}),
       grpc.credentials.createInsecure()
     );
 {{/if}}
