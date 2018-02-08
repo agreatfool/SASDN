@@ -43,6 +43,7 @@
     "mkdirp": "0.5.1",
     "mz": "2.7.0",
     "prompt": "1.0.0",
+    "protobufjs": "^6.8.4",
     "recursive-readdir": "2.2.1",
     "shelljs": "0.7.8",
     "swagger-schema-official": "2.0.0-d79c205",
@@ -60,7 +61,6 @@
     "@types/node": "8.0.31",
     "@types/shelljs": "0.7.4",
     "@types/swagger-parser": "4.0.2",
-    "@types/swagger-schema-official": "2.0.6",
-    "protobufjs": "^6.8.4"
+    "@types/swagger-schema-official": "2.0.6"
   }
 }
