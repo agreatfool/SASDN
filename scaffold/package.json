@@ -32,7 +32,8 @@
     "mockjs": "1.0.1-beta3",
     "sasdn-zipkin": "^1.0.6",
     "sasdn-log": "^1.0.1",
-    "sasdn-database": "^1.0.5"
+    "sasdn-database": "^1.0.5",
+    "protobufjs": "5.0.2"
   },
   "devDependencies": {
     "@types/google-protobuf": "3.2.5",
