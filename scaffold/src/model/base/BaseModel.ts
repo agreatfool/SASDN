@@ -451,14 +451,15 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   protected _isFindOptions(obj: any): obj is FindOptions<any> {
-    const possibleOptions: FindOptions<any> = obj;
-    return possibleOptions &&
-      (
-        possibleOptions.where instanceof Object ||
-        typeof possibleOptions.where === 'string' ||
-        possibleOptions.order instanceof Object ||
-        typeof (possibleOptions as FindOptions<any>).start === 'number' ||
-        typeof (possibleOptions as FindOptions<any>).limit === 'number'
-      );
+    return obj.where instanceof Object ||
+      typeof obj.where === 'string' ||
+      obj.order instanceof Object ||
+      typeof obj.start === 'number' ||
+      typeof obj.limit === 'number' ||
+      obj.whereIn instanceof Object ||
+      obj.whereLike instanceof Object ||
+      obj.orWhere instanceof Object ||
+      obj.orWhereIn instanceof Object ||
+      obj.orWhereLike instanceof Object;
   }
 }

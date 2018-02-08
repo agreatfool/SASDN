@@ -1,3 +1,6 @@
+// 该文件来自：https://github.com/dcodeIO/protobuf.js/blob/master/src/parse.js
+// 查找自定义代码请搜索字符串："CHANGED"
+
 const protobuf = require('protobufjs');
 
 const parse = protobuf.parse;
@@ -28,7 +31,7 @@ var base10Re    = /^[1-9][0-9]*$/,
     typeRefRe   = /^(?:\.?[a-zA-Z_][a-zA-Z_0-9]*)+$/,
     fqTypeRefRe = /^(?:\.[a-zA-Z][a-zA-Z_0-9]*)+$/;
 
-function proxyParse(source, root, options) {
+function wrappedProtobufjsParse(source, root, options) {
     if (!(root instanceof Root)) {
         options = root;
         root = new Root();
@@ -269,7 +272,9 @@ function proxyParse(source, root, options) {
             throw illegal(token, "type name");
 
         var type = new Type(token);
-        //get comment ;
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        //-* CHANGED: 2018-02-08
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
         var _comment = cmnt();
         ifBlock(type, function parseType_block(token) {
             if (parseCommon(type, token))
@@ -332,7 +337,9 @@ function proxyParse(source, root, options) {
 
         name = applyCase(name);
         skip("=");
-        //get comment ;
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        //-* CHANGED: 2018-02-08
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
         var _comment = cmnt();
         var field = new Field(name, parseId(next()), type, rule, extend,null);
         ifBlock(field, function parseField_block(token) {
@@ -347,7 +354,9 @@ function proxyParse(source, root, options) {
         }, function parseField_line() {
             parseInlineOptions(field);
         });
-        //set comment ;
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        //-* CHANGED: 2018-02-08
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
         field.comment = _comment;
         parent.add(field);
 
@@ -569,7 +578,9 @@ function proxyParse(source, root, options) {
             throw illegal(token, "service name");
 
         var service = new Service(token);
-        //get comment ;
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        //-* CHANGED: 2018-02-08
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
         var _comment = cmnt();
         ifBlock(service, function parseService_block(token) {
             if (parseCommon(service, token))
@@ -615,7 +626,9 @@ function proxyParse(source, root, options) {
 
         responseType = token;
         skip(")");
-        //get comment ;
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        //-* CHANGED: 2018-02-08
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
         var _comment = cmnt();
         var method = new Method(name, type, requestType, responseType, requestStream, responseStream);
         ifBlock(method, function parseMethod_block(token) {
@@ -723,4 +736,4 @@ function proxyParse(source, root, options) {
     };
 }
 
-module.exports = proxyParse;
+module.exports = wrappedProtobufjsParse;
