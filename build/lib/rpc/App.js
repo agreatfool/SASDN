@@ -8,7 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-///<reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 const EventEmitter = require("events");
 const assert = require("assert");
 const koaCompose = require("koa-compose");

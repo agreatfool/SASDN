@@ -1,13 +1,13 @@
-import {{curlyLeft}}{{{callTypeStr}}}{{#if hasCallback}}, RpcImplCallback{{/if}}{{curlyRight}} from "grpc";
-import {{curlyLeft}}RpcContext, RpcMiddleware, MiddlewareNext{{curlyRight}} from "sasdn";
+import {{curlyLeft}}{{{callTypeStr}}}{{#if hasCallback}}, sendUnaryData as GrpcSendUnaryData{{/if}}{{curlyRight}} from 'grpc';
+import {{curlyLeft}}RpcContext, RpcMiddleware, MiddlewareNext{{curlyRight}} from 'sasdn';
 {{#each protoMsgImportPath}}
-import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from "{{{@key}}}";
+import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from '{{{@key}}}';
 {{/each}}
 
 export const {{{methodName}}}Handler: RpcMiddleware = async (ctx: RpcContext, next: MiddlewareNext) => {
   let call: {{{callTypeStr}}} = ctx.call as {{{callTypeStr}}};
 {{#if hasCallback}}
-  let callback: RpcImplCallback = ctx.callback;
+  let callback: GrpcSendUnaryData = ctx.callback;
 {{/if}}
 {{#if hasRequest}}
   let request = call.request as {{{requestTypeStr}}};

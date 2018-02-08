@@ -3,8 +3,6 @@ import { Order, } from '../../../proto/order/order_pb';
 import { GetDemoOrderRequest, } from '../../../proto/demo/demo_pb';
 import { OrderLogic } from '../../../logic/gateway/OrderLogic';
 
-const debug = require('debug')('SASDN:GWDemo');
-
 interface RequestParams {
   body: GetDemoOrderRequest.AsObject;
 }
@@ -30,9 +28,7 @@ class PostGetDemoOrderApi extends GatewayApiBase {
   }
 
   public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<Order.AsObject> {
-    debug(`[Gateway] /v1/getDemoOrder, params: ${JSON.stringify(params)}`);
     let orderObj = (await OrderLogic.getOrder(ctx, next, params)).toObject();
-    debug(`[Gateway] /v1/getDemoOrder, response: ${JSON.stringify(orderObj)}`);
 
     return Promise.resolve(orderObj);
   }

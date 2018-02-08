@@ -10,8 +10,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "typings/**/*.d.ts",
-    "node_modules/grpc-tsd/src/grpc.d.ts"
+    "typings/**/*.d.ts"
   ],
   "exclude": [
     "src/proto/**/*",

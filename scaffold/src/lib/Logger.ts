@@ -2,6 +2,8 @@ import { SendRequest, SendResponse } from '../proto/kafkaqueue/kafkaqueue_pb';
 import MSKafkaqueueClient from '../clients/kafkaqueue/MSKafkaqueueClient';
 import { Logger as SasdnLogger, LogOptions, KafkaOptions, LEVEL } from 'sasdn-log';
 
+const debug = require('debug')('SASDN:Demo');
+
 export enum TOPIC {
   SYSTEM = 'SystemTopic',
   BUSINESS = 'BusinessTopic',
@@ -62,6 +64,10 @@ export class Logger {
   }
 
   private _log(message: string, level: LEVEL = LEVEL.INFO, options?: LogOptions): void {
+    if (!this._initialized) {
+      debug(`[Logger._log] message=${message}`);
+      return;
+    }
     this._logger.log(message, level, options);
   }
 

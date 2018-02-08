@@ -29,7 +29,7 @@ function deserialize_order_Order(buffer_arg) {
 }
 
 
-// gPRC-getway Test
+// gPRC-Gateway Demo
 var DemoApiServiceService = exports.DemoApiServiceService = {
   getDemoOrderApi: {
     path: '/demo.DemoApiService/GetDemoOrderApi',

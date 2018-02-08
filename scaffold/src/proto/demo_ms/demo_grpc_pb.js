@@ -28,7 +28,7 @@ function deserialize_order_Order(buffer_arg) {
 }
 
 
-// gPRC-getway Test
+// gPRC-MicroService Demo
 var DemoServiceService = exports.DemoServiceService = {
   getDemoOrder: {
     path: '/demo.DemoService/GetDemoOrder',

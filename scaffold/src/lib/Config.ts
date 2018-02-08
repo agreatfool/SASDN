@@ -1,5 +1,3 @@
-import { Logger } from './Logger';
-
 export class ConfigConst {
   public static CONNECT_GATEWAY: string = 'GATEWAY';
   public static CONNECT_ORDER: string = 'MS_ORDER';
@@ -16,6 +14,8 @@ export class ConfigConst {
   public static DATABASE1: string = 'DATABASE1';
   public static DATABASE2: string = 'DATABASE2';
 }
+
+const debug = require('debug')('SASDN:DEMO');
 
 export class Config {
   private static _instance: Config;
@@ -73,7 +73,7 @@ export class Config {
     const host = this._configMap[`${connName}_HOST`];
     const port = this._configMap[`${connName}_PORT`] || '';
     const address = host + (port ? `:${port}` : '');
-    Logger.instance.error(`get address = ${address}, and conn = ${connName}`);
+    debug(`[getAddress] = ${address}, and conn = ${connName}`);
     return address;
   }
 

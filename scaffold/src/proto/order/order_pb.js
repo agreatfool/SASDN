@@ -1,6 +1,8 @@
 /**
  * @fileoverview
  * @enhanceable
+ * @suppress {messageConventions} JS Compiler reports an error if a variable or
+ *     field starts with 'MSG_' and isn't a translatable message.
  * @public
  */
 // GENERATED CODE -- DO NOT EDIT!
@@ -55,6 +57,7 @@ proto.order.Order.prototype.toObject = function(opt_includeInstance) {
  *     http://goto/soy-param-migration
  * @param {!proto.order.Order} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.order.Order.toObject = function(includeInstance, msg) {
   var f, obj = {
@@ -146,6 +149,7 @@ proto.order.Order.prototype.serializeBinary = function() {
  * format), writing to the given BinaryWriter.
  * @param {!proto.order.Order} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.order.Order.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
@@ -307,6 +311,7 @@ proto.order.GetOrderRequest.prototype.toObject = function(opt_includeInstance) {
  *     http://goto/soy-param-migration
  * @param {!proto.order.GetOrderRequest} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.order.GetOrderRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
@@ -376,6 +381,7 @@ proto.order.GetOrderRequest.prototype.serializeBinary = function() {
  * format), writing to the given BinaryWriter.
  * @param {!proto.order.GetOrderRequest} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.order.GetOrderRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
