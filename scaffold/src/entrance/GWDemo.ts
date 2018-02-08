@@ -1,13 +1,11 @@
 import * as Koa from 'koa';
 import * as koaBodyParser from 'koa-bodyparser';
 import { KoaImpl, ZIPKIN_EVENT } from 'sasdn-zipkin';
-import { DatabaseFactory, DatabaseOptions } from 'sasdn-database';
 import RouterLoader from '../router/Router';
 import { Config, ConfigConst } from '../lib/Config';
 import { LEVEL } from 'sasdn-log';
 import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
-import { DatabaseOption } from '../model/DatabaseOptions';
 
 export default class GWDemo {
   private _initialized: boolean;
@@ -32,8 +30,6 @@ export default class GWDemo {
       loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
       loggerLevel: LEVEL.INFO
     });
-
-    await DatabaseFactory.instance.initialize(DatabaseOption.getOptions());
 
     await RouterLoader.instance().init();
 
