@@ -1,6 +1,5 @@
-///<reference path='../../node_modules/grpc-tsd/src/grpc.d.ts'/>
-import {IServerCall, RpcImplCallback} from 'grpc';
-import {RpcApplication, WrappedHandler} from 'sasdn';
+import {sendUnaryData as GrpcSendUnaryData} from 'grpc';
+import {RpcApplication, WrappedHandler, GrpcServerCall} from 'sasdn';
 
 {{#each infos}}
 import {
@@ -25,7 +24,7 @@ export const registerServices = function (app: RpcApplication) {
 
   app.server.addService({{@key}}Service, {
     {{#each this}}
-    {{{this.methodName}}}: async (call: IServerCall{{#if this.hasCallback}}, callback: RpcImplCallback{{/if}}) => {
+    {{{this.methodName}}}: async (call: GrpcServerCall{{#if this.hasCallback}}, callback: GrpcSendUnaryData{{/if}}) => {
       let wrappedHandler: WrappedHandler = app.wrapGrpcHandler({{{this.methodName}}}Handler);
       wrappedHandler(call{{#if this.hasCallback}}, callback{{/if}}).then(_ => _);
     },

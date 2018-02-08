@@ -4,7 +4,7 @@
 import * as grpc from "grpc";
 import * as kafkaqueue_kafkaqueue_pb from "../kafkaqueue/kafkaqueue_pb";
 
-interface IKafkaQueueServiceService extends grpc.IMethodsMap {
+interface IKafkaQueueServiceService extends grpc.ServiceDefinition {
     send: ISend;
 }
 
@@ -20,9 +20,14 @@ interface ISend {
     responseDeserialize: (buffer: Uint8Array) => kafkaqueue_kafkaqueue_pb.SendResponse;
 }
 
-export const KafkaQueueServiceService: IKafkaQueueServiceService;
-export class KafkaQueueServiceClient extends grpc.Client {
-    constructor(address: string, credentials: any, options?: grpc.IClientOptions);
+export interface IKafkaQueueServiceClient {
     send(request: kafkaqueue_kafkaqueue_pb.SendRequest, callback: (error: Error | null, response: kafkaqueue_kafkaqueue_pb.SendResponse) => void): grpc.ClientUnaryCall;
     send(request: kafkaqueue_kafkaqueue_pb.SendRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: kafkaqueue_kafkaqueue_pb.SendResponse) => void): grpc.ClientUnaryCall;
+}
+
+export const KafkaQueueServiceService: IKafkaQueueServiceService;
+export class KafkaQueueServiceClient extends grpc.Client implements IKafkaQueueServiceClient {
+    constructor(address: string, credentials: grpc.ChannelCredentials, options?: object);
+    public send(request: kafkaqueue_kafkaqueue_pb.SendRequest, callback: (error: Error | null, response: kafkaqueue_kafkaqueue_pb.SendResponse) => void): grpc.ClientUnaryCall;
+    public send(request: kafkaqueue_kafkaqueue_pb.SendRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: kafkaqueue_kafkaqueue_pb.SendResponse) => void): grpc.ClientUnaryCall;
 }

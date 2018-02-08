@@ -1,6 +1,5 @@
-/// <reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts" />
-import { IServerCall, RpcImplCallback } from 'grpc';
-import { RpcApplication } from './App';
+import { sendUnaryData as GrpcSendUnaryData } from 'grpc';
+import { RpcApplication, GrpcServerCall } from './App';
 export declare enum GrpcOpType {
     SEND_INITIAL_METADATA = 0,
     SEND_MESSAGE = 1,
@@ -13,8 +12,8 @@ export declare enum GrpcOpType {
 }
 export declare class RpcContext {
     app: RpcApplication;
-    call: IServerCall;
-    callback: RpcImplCallback;
+    call: GrpcServerCall;
+    callback: GrpcSendUnaryData;
     constructor();
     /**
      * Handle error with gRPC status.

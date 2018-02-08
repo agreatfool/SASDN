@@ -9,6 +9,6 @@ message GetDemoOrderRequest {
 }
 
 // gPRC-MicroService Demo
-service DemoApiService {
+service DemoService {
     rpc GetDemoOrder (GetDemoOrderRequest) returns (order.Order) {}
 }

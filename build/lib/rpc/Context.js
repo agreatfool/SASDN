@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-///<reference path="../../../node_modules/grpc-tsd/src/grpc.d.ts"/>
 const assert = require("assert");
 const grpc_1 = require("grpc");
 var GrpcOpType;
@@ -19,7 +18,7 @@ class RpcContext {
     }
     /**
      * Handle error with gRPC status.
-     * @see {@link https://github.com/grpc/grpc/blob/v1.3.7/src/node/src/server.js#L69-L101}
+     * @see {@link https://github.com/grpc/grpc-node/blob/master/packages/grpc-native-core/src/server.js}
      * @param {Error} err
      */
     onError(err) {
@@ -45,10 +44,10 @@ class RpcContext {
         status.metadata = statusMetadata._getCoreRepresentation();
         let errorBatch = {};
         if (!call.metadataSent) {
-            errorBatch[GrpcOpType.SEND_INITIAL_METADATA] = (new grpc_1.Metadata())._getCoreRepresentation();
+            errorBatch[GrpcOpType.SEND_INITIAL_METADATA] = (new grpc_1.Metadata()._getCoreRepresentation());
         }
         errorBatch[GrpcOpType.SEND_STATUS_FROM_SERVER] = status;
-        call.call.startBatch(errorBatch, () => {
+        call.startBatch(errorBatch, () => {
         });
     }
 }

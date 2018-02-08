@@ -1,6 +1,8 @@
 /**
  * @fileoverview
  * @enhanceable
+ * @suppress {messageConventions} JS Compiler reports an error if a variable or
+ *     field starts with 'MSG_' and isn't a translatable message.
  * @public
  */
 // GENERATED CODE -- DO NOT EDIT!
@@ -61,11 +63,12 @@ proto.kafkaqueue.SendRequest.prototype.toObject = function(opt_includeInstance) 
  *     http://goto/soy-param-migration
  * @param {!proto.kafkaqueue.SendRequest} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.kafkaqueue.SendRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     topic: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    messagesList: jspb.Message.getField(msg, 2)
+    messagesList: jspb.Message.getRepeatedField(msg, 2)
   };
 
   if (includeInstance) {
@@ -135,6 +138,7 @@ proto.kafkaqueue.SendRequest.prototype.serializeBinary = function() {
  * format), writing to the given BinaryWriter.
  * @param {!proto.kafkaqueue.SendRequest} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.kafkaqueue.SendRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
@@ -172,12 +176,10 @@ proto.kafkaqueue.SendRequest.prototype.setTopic = function(value) {
 
 /**
  * repeated string messages = 2;
- * If you change this array by adding, removing or replacing elements, or if you
- * replace the array itself, then you must call the setter to update it.
  * @return {!Array.<string>}
  */
 proto.kafkaqueue.SendRequest.prototype.getMessagesList = function() {
-  return /** @type {!Array.<string>} */ (jspb.Message.getField(this, 2));
+  return /** @type {!Array.<string>} */ (jspb.Message.getRepeatedField(this, 2));
 };
 
 
@@ -244,6 +246,7 @@ proto.kafkaqueue.SendResponse.prototype.toObject = function(opt_includeInstance)
  *     http://goto/soy-param-migration
  * @param {!proto.kafkaqueue.SendResponse} msg The msg instance to transform.
  * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.kafkaqueue.SendResponse.toObject = function(includeInstance, msg) {
   var f, obj = {
@@ -313,6 +316,7 @@ proto.kafkaqueue.SendResponse.prototype.serializeBinary = function() {
  * format), writing to the given BinaryWriter.
  * @param {!proto.kafkaqueue.SendResponse} message
  * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
  */
 proto.kafkaqueue.SendResponse.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;

@@ -5,7 +5,7 @@ import * as grpc from "grpc";
 import * as demo_demo_pb from "../demo/demo_pb";
 import * as order_order_pb from "../order/order_pb";
 
-interface IDemoServiceService extends grpc.IMethodsMap {
+interface IDemoServiceService extends grpc.ServiceDefinition {
     getDemoOrder: IGetDemoOrder;
 }
 
@@ -21,9 +21,14 @@ interface IGetDemoOrder {
     responseDeserialize: (buffer: Uint8Array) => order_order_pb.Order;
 }
 
-export const DemoServiceService: IDemoServiceService;
-export class DemoServiceClient extends grpc.Client {
-    constructor(address: string, credentials: any, options?: grpc.IClientOptions);
+export interface IDemoServiceClient {
     getDemoOrder(request: demo_demo_pb.GetDemoOrderRequest, callback: (error: Error | null, response: order_order_pb.Order) => void): grpc.ClientUnaryCall;
     getDemoOrder(request: demo_demo_pb.GetDemoOrderRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: order_order_pb.Order) => void): grpc.ClientUnaryCall;
+}
+
+export const DemoServiceService: IDemoServiceService;
+export class DemoServiceClient extends grpc.Client implements IDemoServiceClient {
+    constructor(address: string, credentials: grpc.ChannelCredentials, options?: object);
+    public getDemoOrder(request: demo_demo_pb.GetDemoOrderRequest, callback: (error: Error | null, response: order_order_pb.Order) => void): grpc.ClientUnaryCall;
+    public getDemoOrder(request: demo_demo_pb.GetDemoOrderRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: order_order_pb.Order) => void): grpc.ClientUnaryCall;
 }
