@@ -53,7 +53,7 @@ export interface ProtoMsgImportInfos {
 export interface RpcProtoServicesInfo {
   protoFile: ProtoFile;
   protoServiceImportPath: string;
-  protoMessageImportPath?: { [key: string]: Set<string> };
+  protoMessageImportPath?: { [key: string]: Array<string> };
   services: {
     [serviceName: string]: Array<RpcMethodInfo>;
   };

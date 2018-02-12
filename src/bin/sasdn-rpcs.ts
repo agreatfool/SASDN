@@ -142,7 +142,10 @@ class ServiceCLI {
               }
             }
           });
-          protoServicesInfo.protoMessageImportPath = importSet;
+          for(const key of Object.keys(importSet)) {
+            const set = importSet[key];
+            protoServicesInfo.protoMessageImportPath[key] = [...set];
+          }
         }
       }
       protoServicesInfos.push(protoServicesInfo);
