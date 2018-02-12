@@ -123,6 +123,7 @@ class ServiceCLI {
         protoFile: protoInfo.protoFile,
         protoServiceImportPath: Proto.genProtoServiceImportPath(protoInfo.protoFile),
         services: {} as { [serviceName: string]: Array<RpcMethodInfo> },
+        protoMessageImportPath: {},
       } as RpcProtoServicesInfo;
       for (let i = 0; i < services.length; i++) {
         let methodInfos = await this._genService(protoInfo.protoFile, services[i], shallIgnore);
@@ -144,7 +145,7 @@ class ServiceCLI {
           });
           for(const key of Object.keys(importSet)) {
             const set = importSet[key];
-            protoServicesInfo.protoMessageImportPath[key] = [...set];
+            protoServicesInfo.protoMessageImportPath[key.substring(6)] = [...set];
           }
         }
       }
