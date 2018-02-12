@@ -122,6 +122,20 @@ class ServiceCLI {
                     let methodInfos = yield this._genService(protoInfo.protoFile, services[i], shallIgnore);
                     if (!shallIgnore) {
                         protoServicesInfo.services[services[i].name] = methodInfos;
+                        const importSet = {};
+                        methodInfos.forEach((methodInfo) => {
+                            const imports = methodInfo.protoMsgImportPath;
+                            for (const path of Object.keys(imports)) {
+                                const importValues = imports[path];
+                                if (!importSet[path]) {
+                                    importSet[path] = new Set();
+                                }
+                                for (const importValue of importValues) {
+                                    importSet[path].add(importValue);
+                                }
+                            }
+                        });
+                        protoServicesInfo.protoMessageImportPath = importSet;
                     }
                 }
                 protoServicesInfos.push(protoServicesInfo);
@@ -159,20 +173,20 @@ class ServiceCLI {
             let outputPath = lib_1.Proto.genFullOutputServicePath(protoFile, service, method);
             let methodInfo = lib_1.genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
             if (!method.requestStream && !method.responseStream) {
-                methodInfo.callTypeStr = 'ServerUnaryCall';
+                methodInfo.callTypeStr = `ServerUnaryCall<${methodInfo.requestTypeStr}>`;
                 methodInfo.hasCallback = true;
                 methodInfo.hasRequest = true;
             }
             else if (!method.requestStream && method.responseStream) {
-                methodInfo.callTypeStr = 'ServerWritableStream';
+                methodInfo.callTypeStr = `ServerWritableStream<${methodInfo.requestTypeStr}}>`;
                 methodInfo.hasRequest = true;
             }
             else if (method.requestStream && !method.responseStream) {
-                methodInfo.callTypeStr = 'ServerReadableStream';
+                methodInfo.callTypeStr = `ServerReadableStream<${methodInfo.requestTypeStr}}>`;
                 methodInfo.hasCallback = true;
             }
             else if (method.requestStream && method.responseStream) {
-                methodInfo.callTypeStr = 'ServerDuplexStream';
+                methodInfo.callTypeStr = `ServerDuplexStream<${methodInfo.requestTypeStr}}, ${methodInfo.responseTypeStr}>`;
             }
             // write files
             if (!shallIgnore) {

@@ -154,7 +154,7 @@ export namespace Cache {
 
   export async function memSetMulti(setObjs: MemcachedObject[]): Promise<boolean[]> {
     const setMultiReq = new MemSetMultiRequest();
-    setObjs.forEach(obj => {
+    setObjs.forEach((obj) => {
       const { key, value, expire } = obj;
       const setReq = new MemSetRequest();
 
@@ -171,14 +171,14 @@ export namespace Cache {
 
   export async function memGetMulti(keys: string[]): Promise<{ [key: string]: string }> {
     const getMultiReq = new MemGetMultiRequest();
-    keys.forEach(key => {
+    keys.forEach((key) => {
       getMultiReq.addKeys(key);
     });
 
     const client = new MSMemcachedClient();
     const resultList = (await client.memGetMulti(getMultiReq)).getResultList();
     const resultMap: { [key: string]: string } = {};
-    resultList.forEach(result => {
+    resultList.forEach((result) => {
       resultMap[result.getKey()] = result.getValue();
     });
     return resultMap;

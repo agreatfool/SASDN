@@ -14,14 +14,17 @@ import {
 } from 'grpc';
 import { RpcContext } from './Context';
 
-export type GrpcServerCall = ServerUnaryCall | ServerReadableStream | ServerWriteableStream | ServerDuplexStream;
+export type GrpcServerCall<RequestType, ResponseType> = ServerUnaryCall<RequestType>
+  | ServerReadableStream<RequestType>
+  | ServerWriteableStream<RequestType>
+  | ServerDuplexStream<RequestType, ResponseType>;
 
 const deprecate = require('depd')('SASDN');
 const debug = require('debug')('SASDN:application');
 
 export type RpcMiddleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
 export type MiddlewareNext = () => Promise<any>;
-export type WrappedHandler = (call: GrpcServerCall, callback?: GrpcSendUnaryData) => Promise<any>;
+export type WrappedHandler = (call: GrpcServerCall<RequestType, ResponseType>, callback?: GrpcSendUnaryData<ResponseType>) => Promise<any>;
 
 export class RpcApplication extends EventEmitter {
 
@@ -91,7 +94,7 @@ export class RpcApplication extends EventEmitter {
    * @returns {RpcContext}
    * @private
    */
-  private _createContext(call: GrpcServerCall, callback?: GrpcSendUnaryData): RpcContext {
+  private _createContext(call: GrpcServerCall<RequestType, ResponseType>, callback?: GrpcSendUnaryData<ResponseType>): RpcContext {
     let ctx = new RpcContext();
 
     ctx.app = this;
@@ -129,7 +132,7 @@ export class RpcApplication extends EventEmitter {
       this.on('error', this._onError);
     }
 
-    return async (call: GrpcServerCall, callback?: GrpcSendUnaryData) => {
+    return async (call: GrpcServerCall<RequestType, ResponseType>, callback?: GrpcSendUnaryData<ResponseType>) => {
       const ctx = this._createContext(call, callback);
       const onError = err => ctx.onError(err);
       return fn(ctx).catch(onError);

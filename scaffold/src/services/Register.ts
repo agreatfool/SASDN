@@ -8,11 +8,12 @@ import {
 
 
 import {getOrderHandler} from "./order/order_grpc_pb/OrderService/getOrder";
+import { GetOrderRequest, Order } from '../proto/order/order_pb';
 
 export const registerServices = function (app: RpcApplication) {
 
     app.server.addService(OrderServiceService, {
-        getOrder: async (call: GrpcServerCall, callback: GrpcSendUnaryData) => {
+        getOrder: async (call: GrpcServerCall<GetOrderRequest, Order>, callback: GrpcSendUnaryData<Order>) => {
             let wrappedHandler: WrappedHandler = app.wrapGrpcHandler(getOrderHandler);
             wrappedHandler(call, callback).then(_ => _);
         },

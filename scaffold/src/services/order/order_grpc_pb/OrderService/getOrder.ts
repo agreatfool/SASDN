@@ -4,8 +4,8 @@ import { GetOrderRequest, Order, } from '../../../../proto/order/order_pb';
 import { OrderLogic } from '../../../../logic/order/OrderLogic';
 
 export const getOrderHandler: RpcMiddleware = async (ctx: RpcContext, next: MiddlewareNext) => {
-  let call: ServerUnaryCall = ctx.call as ServerUnaryCall;
-  let callback: GrpcSendUnaryData = ctx.callback;
+  let call: ServerUnaryCall<GetOrderRequest> = ctx.call as ServerUnaryCall<GetOrderRequest>;
+  let callback: GrpcSendUnaryData<Order> = ctx.callback;
   let request = call.request as GetOrderRequest;
 
   let order = await OrderLogic.getOrder(request);

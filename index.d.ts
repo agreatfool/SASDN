@@ -12,7 +12,10 @@ import {Context as KoaContext, Middleware as KoaMiddleware, Request as KoaReques
 import * as joi from "joi";
 import * as bluebird from "bluebird";
 
-export type GrpcServerCall = ServerUnaryCall | ServerReadableStream | ServerWriteableStream | ServerDuplexStream;
+export type GrpcServerCall<RequestType, ResponseType> = ServerUnaryCall<RequestType>
+  | ServerReadableStream<RequestType>
+  | ServerWriteableStream<RequestType>
+  | ServerDuplexStream<RequestType, ResponseType>;
 
 export interface GatewayContext extends KoaContext {
     params: any;
@@ -45,7 +48,7 @@ export declare abstract class GatewayApiBase {
 
 export declare type RpcMiddleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
 export declare type MiddlewareNext = () => Promise<any>;
-export declare type WrappedHandler = (call: GrpcServerCall, callback?: sendUnaryData) => Promise<any>;
+export declare type WrappedHandler = (call: GrpcServerCall<RequestType, ResponseType>, callback?: sendUnaryData<ResponseType>) => Promise<any>;
 
 export declare class RpcApplication extends EventEmitter {
     constructor();
@@ -81,7 +84,7 @@ export declare class RpcApplication extends EventEmitter {
      * @param {RpcMiddleware} reqHandler
      * @returns {WrappedHandler}
      */
-    wrapGrpcHandler(reqHandler: RpcMiddleware): (call: GrpcServerCall, callback?: sendUnaryData) => Promise<void>;
+    wrapGrpcHandler(reqHandler: RpcMiddleware): (call: GrpcServerCall<RequestType, ResponseType>, callback?: sendUnaryData<ResponseType>) => Promise<void>;
 }
 
 export declare enum GrpcOpType {
@@ -97,8 +100,8 @@ export declare enum GrpcOpType {
 
 export declare class RpcContext {
     app: RpcApplication;
-    call: GrpcServerCall;
-    callback: sendUnaryData;
+    call: GrpcServerCall<RequestType, ResponseType>;
+    callback: sendUnaryData<ResponseType>;
 
     constructor();
 
