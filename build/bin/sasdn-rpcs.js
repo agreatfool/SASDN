@@ -138,7 +138,7 @@ class ServiceCLI {
                         });
                         for (const key of Object.keys(importSet)) {
                             const set = importSet[key];
-                            protoServicesInfo.protoMessageImportPath[key.substring(6)] = [...set];
+                            protoServicesInfo.protoMessageImportPath[key.substring(9)] = [...set];
                         }
                     }
                 }
