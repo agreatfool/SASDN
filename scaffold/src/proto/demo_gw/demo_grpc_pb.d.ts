@@ -1,11 +1,13 @@
 // package: demo
 // file: demo/demo.proto
 
+/* tslint:disable */
+
 import * as grpc from "grpc";
 import * as demo_demo_pb from "../demo/demo_pb";
 import * as order_order_pb from "../order/order_pb";
 
-interface IDemoApiServiceService extends grpc.ServiceDefinition {
+interface IDemoApiServiceService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
     getDemoOrderApi: IGetDemoOrderApi;
 }
 
@@ -13,8 +15,8 @@ interface IGetDemoOrderApi {
     path: string; // "/demo.DemoApiService/GetDemoOrderApi"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestType: demo_demo_pb.GetDemoOrderRequest,
-    responseType: order_order_pb.Order,
+    requestType: demo_demo_pb.GetDemoOrderRequest;
+    responseType: order_order_pb.Order;
     requestSerialize: (arg: demo_demo_pb.GetDemoOrderRequest) => Buffer;
     requestDeserialize: (buffer: Uint8Array) => demo_demo_pb.GetDemoOrderRequest;
     responseSerialize: (arg: order_order_pb.Order) => Buffer;

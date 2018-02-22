@@ -1,6 +1,8 @@
 // package: kafkaqueue
 // file: kafkaqueue/kafkaqueue.proto
 
+/* tslint:disable */
+
 import * as jspb from "google-protobuf";
 
 export class SendRequest extends jspb.Message { 
