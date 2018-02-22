@@ -188,17 +188,21 @@ class ServiceCLI {
     let methodInfo = genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
 
     if (!method.requestStream && !method.responseStream) {
-      methodInfo.callTypeStr = `ServerUnaryCall<${methodInfo.requestTypeStr}>`;
+      methodInfo.callTypeStr = 'ServerUnaryCall';
+      methodInfo.callGenerics = `<${methodInfo.requestTypeStr}>`;
       methodInfo.hasCallback = true;
       methodInfo.hasRequest = true;
     } else if (!method.requestStream && method.responseStream) {
-      methodInfo.callTypeStr = `ServerWritableStream<${methodInfo.requestTypeStr}}>`;
+      methodInfo.callTypeStr = 'ServerWritableStream';
+      methodInfo.callGenerics = `<${methodInfo.requestTypeStr}>`;
       methodInfo.hasRequest = true;
     } else if (method.requestStream && !method.responseStream) {
-      methodInfo.callTypeStr = `ServerReadableStream<${methodInfo.requestTypeStr}}>`;
+      methodInfo.callTypeStr = 'ServerReadableStream';
+      methodInfo.callGenerics = `<${methodInfo.requestTypeStr}>`;
       methodInfo.hasCallback = true;
     } else if (method.requestStream && method.responseStream) {
-      methodInfo.callTypeStr = `ServerDuplexStream<${methodInfo.requestTypeStr}}, ${methodInfo.responseTypeStr}>`;
+      methodInfo.callTypeStr = 'ServerDuplexStream';
+      methodInfo.callGenerics = `<${methodInfo.requestTypeStr}, ${methodInfo.responseTypeStr}>`;
     }
 
     // write files
@@ -206,6 +210,7 @@ class ServiceCLI {
       await mkdir(LibPath.dirname(outputPath));
       let content = TplEngine.render('rpcs/service', {
         callTypeStr: methodInfo.callTypeStr,
+        callGenerics: methodInfo.callGenerics,
         requestTypeStr: methodInfo.requestTypeStr,
         responseTypeStr: methodInfo.responseTypeStr,
         hasCallback: methodInfo.hasCallback,

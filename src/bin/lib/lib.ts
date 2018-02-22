@@ -75,6 +75,7 @@ export interface RpcProtoClientInfo {
 
 export interface RpcMethodInfo {
   callTypeStr: string;
+  callGenerics: string;
   requestTypeStr: string;
   responseTypeStr: string;
   hasCallback: boolean;
