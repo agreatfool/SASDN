@@ -119,15 +119,16 @@ class ServiceCLI {
         });
       }
 
-      let protoServicesInfo = {
-        protoFile: protoInfo.protoFile,
-        protoServiceImportPath: Proto.genProtoServiceImportPath(protoInfo.protoFile),
-        services: {} as { [serviceName: string]: Array<RpcMethodInfo> },
-        protoMessageImportPath: {},
-      } as RpcProtoServicesInfo;
+
       for (let i = 0; i < services.length; i++) {
         let methodInfos = await this._genService(protoInfo.protoFile, services[i], shallIgnore);
         if (!shallIgnore) {
+          let protoServicesInfo = {
+            protoFile: protoInfo.protoFile,
+            protoServiceImportPath: Proto.genProtoServiceImportPath(protoInfo.protoFile),
+            services: {} as { [serviceName: string]: Array<RpcMethodInfo> },
+            protoMessageImportPath: {},
+          } as RpcProtoServicesInfo;
           protoServicesInfo.services[services[i].name] = methodInfos;
 
           const importSet: { [key: string]: Set<string> } = {};
@@ -145,11 +146,13 @@ class ServiceCLI {
           });
           for(const key of Object.keys(importSet)) {
             const set = importSet[key];
-            protoServicesInfo.protoMessageImportPath[key.substring(9)] = [...set];
+            if(set.size > 0) {
+              protoServicesInfo.protoMessageImportPath[key.substring(9)] = [...set];
+            }
           }
+          protoServicesInfos.push(protoServicesInfo);
         }
       }
-      protoServicesInfos.push(protoServicesInfo);
     }
     if (protoServicesInfos.length === 0) {
       return;

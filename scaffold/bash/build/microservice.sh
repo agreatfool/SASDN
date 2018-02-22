@@ -59,7 +59,7 @@ if [ "${IS_MICROSERVICE}" = true ] ; then
     --proto=${PROTO_ROOT} \
     --output=${OUTPUT} \
     --import=${PROTO_3RD} \
-    --exclude=${PROTO_3RD}/google,${PROTO_ROOT}/demo
+    --exclude=${PROTO_3RD}/google,${PROTO_ROOT}/demo,${PROTO_3RD}/kafkaqueue,${PROTO_3RD}/memcached
 fi
 
 echo "Generate grpc client code ..."

@@ -113,15 +113,15 @@ class ServiceCLI {
                         }
                     });
                 }
-                let protoServicesInfo = {
-                    protoFile: protoInfo.protoFile,
-                    protoServiceImportPath: lib_1.Proto.genProtoServiceImportPath(protoInfo.protoFile),
-                    services: {},
-                    protoMessageImportPath: {},
-                };
                 for (let i = 0; i < services.length; i++) {
                     let methodInfos = yield this._genService(protoInfo.protoFile, services[i], shallIgnore);
                     if (!shallIgnore) {
+                        let protoServicesInfo = {
+                            protoFile: protoInfo.protoFile,
+                            protoServiceImportPath: lib_1.Proto.genProtoServiceImportPath(protoInfo.protoFile),
+                            services: {},
+                            protoMessageImportPath: {},
+                        };
                         protoServicesInfo.services[services[i].name] = methodInfos;
                         const importSet = {};
                         methodInfos.forEach((methodInfo) => {
@@ -138,11 +138,13 @@ class ServiceCLI {
                         });
                         for (const key of Object.keys(importSet)) {
                             const set = importSet[key];
-                            protoServicesInfo.protoMessageImportPath[key.substring(9)] = [...set];
+                            if(set.size > 0) {
+                                protoServicesInfo.protoMessageImportPath[key.substring(9)] = [...set];
+                            }
                         }
+                        protoServicesInfos.push(protoServicesInfo);
                     }
                 }
-                protoServicesInfos.push(protoServicesInfo);
             }
             if (protoServicesInfos.length === 0) {
                 return;
