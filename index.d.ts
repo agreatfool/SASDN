@@ -12,10 +12,15 @@ import {Context as KoaContext, Middleware as KoaMiddleware, Request as KoaReques
 import * as joi from "joi";
 import * as bluebird from "bluebird";
 
-export type GrpcServerCall<RequestType, ResponseType> = ServerUnaryCall<RequestType>
-  | ServerReadableStream<RequestType>
-  | ServerWriteableStream<RequestType>
-  | ServerDuplexStream<RequestType, ResponseType>;
+export type GrpcServerUnaryCall<RequestType, ResponseType> = ServerUnaryCall<RequestType>;
+export type GrpcServerReadableStream<RequestType, ResponseType> = ServerReadableStream<RequestType>;
+export type GrpcServerWriteableStream<RequestType, ResponseType> = ServerWriteableStream<RequestType>;
+export type GrpcServerDuplexStream<RequestType, ResponseType> = ServerDuplexStream<RequestType, ResponseType>;
+
+export type GrpcServerCall<RequestType, ResponseType> = GrpcServerUnaryCall<RequestType, ResponseType>
+  | GrpcServerReadableStream<RequestType, ResponseType>
+  | GrpcServerWriteableStream<RequestType, ResponseType>
+  | GrpcServerDuplexStream<RequestType, ResponseType>;
 
 export interface GatewayContext extends KoaContext {
     params: any;

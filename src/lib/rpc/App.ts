@@ -14,10 +14,15 @@ import {
 } from 'grpc';
 import { RpcContext } from './Context';
 
-export type GrpcServerCall<RequestType, ResponseType> = ServerUnaryCall<RequestType>
-  | ServerReadableStream<RequestType>
-  | ServerWriteableStream<RequestType>
-  | ServerDuplexStream<RequestType, ResponseType>;
+export type GrpcServerUnaryCall<RequestType, ResponseType> = ServerUnaryCall<RequestType>;
+export type GrpcServerReadableStream<RequestType, ResponseType> = ServerReadableStream<RequestType>;
+export type GrpcServerWriteableStream<RequestType, ResponseType> = ServerWriteableStream<RequestType>;
+export type GrpcServerDuplexStream<RequestType, ResponseType> = ServerDuplexStream<RequestType, ResponseType>;
+
+export type GrpcServerCall<RequestType, ResponseType> = GrpcServerUnaryCall<RequestType, ResponseType>
+  | GrpcServerReadableStream<RequestType, ResponseType>
+  | GrpcServerWriteableStream<RequestType, ResponseType>
+  | GrpcServerDuplexStream<RequestType, ResponseType>;
 
 const deprecate = require('depd')('SASDN');
 const debug = require('debug')('SASDN:application');
