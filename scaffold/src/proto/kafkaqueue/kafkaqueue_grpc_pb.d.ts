@@ -1,10 +1,12 @@
 // package: kafkaqueue
 // file: kafkaqueue/kafkaqueue.proto
 
+/* tslint:disable */
+
 import * as grpc from "grpc";
 import * as kafkaqueue_kafkaqueue_pb from "../kafkaqueue/kafkaqueue_pb";
 
-interface IKafkaQueueServiceService extends grpc.ServiceDefinition {
+interface IKafkaQueueServiceService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
     send: ISend;
 }
 
@@ -12,8 +14,8 @@ interface ISend {
     path: string; // "/kafkaqueue.KafkaQueueService/Send"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestType: kafkaqueue_kafkaqueue_pb.SendRequest,
-    responseType: kafkaqueue_kafkaqueue_pb.SendResponse,
+    requestType: kafkaqueue_kafkaqueue_pb.SendRequest;
+    responseType: kafkaqueue_kafkaqueue_pb.SendResponse;
     requestSerialize: (arg: kafkaqueue_kafkaqueue_pb.SendRequest) => Buffer;
     requestDeserialize: (buffer: Uint8Array) => kafkaqueue_kafkaqueue_pb.SendRequest;
     responseSerialize: (arg: kafkaqueue_kafkaqueue_pb.SendResponse) => Buffer;

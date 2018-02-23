@@ -5,7 +5,7 @@ import * as grpc from "grpc";
 import * as demo_demo_pb from "../demo/demo_pb";
 import * as order_order_pb from "../order/order_pb";
 
-interface IDemoServiceService extends grpc.ServiceDefinition {
+interface IDemoServiceService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
     getDemoOrder: IGetDemoOrder;
 }
 

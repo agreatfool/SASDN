@@ -1,10 +1,12 @@
 // package: order
 // file: order/order.proto
 
+/* tslint:disable */
+
 import * as grpc from "grpc";
 import * as order_order_pb from "../order/order_pb";
 
-interface IOrderServiceService extends grpc.ServiceDefinition {
+interface IOrderServiceService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
     getOrder: IGetOrder;
 }
 
@@ -12,8 +14,8 @@ interface IGetOrder {
     path: string; // "/order.OrderService/GetOrder"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestType: order_order_pb.GetOrderRequest,
-    responseType: order_order_pb.Order,
+    requestType: order_order_pb.GetOrderRequest;
+    responseType: order_order_pb.Order;
     requestSerialize: (arg: order_order_pb.GetOrderRequest) => Buffer;
     requestDeserialize: (buffer: Uint8Array) => order_order_pb.GetOrderRequest;
     responseSerialize: (arg: order_order_pb.Order) => Buffer;

@@ -171,7 +171,6 @@ class ClientCLI {
         for (const methodKey of methodKeys) {
             const method = service.methods[methodKey];
             const methodInfo = lib_1.genRpcMethodInfo(protoFile, method, outputPath, importInfos, 'clients');
-            console.log('methodInfo = ', methodInfo);
             methodInfos.push(methodInfo);
         }
         return methodInfos;

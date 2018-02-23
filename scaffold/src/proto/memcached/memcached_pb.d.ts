@@ -1,6 +1,8 @@
 // package: memcached
 // file: memcached/memcached.proto
 
+/* tslint:disable */
+
 import * as jspb from "google-protobuf";
 
 export class SetRequest extends jspb.Message { 

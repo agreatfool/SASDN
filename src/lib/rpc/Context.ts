@@ -22,8 +22,8 @@ export enum GrpcOpType {
 export class RpcContext {
 
   public app: RpcApplication;
-  public call: GrpcServerCall;
-  public callback: GrpcSendUnaryData;
+  public call: GrpcServerCall<any, any>;
+  public callback: GrpcSendUnaryData<any>;
 
   constructor() {
   }

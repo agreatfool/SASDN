@@ -1,5 +1,5 @@
-import {sendUnaryData as GrpcSendUnaryData} from 'grpc';
-import {RpcApplication, WrappedHandler, GrpcServerCall} from 'sasdn';
+import { sendUnaryData as GrpcSendUnaryData } from 'grpc';
+import { RpcApplication, WrappedHandler, GrpcServerCall } from 'sasdn';
 
 {{#each infos}}
 import {
@@ -7,13 +7,20 @@ import {
   {{@key}}Service,
   {{/each}}
 } from '{{{this.protoServiceImportPath}}}';
+{{#each this.protoMessageImportPath}}
+import {
+  {{#each this}}
+  {{this}},
+  {{/each}}
+} from '{{{@key}}}';
+{{/each}}
 {{/each}}
 {{#each infos}}
 
   {{#each this.services}}
 
     {{#each this}}
-import {{curlyLeft}}{{{this.methodName}}}Handler{{curlyRight}} from './{{#eq ../../this.protoFile.relativePath '.'}}{{else}}{{../../this.protoFile.relativePath}}/{{/eq}}{{../../this.protoFile.svcNamespace}}/{{@../key}}/{{{this.methodName}}}';
+import {{curlyLeft}} {{{this.methodName}}}Handler {{curlyRight}} from './{{#eq ../../this.protoFile.relativePath '.'}}{{else}}{{../../this.protoFile.relativePath}}/{{/eq}}{{../../this.protoFile.svcNamespace}}/{{@../key}}/{{{this.methodName}}}';
     {{/each}}
   {{/each}}
 {{/each}}
@@ -24,7 +31,7 @@ export const registerServices = function (app: RpcApplication) {
 
   app.server.addService({{@key}}Service, {
     {{#each this}}
-    {{{this.methodName}}}: async (call: GrpcServerCall{{#if this.hasCallback}}, callback: GrpcSendUnaryData{{/if}}) => {
+    {{{this.methodName}}}: async (call: GrpcServerCall<{{{this.requestTypeStr}}}, {{{this.responseTypeStr}}}>{{#if this.hasCallback}}, callback: GrpcSendUnaryData<{{{this.responseTypeStr}}}>{{/if}}) => {
       let wrappedHandler: WrappedHandler = app.wrapGrpcHandler({{{this.methodName}}}Handler);
       wrappedHandler(call{{#if this.hasCallback}}, callback{{/if}}).then(_ => _);
     },

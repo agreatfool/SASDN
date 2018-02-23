@@ -11,10 +11,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const LibPath = require("path");
 const LibFs = require("mz/fs");
 const recursive = require("recursive-readdir");
-const protobuf = require("protobufjs");
 const protobufjs_1 = require("protobufjs");
 const bluebird = require("bluebird");
 const LibMkdirP = require("mkdirp");
+const wrappedProtobufjsParse = require('./protobufjs/ParseWrapper');
 const mkdirp = bluebird.promisify(LibMkdirP);
 /**
  * 读取 protoDir 文件夹内的 proto 文件名生成 ProtoFile 结构体。
@@ -72,7 +72,7 @@ exports.readProtoList = function (protoDir, outputDir, excludes) {
 exports.parseProto = function (protoFile) {
     return __awaiter(this, void 0, void 0, function* () {
         let content = yield LibFs.readFile(Proto.genFullProtoFilePath(protoFile));
-        let proto = protobuf.parse(content.toString());
+        let proto = wrappedProtobufjsParse(content.toString());
         return Promise.resolve(proto);
     });
 };

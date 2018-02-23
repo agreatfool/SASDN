@@ -1,10 +1,12 @@
 // package: memcached
 // file: memcached/memcached.proto
 
+/* tslint:disable */
+
 import * as grpc from "grpc";
 import * as memcached_memcached_pb from "../memcached/memcached_pb";
 
-interface IMemcachedServiceService extends grpc.ServiceDefinition {
+interface IMemcachedServiceService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
     memSet: IMemSet;
     memSetMulti: IMemSetMulti;
     memAdd: IMemAdd;
@@ -17,8 +19,8 @@ interface IMemSet {
     path: string; // "/memcached.MemcachedService/MemSet"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestType: memcached_memcached_pb.SetRequest,
-    responseType: memcached_memcached_pb.BoolResponse,
+    requestType: memcached_memcached_pb.SetRequest;
+    responseType: memcached_memcached_pb.BoolResponse;
     requestSerialize: (arg: memcached_memcached_pb.SetRequest) => Buffer;
     requestDeserialize: (buffer: Uint8Array) => memcached_memcached_pb.SetRequest;
     responseSerialize: (arg: memcached_memcached_pb.BoolResponse) => Buffer;
@@ -28,8 +30,8 @@ interface IMemSetMulti {
     path: string; // "/memcached.MemcachedService/MemSetMulti"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestType: memcached_memcached_pb.SetMultiRequest,
-    responseType: memcached_memcached_pb.BoolsResponse,
+    requestType: memcached_memcached_pb.SetMultiRequest;
+    responseType: memcached_memcached_pb.BoolsResponse;
     requestSerialize: (arg: memcached_memcached_pb.SetMultiRequest) => Buffer;
     requestDeserialize: (buffer: Uint8Array) => memcached_memcached_pb.SetMultiRequest;
     responseSerialize: (arg: memcached_memcached_pb.BoolsResponse) => Buffer;
@@ -39,8 +41,8 @@ interface IMemAdd {
     path: string; // "/memcached.MemcachedService/MemAdd"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestType: memcached_memcached_pb.AddRequest,
-    responseType: memcached_memcached_pb.BoolResponse,
+    requestType: memcached_memcached_pb.AddRequest;
+    responseType: memcached_memcached_pb.BoolResponse;
     requestSerialize: (arg: memcached_memcached_pb.AddRequest) => Buffer;
     requestDeserialize: (buffer: Uint8Array) => memcached_memcached_pb.AddRequest;
     responseSerialize: (arg: memcached_memcached_pb.BoolResponse) => Buffer;
@@ -50,8 +52,8 @@ interface IMemDel {
     path: string; // "/memcached.MemcachedService/MemDel"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestType: memcached_memcached_pb.DelRequest,
-    responseType: memcached_memcached_pb.BoolResponse,
+    requestType: memcached_memcached_pb.DelRequest;
+    responseType: memcached_memcached_pb.BoolResponse;
     requestSerialize: (arg: memcached_memcached_pb.DelRequest) => Buffer;
     requestDeserialize: (buffer: Uint8Array) => memcached_memcached_pb.DelRequest;
     responseSerialize: (arg: memcached_memcached_pb.BoolResponse) => Buffer;
@@ -61,8 +63,8 @@ interface IMemGet {
     path: string; // "/memcached.MemcachedService/MemGet"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestType: memcached_memcached_pb.GetRequest,
-    responseType: memcached_memcached_pb.DataResponse,
+    requestType: memcached_memcached_pb.GetRequest;
+    responseType: memcached_memcached_pb.DataResponse;
     requestSerialize: (arg: memcached_memcached_pb.GetRequest) => Buffer;
     requestDeserialize: (buffer: Uint8Array) => memcached_memcached_pb.GetRequest;
     responseSerialize: (arg: memcached_memcached_pb.DataResponse) => Buffer;
@@ -72,8 +74,8 @@ interface IMemGetMulti {
     path: string; // "/memcached.MemcachedService/MemGetMulti"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestType: memcached_memcached_pb.GetMultiRequest,
-    responseType: memcached_memcached_pb.DatasResponse,
+    requestType: memcached_memcached_pb.GetMultiRequest;
+    responseType: memcached_memcached_pb.DatasResponse;
     requestSerialize: (arg: memcached_memcached_pb.GetMultiRequest) => Buffer;
     requestDeserialize: (buffer: Uint8Array) => memcached_memcached_pb.GetMultiRequest;
     responseSerialize: (arg: memcached_memcached_pb.DatasResponse) => Buffer;

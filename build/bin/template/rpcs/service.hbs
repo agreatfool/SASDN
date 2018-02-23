@@ -5,9 +5,9 @@ import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from '{{{@ke
 {{/each}}
 
 export const {{{methodName}}}Handler: RpcMiddleware = async (ctx: RpcContext, next: MiddlewareNext) => {
-  let call: {{{callTypeStr}}} = ctx.call as {{{callTypeStr}}};
+  let call: {{{callTypeStr}}}{{{callGenerics}}} = ctx.call as {{{callTypeStr}}}{{{callGenerics}}};
 {{#if hasCallback}}
-  let callback: GrpcSendUnaryData = ctx.callback;
+  let callback: GrpcSendUnaryData<{{{responseTypeStr}}}> = ctx.callback;
 {{/if}}
 {{#if hasRequest}}
   let request = call.request as {{{requestTypeStr}}};

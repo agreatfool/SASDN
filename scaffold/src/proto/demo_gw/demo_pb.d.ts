@@ -1,6 +1,8 @@
 // package: demo
 // file: demo/demo.proto
 
+/* tslint:disable */
+
 import * as jspb from "google-protobuf";
 import * as order_order_pb from "../order/order_pb";
 

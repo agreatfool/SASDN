@@ -113,18 +113,38 @@ class ServiceCLI {
                         }
                     });
                 }
-                let protoServicesInfo = {
-                    protoFile: protoInfo.protoFile,
-                    protoServiceImportPath: lib_1.Proto.genProtoServiceImportPath(protoInfo.protoFile),
-                    services: {},
-                };
                 for (let i = 0; i < services.length; i++) {
                     let methodInfos = yield this._genService(protoInfo.protoFile, services[i], shallIgnore);
                     if (!shallIgnore) {
+                        let protoServicesInfo = {
+                            protoFile: protoInfo.protoFile,
+                            protoServiceImportPath: lib_1.Proto.genProtoServiceImportPath(protoInfo.protoFile),
+                            services: {},
+                            protoMessageImportPath: {},
+                        };
                         protoServicesInfo.services[services[i].name] = methodInfos;
+                        const importSet = {};
+                        methodInfos.forEach((methodInfo) => {
+                            const imports = methodInfo.protoMsgImportPath;
+                            for (const path of Object.keys(imports)) {
+                                const importValues = imports[path];
+                                if (!importSet[path]) {
+                                    importSet[path] = new Set();
+                                }
+                                for (const importValue of importValues) {
+                                    importSet[path].add(importValue);
+                                }
+                            }
+                        });
+                        for (const key of Object.keys(importSet)) {
+                            const set = importSet[key];
+                            if(set.size > 0) {
+                                protoServicesInfo.protoMessageImportPath[key.substring(9)] = [...set];
+                            }
+                        }
+                        protoServicesInfos.push(protoServicesInfo);
                     }
                 }
-                protoServicesInfos.push(protoServicesInfo);
             }
             if (protoServicesInfos.length === 0) {
                 return;
@@ -160,25 +180,30 @@ class ServiceCLI {
             let methodInfo = lib_1.genRpcMethodInfo(protoFile, method, outputPath, this._protoMsgImportInfos);
             if (!method.requestStream && !method.responseStream) {
                 methodInfo.callTypeStr = 'ServerUnaryCall';
+                methodInfo.callGenerics = `<${methodInfo.requestTypeStr}>`;
                 methodInfo.hasCallback = true;
                 methodInfo.hasRequest = true;
             }
             else if (!method.requestStream && method.responseStream) {
                 methodInfo.callTypeStr = 'ServerWritableStream';
+                methodInfo.callGenerics = `<${methodInfo.requestTypeStr}>`;
                 methodInfo.hasRequest = true;
             }
             else if (method.requestStream && !method.responseStream) {
                 methodInfo.callTypeStr = 'ServerReadableStream';
+                methodInfo.callGenerics = `<${methodInfo.requestTypeStr}>`;
                 methodInfo.hasCallback = true;
             }
             else if (method.requestStream && method.responseStream) {
                 methodInfo.callTypeStr = 'ServerDuplexStream';
+                methodInfo.callGenerics = `<${methodInfo.requestTypeStr}, ${methodInfo.responseTypeStr}>`;
             }
             // write files
             if (!shallIgnore) {
                 yield lib_1.mkdir(LibPath.dirname(outputPath));
                 let content = template_1.TplEngine.render('rpcs/service', {
                     callTypeStr: methodInfo.callTypeStr,
+                    callGenerics: methodInfo.callGenerics,
                     requestTypeStr: methodInfo.requestTypeStr,
                     responseTypeStr: methodInfo.responseTypeStr,
                     hasCallback: methodInfo.hasCallback,

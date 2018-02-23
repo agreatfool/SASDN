@@ -1,6 +1,8 @@
 // package: order
 // file: order/order.proto
 
+/* tslint:disable */
+
 import * as jspb from "google-protobuf";
 
 export class Order extends jspb.Message { 
