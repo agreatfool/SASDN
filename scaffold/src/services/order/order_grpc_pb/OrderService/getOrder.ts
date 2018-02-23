@@ -8,9 +8,14 @@ export const getOrderHandler: RpcMiddleware = async (ctx: RpcContext, next: Midd
   let callback: GrpcSendUnaryData<Order> = ctx.callback;
   let request = call.request as GetOrderRequest;
 
-  let order = await OrderLogic.getOrder(request);
+  try {
+    const order = await OrderLogic.getOrder(request);
+    callback(null, order);
+  } catch(error) {
+    callback(error, null);
+  }
 
-  callback(null, order);
+  await next();
 
   return Promise.resolve();
 };
