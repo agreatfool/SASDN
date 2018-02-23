@@ -12,15 +12,10 @@ import {Context as KoaContext, Middleware as KoaMiddleware, Request as KoaReques
 import * as joi from "joi";
 import * as bluebird from "bluebird";
 
-export type GrpcServerUnaryCall<RequestType, ResponseType> = ServerUnaryCall<RequestType>;
-export type GrpcServerReadableStream<RequestType, ResponseType> = ServerReadableStream<RequestType>;
-export type GrpcServerWriteableStream<RequestType, ResponseType> = ServerWriteableStream<RequestType>;
-export type GrpcServerDuplexStream<RequestType, ResponseType> = ServerDuplexStream<RequestType, ResponseType>;
-
-export type GrpcServerCall<RequestType, ResponseType> = GrpcServerUnaryCall<RequestType, ResponseType>
-  | GrpcServerReadableStream<RequestType, ResponseType>
-  | GrpcServerWriteableStream<RequestType, ResponseType>
-  | GrpcServerDuplexStream<RequestType, ResponseType>;
+export type GrpcServerCall<RequestType, ResponseType> = ServerUnaryCall<RequestType>
+  | ServerReadableStream<RequestType>
+  | ServerWriteableStream<RequestType>
+  | ServerDuplexStream<RequestType, ResponseType>;
 
 export interface GatewayContext extends KoaContext {
     params: any;
@@ -53,7 +48,7 @@ export declare abstract class GatewayApiBase {
 
 export declare type RpcMiddleware = (ctx: RpcContext, next: MiddlewareNext) => Promise<any>;
 export declare type MiddlewareNext = () => Promise<any>;
-export declare type WrappedHandler = (call: GrpcServerCall<RequestType, ResponseType>, callback?: sendUnaryData<ResponseType>) => Promise<any>;
+export declare type WrappedHandler = (call: GrpcServerCall<any, any>, callback?: sendUnaryData<any>) => Promise<any>;
 
 export declare class RpcApplication extends EventEmitter {
     constructor();
@@ -89,7 +84,7 @@ export declare class RpcApplication extends EventEmitter {
      * @param {RpcMiddleware} reqHandler
      * @returns {WrappedHandler}
      */
-    wrapGrpcHandler(reqHandler: RpcMiddleware): (call: GrpcServerCall<RequestType, ResponseType>, callback?: sendUnaryData<ResponseType>) => Promise<void>;
+    wrapGrpcHandler(reqHandler: RpcMiddleware): (call: GrpcServerCall<any, any>, callback?: sendUnaryData<any>) => Promise<void>;
 }
 
 export declare enum GrpcOpType {
@@ -105,8 +100,8 @@ export declare enum GrpcOpType {
 
 export declare class RpcContext {
     app: RpcApplication;
-    call: GrpcServerCall<RequestType, ResponseType>;
-    callback: sendUnaryData<ResponseType>;
+    call: GrpcServerCall<any, any>;
+    callback: sendUnaryData<any>;
 
     constructor();
 
