@@ -72,6 +72,7 @@ export interface FieldInfo {
   fieldType: string;
   fieldComment: string;
   isRepeated: boolean;
+  fieldInfo?: FieldInfo[] | string;
 }
 
 export interface MethodInfo {
@@ -320,6 +321,7 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
       Object.keys(protoType.fields).forEach((fieldKey) => {
         const field = protoType.fields[fieldKey] as ProtobufField;
         let fieldType = field.type;
+        let info;
         if (PROTO_BUFFER_BASE_TYPE.indexOf(fieldType) < 0) {
           /**
            * Means this field is a custom type
@@ -327,6 +329,7 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
            * Need change type from {package}.{MessageName} to {package}{MessageName} : order.Order => orderOrder
            */
           fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', '') : packageName + fieldType;
+          info = fieldType;
         }
 
         const fieldInfo: FieldInfo = {
@@ -334,6 +337,7 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
           fieldName: field.name,
           fieldComment: field.comment,
           isRepeated: field.repeated,
+          fieldInfo: info,
         };
 
         fields.push(fieldInfo);
@@ -341,7 +345,7 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
     } else if (reflectObj.hasOwnProperty('methods')) {
       // Means this ReflectionObject is typeof Service
       const protoService = reflectObj as ProtobufService;
-      Object.keys(protoService).forEach((methodKey) => {
+      Object.keys(protoService.methods).forEach((methodKey) => {
         const method = protoService.methods[methodKey] as ProtobufMethod;
         const requestAndResponse: string[] = [ method.requestType, method.responseType ].map((value) => {
           return value.indexOf('.') >= 0 ? value.replace('.', '') : packageName + value;

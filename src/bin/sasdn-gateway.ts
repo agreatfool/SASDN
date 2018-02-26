@@ -227,6 +227,11 @@ class GatewayCLI {
                                 if (this._protoMsgImportInfos.hasOwnProperty(definitionName)) {
                                     let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
                                     requestType = protoMsgImportInfo.msgType;
+                                    protoMsgImportInfo.fields.forEach((field) => {
+                                       if(field.fieldInfo) {
+                                           field.fieldInfo = this._protoMsgImportInfos[field.fieldInfo as string].fields;
+                                       }
+                                    });
                                     protoMsgImportPaths = addIntoRpcMethodImportPathInfos(
                                         protoMsgImportPaths,
                                         requestType as string,

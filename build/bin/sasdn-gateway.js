@@ -165,6 +165,11 @@ class GatewayCLI {
                                     if (this._protoMsgImportInfos.hasOwnProperty(definitionName)) {
                                         let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
                                         requestType = protoMsgImportInfo.msgType;
+                                        protoMsgImportInfo.fields.forEach((field) => {
+                                            if (field.fieldInfo) {
+                                                field.fieldInfo = this._protoMsgImportInfos[field.fieldInfo].fields;
+                                            }
+                                        });
                                         protoMsgImportPaths = lib_1.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, requestType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                                     }
                                     break;

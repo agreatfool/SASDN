@@ -137,6 +137,7 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
             Object.keys(protoType.fields).forEach((fieldKey) => {
                 const field = protoType.fields[fieldKey];
                 let fieldType = field.type;
+                let info;
                 if (PROTO_BUFFER_BASE_TYPE.indexOf(fieldType) < 0) {
                     /**
                      * Means this field is a custom type
@@ -144,12 +145,14 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
                      * Need change type from {package}.{MessageName} to {package}{MessageName} : order.Order => orderOrder
                      */
                     fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', '') : packageName + fieldType;
+                    info = fieldType;
                 }
                 const fieldInfo = {
                     fieldType: fieldType,
                     fieldName: field.name,
                     fieldComment: field.comment,
                     isRepeated: field.repeated,
+                    fieldInfo: info,
                 };
                 fields.push(fieldInfo);
             });
@@ -157,7 +160,7 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
         else if (reflectObj.hasOwnProperty('methods')) {
             // Means this ReflectionObject is typeof Service
             const protoService = reflectObj;
-            Object.keys(protoService).forEach((methodKey) => {
+            Object.keys(protoService.methods).forEach((methodKey) => {
                 const method = protoService.methods[methodKey];
                 const requestAndResponse = [method.requestType, method.responseType].map((value) => {
                     return value.indexOf('.') >= 0 ? value.replace('.', '') : packageName + value;
