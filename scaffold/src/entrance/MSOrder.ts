@@ -7,6 +7,7 @@ import { LEVEL } from 'sasdn-log';
 import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
 import { DatabaseOption } from '../model/DatabaseOptions';
+import { ContainerEnv } from '../constant/const';
 
 export default class MSOrder {
   private _initialized: boolean;
@@ -16,8 +17,8 @@ export default class MSOrder {
     this._initialized = false;
   }
 
-  public async init(isDev: boolean = false): Promise<any> {
-    if (isDev) {
+  public async init(container: string = ContainerEnv.PM2): Promise<any> {
+    if (container === ContainerEnv.PM2) {
       const loadEnv = LibDotEnv.config();
       if (loadEnv.error) {
         return Promise.reject(loadEnv.error);

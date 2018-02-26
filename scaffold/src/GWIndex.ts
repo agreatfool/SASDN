@@ -1,9 +1,8 @@
 import GWDemo from './entrance/GWDemo';
 import { Logger } from './lib/Logger';
 
-
 const server = new GWDemo();
-server.init(process.env.NODE_ENV === 'development')
+server.init(process.env.CONTAINER)
   .then(() => {
     server.start();
   })

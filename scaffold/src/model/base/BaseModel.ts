@@ -113,7 +113,7 @@ export class BaseModel<E extends BaseOrmEntity> {
    */
   public async find(params?: FindOptions<E> | DeepPartial<E>, tableIndexList?: number[]): Promise<any[]> {
     // 有 metaData 说明分表了
-    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._EntityClass.name];
     let result: any[] = [];
     if (!metaData) {
       result = await this._find(this._EntityClass, params);
@@ -151,7 +151,7 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @returns {Promise<[any[] , number]>}
    */
   public async findAndCount(params?: FindOptions<E> | DeepPartial<E>, tableIndexList?: number[]): Promise<[any[], number]> {
-    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._EntityClass.name];
     let result: [any[], number] = [[], 0];
     if (!metaData) {
       result = await this._findAndCount(this._EntityClass, params);
@@ -205,7 +205,7 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @returns {Promise<void>}
    */
   public async updateMulti(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>, tableIndexList?: number[]): Promise<void> {
-    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._EntityClass.name];
     // 不分表的情况
     if (!metaData) {
       await this._update(this._EntityClass, queryParams, updateParams);
@@ -251,7 +251,7 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @returns {Promise<void>}
    */
   public async deleteMulti(params: DeepPartial<E>, tableIndexList?: number[]): Promise<void> {
-    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._EntityClass.name];
     // 不分表的情况
     if (!metaData) {
       await this._delete(this._EntityClass, params);
