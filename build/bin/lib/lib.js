@@ -16,6 +16,23 @@ const bluebird = require("bluebird");
 const LibMkdirP = require("mkdirp");
 const wrappedProtobufjsParse = require('./protobufjs/ParseWrapper');
 const mkdirp = bluebird.promisify(LibMkdirP);
+const PROTO_BUFFER_BASE_TYPE = [
+    'double',
+    'float',
+    'int32',
+    'int64',
+    'uint32',
+    'uint64',
+    'sint32',
+    'sint64',
+    'fixed32',
+    'fixed64',
+    'sfixed32',
+    'sfixed64',
+    'bool',
+    'string',
+    'bytes'
+];
 /**
  * 读取 protoDir 文件夹内的 proto 文件名生成 ProtoFile 结构体。
  *
@@ -107,13 +124,60 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
     let pkgRoot = proto.root.lookup(proto.package);
     let msgImportInfos = {};
     let nestedKeys = Object.keys(pkgRoot.nested);
+    const packageName = proto.package;
     nestedKeys.forEach((nestedKey) => {
         // packageName: 'user' + symlink: '.' + nestedKey: 'UserService' = 'user.UserService'
         let msgTypeStr = pkgRoot.name + symlink + nestedKey;
+        const reflectObj = pkgRoot.lookup(nestedKey);
+        const fields = [];
+        const methods = [];
+        if (reflectObj.hasOwnProperty('fields')) {
+            // Means this ReflectionObject is typeof Type
+            const protoType = reflectObj;
+            Object.keys(protoType.fields).forEach((fieldKey) => {
+                const field = protoType.fields[fieldKey];
+                let fieldType = field.type;
+                if (PROTO_BUFFER_BASE_TYPE.indexOf(fieldType) < 0) {
+                    /**
+                     * Means this field is a custom type
+                     * If type contain '.' means this type is import from other proto file
+                     * Need change type from {package}.{MessageName} to {package}{MessageName} : order.Order => orderOrder
+                     */
+                    fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', '') : packageName + fieldType;
+                }
+                const fieldInfo = {
+                    fieldType: fieldType,
+                    fieldName: field.name,
+                    fieldComment: field.comment,
+                    isRepeated: field.repeated,
+                };
+                fields.push(fieldInfo);
+            });
+        }
+        else if (reflectObj.hasOwnProperty('methods')) {
+            // Means this ReflectionObject is typeof Service
+            const protoService = reflectObj;
+            Object.keys(protoService).forEach((methodKey) => {
+                const method = protoService.methods[methodKey];
+                const requestAndResponse = [method.requestType, method.responseType].map((value) => {
+                    return value.indexOf('.') >= 0 ? value.replace('.', '') : packageName + value;
+                });
+                const methodInfo = {
+                    methodName: method.name,
+                    requestType: requestAndResponse[0],
+                    requestStream: method.requestStream,
+                    responseType: requestAndResponse[1],
+                    responseStream: method.responseStream,
+                };
+                methods.push(methodInfo);
+            });
+        }
         msgImportInfos[msgTypeStr] = {
             msgType: nestedKey,
             namespace: pkgRoot.name,
-            protoFile: protoFile
+            protoFile: protoFile,
+            fields: fields,
+            methods: methods,
         };
     });
     return msgImportInfos;
