@@ -33,6 +33,22 @@ interface GatewayInfo {
   injectedCode: string;
 }
 
+interface JoiComment {
+  required: boolean;
+  defaultValue?: any;
+  valid?: Array<any>;
+  invalid?: Array<any>;
+  min?: number;
+  max?: number;
+  greater?: number;
+  less?: number;
+  interger?: any;
+  positive?: any;
+  regex?: string;
+  truthy?: Array<any>;
+  falsy?: Array<any>;
+}
+
 interface GatewayDefinitionSchemaMap {
   [definitionName: string]: Array<GatewaySwaggerSchema>;
 }
@@ -397,26 +413,43 @@ class GatewayCLI {
     }
   }
 
-  private _genFieldInfo(field: FieldInfo): string {
+  private _genFieldInfo(field: FieldInfo, space: string = '', newLine: string = ''): string {
     let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
     fieldName = isRepeated ? fieldName + 'List' : fieldName;
     if (typeof(fieldComment) === 'string') {
       // Comments is not JSON
       fieldComment = {};
     }
+    let extraStr: string = '';
     const jsonComment = fieldComment as object;
-    if (typeof(fieldInfo) !== 'string' ) {
+    if (jsonComment && jsonComment.hasOwnProperty('Joi')) {
+      const joiComment = jsonComment['Joi'] as JoiComment;
+      extraStr += joiComment.required ? '.required()' : '.optional()';
+      extraStr += joiComment.defaultValue ? `.default(${joiComment.defaultValue})` : '';
+      extraStr += joiComment.valid ? `.valid(${[...joiComment.valid]})` : '';
+      extraStr += joiComment.invalid ? `.invalid(${[...joiComment.invalid]})` : '';
+      extraStr += joiComment.interger && fieldType === 'number' ? '.interger()' : '';
+      extraStr += joiComment.positive && fieldType === 'number' ? '.positive()' : '';
+      extraStr += joiComment.greater && fieldType === 'number' ? `.greater(${joiComment.greater})` : '';
+      extraStr += joiComment.less && fieldType === 'number' ? `.less(${joiComment.less})` : '';
+      extraStr += joiComment.max && (fieldType === 'number' || fieldType === 'string') ? `.max(${joiComment.max})` : '';
+      extraStr += joiComment.min && (fieldType === 'number' || fieldType === 'string') ? `.min(${joiComment.min})` : '';
+      extraStr += joiComment.regex && fieldType === 'string' ? `.regex(${joiComment.regex})` : '';
+      extraStr += joiComment.truthy && fieldType === 'bool' ? `.truthy(${[...joiComment.truthy]})` : '';
+      extraStr += joiComment.falsy && fieldType === 'bool' ? `.falsy(${[...joiComment.falsy]})` : '';
+    }
+    if (fieldInfo && typeof(fieldInfo) !== 'string') {
       // Means this field is not a base type
-      let objectStr = '';
-      (fieldInfo as FieldInfo[]).forEach((nextField) => {
-        objectStr += this._genFieldInfo(nextField);
+      let returnStr = `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}LibJoi.object().keys({\n`;
+      space += newLine ? '' : '        ';
+      fieldInfo.forEach((nextField) => {
+        returnStr += this._genFieldInfo(nextField, space+'  ', '\n');
       });
-      return `${fieldName}: LibJoi.object().keys({
-               ${objectStr}
-             }),`;
+      returnStr += `${space}${isRepeated ? ')' : ''}})${extraStr},${newLine}`;
+      return returnStr;
     } else {
       // protobuffer base type
-      return `${fieldName}: PbJoi.v${ucfirst(fieldType)}().base()`;
+      return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${ucfirst(fieldType)}().base()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
     }
   }
 }
