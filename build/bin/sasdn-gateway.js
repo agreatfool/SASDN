@@ -329,10 +329,12 @@ class GatewayCLI {
         const jsonComment = fieldComment;
         if (typeof (fieldInfo) !== 'string') {
             // Means this field is not a base type
+            let objectStr = '';
+            fieldInfo.forEach((nextField) => {
+                objectStr += this._genFieldInfo(nextField);
+            });
             return `${fieldName}: LibJoi.object().keys({
-               ${fieldInfo.forEach((nextField) => {
-                return this._genFieldInfo(nextField);
-            })}
+               ${objectStr}
              }),`;
         }
         else {
