@@ -70,7 +70,7 @@ export interface ProtoMsgImportInfo {
 export interface FieldInfo {
   fieldName: string;
   fieldType: string;
-  fieldComment: string;
+  fieldComment: object | string;
   isRepeated: boolean;
   fieldInfo?: FieldInfo[] | string;
 }
@@ -332,10 +332,12 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
           info = fieldType;
         }
 
+        const commentObject = JSON.parse(field.comment);
+
         const fieldInfo: FieldInfo = {
           fieldType: fieldType,
           fieldName: field.name,
-          fieldComment: field.comment,
+          fieldComment: commentObject || field.comment,
           isRepeated: field.repeated,
           fieldInfo: info,
         };

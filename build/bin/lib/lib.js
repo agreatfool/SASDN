@@ -147,10 +147,11 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
                     fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', '') : packageName + fieldType;
                     info = fieldType;
                 }
+                const commentObject = JSON.parse(field.comment);
                 const fieldInfo = {
                     fieldType: fieldType,
                     fieldName: field.name,
-                    fieldComment: field.comment,
+                    fieldComment: commentObject || field.comment,
                     isRepeated: field.repeated,
                     fieldInfo: info,
                 };

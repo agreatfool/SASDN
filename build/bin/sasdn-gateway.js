@@ -153,6 +153,7 @@ class GatewayCLI {
                         let funcParamsStr = '';
                         let aggParamsStr = '';
                         let requiredParamsStr = '';
+                        let fields = [];
                         // 循环解析 parameters 字段，并将字段类型和 schema 结构加入到 swaggerSchemaList。
                         for (let parameter of methodOperation.parameters) {
                             let type;
@@ -166,10 +167,9 @@ class GatewayCLI {
                                         let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
                                         requestType = protoMsgImportInfo.msgType;
                                         protoMsgImportInfo.fields.forEach((field) => {
-                                            if (field.fieldInfo) {
-                                                field.fieldInfo = this._protoMsgImportInfos[field.fieldInfo].fields;
-                                            }
+                                            this._checkFieldInfo(field);
                                         });
+                                        fields = protoMsgImportInfo.fields;
                                         protoMsgImportPaths = lib_1.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, requestType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                                     }
                                     break;
@@ -193,7 +193,7 @@ class GatewayCLI {
                             funcParamsStr += (funcParamsStr === '') ? parameter.name : `, ${parameter.name}`;
                             aggParamsStr += (aggParamsStr === '') ? `'${parameter.name}'` : `, '${parameter.name}'`;
                             if (parameter.required) {
-                                requiredParamsStr += (requiredParamsStr == '') ? `'${parameter.name}'` : `, '${parameter.name}'`;
+                                requiredParamsStr += (requiredParamsStr === '') ? `'${parameter.name}'` : `, '${parameter.name}'`;
                             }
                         }
                         // 循环解析 response 的 definitions 数据，将需要 import 的文件和类名加入到 RpcMethodImportPathInfos 列表数据中。
@@ -241,6 +241,7 @@ class GatewayCLI {
                             requiredParamsStr: requiredParamsStr,
                             requestTypeStr: requestType,
                             requestParameters: swaggerSchemaList,
+                            requestFields: fields,
                             responseTypeStr: responseType,
                             responseParameters: responseParameters,
                             injectedCode: INJECTED_CODE,
@@ -303,6 +304,18 @@ class GatewayCLI {
                 }
             }
         });
+    }
+    _checkFieldInfo(field) {
+        if (field.fieldInfo) {
+            const msgTypeStr = field.fieldInfo;
+            if (this._protoMsgImportInfos.hasOwnProperty(msgTypeStr)) {
+                const nextFields = this._protoMsgImportInfos[msgTypeStr].fields;
+                nextFields.forEach((nextField) => {
+                    this._checkFieldInfo(nextField);
+                });
+                field.fieldInfo = nextFields;
+            }
+        }
     }
 }
 GatewayCLI.instance().run().catch((err) => {
