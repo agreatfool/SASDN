@@ -449,7 +449,7 @@ class GatewayCLI {
       return returnStr;
     } else {
       // protobuffer base type
-      return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${ucfirst(fieldType)}().base()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
+      return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${ucfirst(fieldType)}.base()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
     }
   }
 }
