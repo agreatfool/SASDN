@@ -169,7 +169,9 @@ class GatewayCLI {
                                         protoMsgImportInfo.fields.forEach((field) => {
                                             this._checkFieldInfo(field);
                                         });
-                                        fields = protoMsgImportInfo.fields;
+                                        protoMsgImportInfo.fields.forEach((field) => {
+                                            fields.push(this._genFieldInfo(field));
+                                        });
                                         protoMsgImportPaths = lib_1.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, requestType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                                     }
                                     break;
@@ -272,9 +274,6 @@ class GatewayCLI {
                         }
                     }
                     return name;
-                });
-                template_1.TplEngine.registerHelper('joi', function (field) {
-                    return this._genFieldInfo(field);
                 });
                 // write file Router.ts in OUTPUT_DIR/router/
                 let routerContent = template_1.TplEngine.render('router/router', {

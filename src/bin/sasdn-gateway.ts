@@ -27,7 +27,7 @@ interface GatewayInfo {
   requiredParamsStr: string;
   requestTypeStr: string;
   requestParameters: Array<GatewaySwaggerSchema>;
-  requestFields: Array<FieldInfo>;
+  requestFields: Array<string>;
   responseTypeStr: string;
   responseParameters: Array<GatewaySwaggerSchema>;
   injectedCode: string;
@@ -196,7 +196,7 @@ class GatewayCLI {
           let funcParamsStr: string = '';
           let aggParamsStr: string = '';
           let requiredParamsStr: string = '';
-          let fields: FieldInfo[] = [];
+          let fields: string[] = [];
 
           // 循环解析 parameters 字段，并将字段类型和 schema 结构加入到 swaggerSchemaList。
           for (let parameter of methodOperation.parameters) {
@@ -216,7 +216,9 @@ class GatewayCLI {
                   protoMsgImportInfo.fields.forEach((field) => {
                     this._checkFieldInfo(field);
                   });
-                  fields = protoMsgImportInfo.fields;
+                  protoMsgImportInfo.fields.forEach((field) => {
+                    fields.push(this._genFieldInfo(field));
+                  });
                   protoMsgImportPaths = addIntoRpcMethodImportPathInfos(
                     protoMsgImportPaths,
                     requestType as string,
@@ -342,9 +344,6 @@ class GatewayCLI {
           }
         }
         return name;
-      });
-      TplEngine.registerHelper('joi', function (field: FieldInfo) {
-        return this._genFieldInfo(field);
       });
 
       // write file Router.ts in OUTPUT_DIR/router/
