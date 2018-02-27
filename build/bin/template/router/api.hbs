@@ -1,5 +1,6 @@
 import * as Mock from 'mockjs';
-import {GatewayApiBase, GatewayContext, MiddlewareNext} from 'sasdn';
+import {GatewayApiBase, GatewayContext, MiddlewareNext, joi as LibJoi} from 'sasdn';
+import { PbJoi } from '../../../lib/PbJoi';
 {{#each info.protoMsgImportPath}}
 import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from '{{{@key}}}';
 {{/each}}
@@ -21,54 +22,11 @@ class {{info.apiName}} extends GatewayApiBase {
     this.uri = '{{info.uri}}';
     this.type = 'application/json; charset=utf-8';
     this.schemaDefObj = {
-    {{#each info.requestParameters}}
-      {{hump this.name}}: {
-        type: '{{this.type}}',
-        required: {{this.required}},
-        {{#if this.schema}}
-        schema: {
-        {{#each this.schema}}
-          {{#equal this.type 'number'}}{{hump this.name}}{{/equal~}}
-          {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
-          {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
-          {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
-          {{#equal this.type 'object'}}{{hump this.name}}{{#if this.protoMap}}Map{{/if}}{{/equal}}: {
-            type: '{{#if this.protoMap}}array{{else}}{{this.type}}{{/if}}',
-            required: {{this.required}},
-            {{#if this.schema}}
-            schema: {
-            {{#each this.schema}}
-              {{#equal this.type 'number'}}{{hump this.name}}{{/equal~}}
-              {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
-              {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
-              {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
-              {{#equal this.type 'object'}}{{hump this.name}}{{#if this.protoMap}}Map{{/if}}{{/equal}}: {
-                type: '{{#if this.protoMap}}array{{else}}{{this.type}}{{/if}}',
-                required: {{this.required}},
-                {{#if this.schema}}
-                schema: {
-                {{#each this.schema}}
-                  {{#equal this.type 'number'}}{{hump this.name}}{{/equal~}}
-                  {{#equal this.type 'boolean'}}{{hump this.name}}{{/equal~}}
-                  {{#equal this.type 'string'}}{{hump this.name}}{{/equal~}}
-                  {{#equal this.type 'array'}}{{hump this.name}}List{{/equal~}}
-                  {{#equal this.type 'object'}}{{hump this.name}}{{#if this.protoMap}}Map{{/if}}{{/equal}}: {
-                    type: '{{#if this.protoMap}}array{{else}}{{this.type}}{{/if}}',
-                    required: {{this.required}},
-                  },
-                {{/each}}
-                },
-                {{/if}}
-              },
-            {{/each}}
-            },
-            {{/if}}
-          },
+      body: LibJoi.object().keys({
+        {{#each info.requestFields}}
+        {{joi this}}
         {{/each}}
-        },
-        {{/if}}
-      },
-    {{/each}}
+      })
     };
   }
 

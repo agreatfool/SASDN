@@ -343,6 +343,9 @@ class GatewayCLI {
         }
         return name;
       });
+      TplEngine.registerHelper('joi', function (field: FieldInfo) {
+        return this._genFieldInfo(field);
+      });
 
       // write file Router.ts in OUTPUT_DIR/router/
       let routerContent = TplEngine.render('router/router', {
@@ -392,6 +395,27 @@ class GatewayCLI {
         });
         field.fieldInfo = nextFields;
       }
+    }
+  }
+
+  private _genFieldInfo(field: FieldInfo): string {
+    let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
+    fieldName = isRepeated ? fieldName + 'List' : fieldName;
+    if (typeof(fieldComment) === 'string') {
+      // Comments is not JSON
+      fieldComment = {};
+    }
+    const jsonComment = fieldComment as object;
+    if (typeof(fieldInfo) !== 'string' ) {
+      // Means this field is not a base type
+      return `${fieldName}: LibJoi.object().keys({
+               ${fieldInfo.forEach((nextField) => {
+                   return this._genFieldInfo(nextField);
+                })}
+             }),`;
+    } else {
+      // protobuffer base type
+      return `${fieldName}: PbJoi.v${ucfirst(fieldType)}().base()`;
     }
   }
 }
