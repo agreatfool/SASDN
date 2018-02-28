@@ -24,7 +24,7 @@ class {{info.apiName}} extends GatewayApiBase {
     this.schemaDefObj = {
       body: LibJoi.object().keys({
         {{#each info.requestFields}}
-        {{this}}
+        {{{this}}}
         {{/each}}
       })
     };

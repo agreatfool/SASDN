@@ -337,12 +337,12 @@ class GatewayCLI {
             }
             extraStr += joiComment.valid ? `.valid(${[...joiComment.valid]})` : '';
             extraStr += joiComment.invalid ? `.invalid(${[...joiComment.invalid]})` : '';
-            extraStr += joiComment.interger && fieldType === 'number' ? '.interger()' : '';
-            extraStr += joiComment.positive && fieldType === 'number' ? '.positive()' : '';
-            extraStr += joiComment.greater && fieldType === 'number' ? `.greater(${joiComment.greater})` : '';
-            extraStr += joiComment.less && fieldType === 'number' ? `.less(${joiComment.less})` : '';
-            extraStr += joiComment.max && (fieldType === 'number' || fieldType === 'string') ? `.max(${joiComment.max})` : '';
-            extraStr += joiComment.min && (fieldType === 'number' || fieldType === 'string') ? `.min(${joiComment.min})` : '';
+            extraStr += joiComment.interger && this._isNumber(fieldType) ? '.interger()' : '';
+            extraStr += joiComment.positive && this._isNumber(fieldType) ? '.positive()' : '';
+            extraStr += joiComment.greater && this._isNumber(fieldType) ? `.greater(${joiComment.greater})` : '';
+            extraStr += joiComment.less && this._isNumber(fieldType) ? `.less(${joiComment.less})` : '';
+            extraStr += joiComment.max && (this._isNumber(fieldType) || fieldType === 'string') ? `.max(${joiComment.max})` : '';
+            extraStr += joiComment.min && (this._isNumber(fieldType) || fieldType === 'string') ? `.min(${joiComment.min})` : '';
             extraStr += joiComment.regex && fieldType === 'string' ? `.regex(${joiComment.regex})` : '';
             extraStr += joiComment.truthy && fieldType === 'bool' ? `.truthy(${[...joiComment.truthy]})` : '';
             extraStr += joiComment.falsy && fieldType === 'bool' ? `.falsy(${[...joiComment.falsy]})` : '';
@@ -361,6 +361,22 @@ class GatewayCLI {
             // protobuffer base type
             return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${lib_1.ucfirst(fieldType)}.activate()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
         }
+    }
+    _isNumber(type) {
+        return [
+            'double',
+            'float',
+            'int32',
+            'int64',
+            'uint32',
+            'uint64',
+            'sint32',
+            'sint64',
+            'fixed32',
+            'fixed64',
+            'sfixed32',
+            'sfixed64',
+        ].indexOf(type) >= 0;
     }
 }
 GatewayCLI.instance().run().catch((err) => {
