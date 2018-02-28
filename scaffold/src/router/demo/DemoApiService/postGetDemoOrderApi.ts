@@ -23,8 +23,8 @@ class PostGetDemoOrderApi extends GatewayApiBase {
   }
 
   public async handle(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<Order.AsObject> {
-    const order: Order = await OrderLogic.getOrder(ctx, next, params);
-    return Promise.resolve(order.toObject());
+    const response = await OrderLogic.getOrder(ctx, next, params);
+    return Promise.resolve(response.toObject());
   }
 
   public async handleMock(ctx: GatewayContext, next: MiddlewareNext, params: RequestParams): Promise<Order.AsObject> {
