@@ -2,14 +2,14 @@ import { joi } from 'sasdn';
 
 export namespace ProtobufJoiValidation {
   export const vDouble = joi.extend((joi) => ({
-    base: joi.number().greater(Number.MIN_SAFE_INTEGER).less(Number.MAX_SAFE_INTEGER),
+    base: joi.number().min(Number.MIN_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER),
     name: 'activate'
   }));
 
   export const vFloat = vDouble;
 
   export const vInt32 = joi.extend((joi) => ({
-    base: joi.number().integer().greater(Number.MIN_SAFE_INTEGER).less(Number.MAX_SAFE_INTEGER),
+    base: joi.number().integer().min(Number.MIN_SAFE_INTEGER).max(Number.MAX_SAFE_INTEGER),
     name: 'activate'
   }));
 
@@ -26,7 +26,7 @@ export namespace ProtobufJoiValidation {
   export const vSfixed64 = vInt64;
 
   export const vUint32 = joi.extend((joi) => ({
-    base: joi.number().integer().positive().less(Number.MAX_SAFE_INTEGER),
+    base: joi.number().integer().positive().max(Number.MAX_SAFE_INTEGER),
     name: 'activate'
   }));
 
@@ -35,4 +35,14 @@ export namespace ProtobufJoiValidation {
   export const vUint64 = vUint32;
 
   export const vFixed64 = vUint64;
+
+  export const vBool = joi.extend((joi) => ({
+    base: joi.bool(),
+    name: 'activate'
+  }));
+
+  export const vString = joi.extend((joi) => ({
+    base: joi.string(),
+    name: 'activate'
+  }));
 }

@@ -425,7 +425,10 @@ class GatewayCLI {
     if (jsonComment && jsonComment.hasOwnProperty('Joi')) {
       const joiComment = jsonComment['Joi'] as JoiComment;
       extraStr += joiComment.required ? '.required()' : '.optional()';
-      extraStr += joiComment.defaultValue ? `.default(${joiComment.defaultValue})` : '';
+      if (joiComment.defaultValue) {
+        const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;
+        extraStr += `.default(${defaultValue})`;
+      }
       extraStr += joiComment.valid ? `.valid(${[...joiComment.valid]})` : '';
       extraStr += joiComment.invalid ? `.invalid(${[...joiComment.invalid]})` : '';
       extraStr += joiComment.interger && fieldType === 'number' ? '.interger()' : '';
