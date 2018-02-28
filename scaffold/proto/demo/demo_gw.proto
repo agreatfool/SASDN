@@ -6,6 +6,13 @@ import "order/order.proto";
 package demo;
 
 message GetDemoOrderRequest {
+    /**
+     {
+        "Joi": {
+            "required": true
+        }
+     }
+     */
     int64 order_id = 1;
 }
 
