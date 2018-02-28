@@ -3,15 +3,33 @@ import * as LibFs from 'mz/fs';
 import * as recursive from 'recursive-readdir';
 import {
   IParserResult as ProtobufIParserResult, Method as ProtobufMethod, Namespace as ProtobufNamespace,
-  Service as ProtobufService
+  Service as ProtobufService, ReflectionObject as ProtobufReflectionObject, Type as ProtobufType,
+  Field as ProtobufField
 } from 'protobufjs';
-import * as bluebird from 'bluebird';
 import * as LibMkdirP from 'mkdirp';
 import { Schema as SwaggerSchema, Spec as SwaggerSpec } from 'swagger-schema-official';
-import Bluebird = require('bluebird');
+import * as LibUtil from 'util';
 
 const wrappedProtobufjsParse = require('./protobufjs/ParseWrapper');
-const mkdirp: (arg1: string) => Bluebird<string> = bluebird.promisify<string, string>(LibMkdirP);
+const mkdirp:(arg1: string) => Promise<string> = LibUtil.promisify<string, string>(LibMkdirP);
+
+const PROTO_BUFFER_BASE_TYPE = [
+  'double',
+  'float',
+  'int32',
+  'int64',
+  'uint32',
+  'uint64',
+  'sint32',
+  'sint64',
+  'fixed32',
+  'fixed64',
+  'sfixed32',
+  'sfixed64',
+  'bool',
+  'string',
+  'bytes'
+];
 
 /**
  * protoDir: /Users/XXX/Projects/projectX/result
@@ -44,6 +62,24 @@ export interface ProtoMsgImportInfo {
   msgType: string;
   namespace: string;
   protoFile: ProtoFile;
+  fields?: Array<FieldInfo>;
+  methods?: Array<MethodInfo>;
+}
+
+export interface FieldInfo {
+  fieldName: string;
+  fieldType: string;
+  fieldComment: object | string;
+  isRepeated: boolean;
+  fieldInfo?: FieldInfo[] | string;
+}
+
+export interface MethodInfo {
+  methodName: string;
+  requestType: string;
+  requestStream: boolean;
+  responseType: string;
+  responseStream: boolean;
 }
 
 export interface ProtoMsgImportInfos {
@@ -271,13 +307,68 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
   let pkgRoot = proto.root.lookup(proto.package) as ProtobufNamespace;
   let msgImportInfos = {} as ProtoMsgImportInfos;
   let nestedKeys = Object.keys(pkgRoot.nested);
+  const packageName = proto.package;
   nestedKeys.forEach((nestedKey) => {
     // packageName: 'user' + symlink: '.' + nestedKey: 'UserService' = 'user.UserService'
     let msgTypeStr = pkgRoot.name + symlink + nestedKey;
+    const reflectObj:ProtobufReflectionObject = pkgRoot.lookup(nestedKey);
+    const fields: FieldInfo[] = [];
+    const methods: MethodInfo[] = [];
+    if (reflectObj.hasOwnProperty('fields')) {
+      // Means this ReflectionObject is typeof Type
+      const protoType = reflectObj as ProtobufType;
+      Object.keys(protoType.fields).forEach((fieldKey) => {
+        const field = protoType.fields[fieldKey] as ProtobufField;
+        let fieldType = field.type;
+        let info;
+        if (PROTO_BUFFER_BASE_TYPE.indexOf(fieldType) < 0) {
+          /**
+           * Means this field is a custom type
+           * If type contain '.' means this type is import from other proto file
+           * Need change type from {package}.{MessageName} to {package}{MessageName} : order.Order => orderOrder
+           */
+          fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', '') : packageName + fieldType;
+          info = fieldType;
+        }
+
+        const commentObject = JSON.parse(field.comment);
+
+        const fieldInfo: FieldInfo = {
+          fieldType: fieldType,
+          fieldName: field.name,
+          fieldComment: commentObject || field.comment,
+          isRepeated: field.repeated,
+          fieldInfo: info,
+        };
+
+        fields.push(fieldInfo);
+      });
+    } else if (reflectObj.hasOwnProperty('methods')) {
+      // Means this ReflectionObject is typeof Service
+      const protoService = reflectObj as ProtobufService;
+      Object.keys(protoService.methods).forEach((methodKey) => {
+        const method = protoService.methods[methodKey] as ProtobufMethod;
+        const requestAndResponse: string[] = [ method.requestType, method.responseType ].map((value) => {
+          return value.indexOf('.') >= 0 ? value.replace('.', '') : packageName + value;
+        });
+
+        const methodInfo: MethodInfo = {
+          methodName: method.name,
+          requestType: requestAndResponse[0],
+          requestStream: method.requestStream,
+          responseType: requestAndResponse[1],
+          responseStream: method.responseStream,
+        };
+
+        methods.push(methodInfo);
+      });
+    }
     msgImportInfos[msgTypeStr] = {
       msgType: nestedKey,
       namespace: pkgRoot.name,
-      protoFile: protoFile
+      protoFile: protoFile,
+      fields: fields,
+      methods: methods,
     } as ProtoMsgImportInfo;
   });
 

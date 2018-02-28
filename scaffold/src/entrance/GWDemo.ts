@@ -6,6 +6,7 @@ import { Config, ConfigConst } from '../lib/Config';
 import { LEVEL } from 'sasdn-log';
 import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
+import { ContainerEnv } from '../constant/const';
 
 export default class GWDemo {
   private _initialized: boolean;
@@ -15,8 +16,8 @@ export default class GWDemo {
     this._initialized = false;
   }
 
-  public async init(isDev: boolean = false): Promise<any> {
-    if (isDev) {
+  public async init(container: string = ContainerEnv.PM2): Promise<any> {
+    if (container === ContainerEnv.PM2) {
       const loadEnv = LibDotEnv.config();
       if (loadEnv.error) {
         return Promise.reject(loadEnv.error);

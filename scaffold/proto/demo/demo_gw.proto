@@ -6,7 +6,47 @@ import "order/order.proto";
 package demo;
 
 message GetDemoOrderRequest {
-    int64 order_id = 1;
+    /**
+     {
+        "Joi": {
+            "required": true,
+            "valid": [ 200, 300, 400 ]
+        }
+     }
+     */
+    int64 param_int64 = 1;
+    /**
+     {
+        "Joi": {
+            "required": true,
+            "greater": 3000,
+            "less": 6000
+        }
+     }
+     */
+    int32 param_int32 = 2;
+    /**
+     {
+        "Joi": {
+            "required": false,
+            "defaultValue": false,
+            "truthy": [ "1", 1, "true" ],
+            "falsy": [ "0", 0, "false" ]
+        }
+     }
+     */
+    bool param_bool = 3;
+    /**
+         {
+            "Joi": {
+                "required": false,
+                "defaultValue": "string",
+                "max": 50,
+                "min": 5
+            }
+         }
+     */
+    string param_string = 4;
 }
 
 // gPRC-Gateway Demo

@@ -138,7 +138,7 @@ class ServiceCLI {
                         });
                         for (const key of Object.keys(importSet)) {
                             const set = importSet[key];
-                            if(set.size > 0) {
+                            if (set.size > 0) {
                                 protoServicesInfo.protoMessageImportPath[key.substring(9)] = [...set];
                             }
                         }

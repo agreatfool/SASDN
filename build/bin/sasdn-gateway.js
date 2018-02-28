@@ -153,6 +153,7 @@ class GatewayCLI {
                         let funcParamsStr = '';
                         let aggParamsStr = '';
                         let requiredParamsStr = '';
+                        let fields = [];
                         // 循环解析 parameters 字段，并将字段类型和 schema 结构加入到 swaggerSchemaList。
                         for (let parameter of methodOperation.parameters) {
                             let type;
@@ -165,6 +166,12 @@ class GatewayCLI {
                                     if (this._protoMsgImportInfos.hasOwnProperty(definitionName)) {
                                         let protoMsgImportInfo = this._protoMsgImportInfos[definitionName];
                                         requestType = protoMsgImportInfo.msgType;
+                                        protoMsgImportInfo.fields.forEach((field) => {
+                                            this._checkFieldInfo(field);
+                                        });
+                                        protoMsgImportInfo.fields.forEach((field) => {
+                                            fields.push(this._genFieldInfo(field));
+                                        });
                                         protoMsgImportPaths = lib_1.addIntoRpcMethodImportPathInfos(protoMsgImportPaths, requestType, lib_1.Proto.genProtoMsgImportPathViaRouterPath(protoMsgImportInfo.protoFile, lib_1.Proto.genFullOutputRouterApiPath(protoMsgImportInfo.protoFile)).replace(/\\/g, '/'));
                                     }
                                     break;
@@ -188,7 +195,7 @@ class GatewayCLI {
                             funcParamsStr += (funcParamsStr === '') ? parameter.name : `, ${parameter.name}`;
                             aggParamsStr += (aggParamsStr === '') ? `'${parameter.name}'` : `, '${parameter.name}'`;
                             if (parameter.required) {
-                                requiredParamsStr += (requiredParamsStr == '') ? `'${parameter.name}'` : `, '${parameter.name}'`;
+                                requiredParamsStr += (requiredParamsStr === '') ? `'${parameter.name}'` : `, '${parameter.name}'`;
                             }
                         }
                         // 循环解析 response 的 definitions 数据，将需要 import 的文件和类名加入到 RpcMethodImportPathInfos 列表数据中。
@@ -236,6 +243,7 @@ class GatewayCLI {
                             requiredParamsStr: requiredParamsStr,
                             requestTypeStr: requestType,
                             requestParameters: swaggerSchemaList,
+                            requestFields: fields,
                             responseTypeStr: responseType,
                             responseParameters: responseParameters,
                             injectedCode: INJECTED_CODE,
@@ -298,6 +306,97 @@ class GatewayCLI {
                 }
             }
         });
+    }
+    _checkFieldInfo(field) {
+        if (field.fieldInfo) {
+            const msgTypeStr = field.fieldInfo;
+            if (this._protoMsgImportInfos.hasOwnProperty(msgTypeStr)) {
+                const nextFields = this._protoMsgImportInfos[msgTypeStr].fields;
+                nextFields.forEach((nextField) => {
+                    this._checkFieldInfo(nextField);
+                });
+                field.fieldInfo = nextFields;
+            }
+        }
+    }
+    _genFieldInfo(field, space = '', newLine = '') {
+        let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
+        fieldName = isRepeated ? fieldName + 'List' : fieldName;
+        if (typeof (fieldComment) === 'string') {
+            // Comments is not JSON
+            fieldComment = {};
+        }
+        let extraStr = '';
+        const jsonComment = fieldComment;
+        if (jsonComment && jsonComment.hasOwnProperty('Joi')) {
+            const joiComment = jsonComment['Joi'];
+            extraStr += joiComment.required ? '.required()' : '.optional()';
+            if (joiComment.defaultValue) {
+                const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;
+                extraStr += `.default(${defaultValue})`;
+            }
+            if (joiComment.valid) {
+                const valid = joiComment.valid.map((value) => {
+                    return typeof (value) === 'string' ? `'${value}'` : value;
+                });
+                extraStr += `.valid([${valid.join(', ')}])`;
+            }
+            if (joiComment.invalid) {
+                const invalid = joiComment.invalid.map((value) => {
+                    return typeof (value) === 'string' ? `'${value}'` : value;
+                });
+                extraStr += `.invalid([${invalid.join(', ')}])`;
+            }
+            extraStr += joiComment.interger && this._isNumber(fieldType) ? '.interger()' : '';
+            extraStr += joiComment.positive && this._isNumber(fieldType) ? '.positive()' : '';
+            extraStr += joiComment.greater && this._isNumber(fieldType) ? `.greater(${joiComment.greater})` : '';
+            extraStr += joiComment.less && this._isNumber(fieldType) ? `.less(${joiComment.less})` : '';
+            extraStr += joiComment.max && (this._isNumber(fieldType) || fieldType === 'string') ? `.max(${joiComment.max})` : '';
+            extraStr += joiComment.min && (this._isNumber(fieldType) || fieldType === 'string') ? `.min(${joiComment.min})` : '';
+            extraStr += joiComment.regex && fieldType === 'string' ? `.regex(${joiComment.regex})` : '';
+            if (joiComment.truthy) {
+                const truthy = joiComment.truthy.map((value) => {
+                    return typeof (value) === 'string' ? `'${value}'` : value;
+                });
+                extraStr += `.truthy([${truthy.join(', ')}])`;
+            }
+            if (joiComment.falsy) {
+                const falsy = joiComment.falsy.map((value) => {
+                    return typeof (value) === 'string' ? `'${value}'` : value;
+                });
+                extraStr += `.falsy([${falsy.join(', ')}])`;
+            }
+        }
+        if (fieldInfo && typeof (fieldInfo) !== 'string') {
+            // Means this field is not a base type
+            let returnStr = `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}LibJoi.object().keys({\n`;
+            space += newLine ? '' : '        ';
+            fieldInfo.forEach((nextField) => {
+                returnStr += this._genFieldInfo(nextField, space + '  ', '\n');
+            });
+            returnStr += `${space}${isRepeated ? ')' : ''}})${extraStr},${newLine}`;
+            return returnStr;
+        }
+        else {
+            // protobuffer base type
+            return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${lib_1.ucfirst(fieldType)}.activate()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
+        }
+    }
+    _isNumber(type) {
+        return [
+            'double',
+            'float',
+            'int32',
+            'int64',
+            'uint32',
+            'uint64',
+            'sint32',
+            'sint64',
+            'fixed32',
+            'fixed64',
+            'sfixed32',
+            'sfixed64',
+        ].indexOf(type) >= 0;
     }
 }
 GatewayCLI.instance().run().catch((err) => {

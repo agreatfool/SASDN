@@ -2,7 +2,7 @@ import MSOrder from './entrance/MSOrder';
 import { Logger } from './lib/Logger';
 
 const server = new MSOrder();
-server.init(process.env.NODE_ENV === 'development')
+server.init(process.env.CONTAINER)
   .then(() => {
     server.start();
   })

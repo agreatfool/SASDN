@@ -21,7 +21,6 @@
   "homepage": "https://github.com/agreatfool/SASDN#readme",
   "dependencies": {
     "@types/fs-extra": "4.0.2",
-    "bluebird": "3.5.1",
     "commander": "2.11.0",
     "debug": "2.6.9",
     "depd": "1.1.1",

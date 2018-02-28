@@ -1,7 +1,8 @@
 import * as joi from 'joi';
-import * as bluebird from 'bluebird';
+import * as LibUtil from 'util';
 
-let joiValidate = bluebird.promisify(joi.validate) as {
-    <T>(value: Object, schema: Object, options: joi.ValidationOptions): bluebird<T>
+let joiValidate = LibUtil.promisify(joi.validate) as {
+  <T>(value: Object, schema: Object, options: joi.ValidationOptions): Promise<T>
 };
-export {joi, joiValidate};
+
+export { joi, joiValidate };

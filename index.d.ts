@@ -10,7 +10,6 @@ import {
 } from 'grpc';
 import {Context as KoaContext, Middleware as KoaMiddleware, Request as KoaRequest} from "koa";
 import * as joi from "joi";
-import * as bluebird from "bluebird";
 
 export type GrpcServerCall<RequestType, ResponseType> = ServerUnaryCall<RequestType>
   | ServerReadableStream<RequestType>
@@ -24,14 +23,6 @@ export interface GatewayContext extends KoaContext {
 export interface GatewayRequest extends KoaRequest {
     body: any;
 }
-export interface GatewayJoiSchema {
-    type: string;
-    required: boolean;
-    schema?: GatewayJoiSchemaMap;
-}
-export interface GatewayJoiSchemaMap {
-    [name: string]: GatewayJoiSchema;
-}
 export interface GatewayApiParams {
     [key: string]: any;
 }
@@ -39,7 +30,7 @@ export declare abstract class GatewayApiBase {
     method: string;
     uri: string;
     type: string;
-    schemaDefObj: GatewayJoiSchemaMap;
+    schemaDefObj: joi.SchemaMap;
 
     abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
 
@@ -113,5 +104,5 @@ export declare class RpcContext {
     onError(err: Error): void;
 }
 
-declare let joiValidate: <T>(value: Object, schema: Object, options: joi.ValidationOptions) => bluebird<T>;
+declare let joiValidate: <T>(value: Object, schema: Object, options: joi.ValidationOptions) => Promise<T>;
 export { joi, joiValidate };
