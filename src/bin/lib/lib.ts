@@ -8,10 +8,10 @@ import {
 } from 'protobufjs';
 import * as LibMkdirP from 'mkdirp';
 import { Schema as SwaggerSchema, Spec as SwaggerSpec } from 'swagger-schema-official';
-import * as util from 'util';
+import * as LibUtil from 'util';
 
 const wrappedProtobufjsParse = require('./protobufjs/ParseWrapper');
-const mkdirp:(arg1: string) => Promise<string> = util.promisify<string, string>(LibMkdirP);
+const mkdirp:(arg1: string) => Promise<string> = LibUtil.promisify<string, string>(LibMkdirP);
 
 const PROTO_BUFFER_BASE_TYPE = [
   'double',
