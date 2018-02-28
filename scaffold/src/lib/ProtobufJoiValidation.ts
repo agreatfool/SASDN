@@ -1,16 +1,16 @@
 import { joi } from 'sasdn';
 
-export namespace PbJoi {
+export namespace ProtobufJoiValidation {
   export const vDouble = joi.extend((joi) => ({
-    base: joi.number().greater(Number.MIN_SAFE_INTEGER).less(Number.MAX_SAFE_INTEGER),
-    name: 'base'
+    activate: joi.number().greater(Number.MIN_SAFE_INTEGER).less(Number.MAX_SAFE_INTEGER),
+    name: 'activate'
   }));
 
   export const vFloat = vDouble;
 
   export const vInt32 = joi.extend((joi) => ({
-    base: joi.number().integer().greater(Number.MIN_SAFE_INTEGER).less(Number.MAX_SAFE_INTEGER),
-    name: 'base'
+    activate: joi.number().integer().greater(Number.MIN_SAFE_INTEGER).less(Number.MAX_SAFE_INTEGER),
+    name: 'activate'
   }));
 
   export const vSint32 = vInt32;
@@ -26,8 +26,8 @@ export namespace PbJoi {
   export const vSfixed64 = vInt64;
 
   export const vUint32 = joi.extend((joi) => ({
-    base: joi.number().integer().positive().less(Number.MAX_SAFE_INTEGER),
-    name: 'base'
+    activate: joi.number().integer().positive().less(Number.MAX_SAFE_INTEGER),
+    name: 'activate'
   }));
 
   export const vFixed32 = vUint32;

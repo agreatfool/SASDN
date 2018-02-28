@@ -356,7 +356,7 @@ class GatewayCLI {
         }
         else {
             // protobuffer base type
-            return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${lib_1.ucfirst(fieldType)}.base()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
+            return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${lib_1.ucfirst(fieldType)}.activate()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
         }
     }
 }

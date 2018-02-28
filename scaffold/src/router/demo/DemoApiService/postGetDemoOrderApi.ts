@@ -1,8 +1,8 @@
 import * as Mock from 'mockjs';
-import {GatewayApiBase, GatewayContext, MiddlewareNext, joi as LibJoi} from 'sasdn';
-import { PbJoi } from '../../../lib/PbJoi';
-import {Order, } from '../../../proto/order/order_pb';
-import {GetDemoOrderRequest, } from '../../../proto/demo/demo_pb';
+import { GatewayApiBase, GatewayContext, joi as LibJoi, MiddlewareNext } from 'sasdn';
+import { ProtobufJoiValidation as PbJoi } from '../../../lib/ProtobufJoiValidation';
+import { Order, } from '../../../proto/order/order_pb';
+import { GetDemoOrderRequest, } from '../../../proto/demo/demo_pb';
 import { OrderLogic } from '../../../logic/gateway/OrderLogic';
 
 interface RequestParams {

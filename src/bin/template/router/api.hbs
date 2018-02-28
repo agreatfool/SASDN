@@ -1,8 +1,8 @@
 import * as Mock from 'mockjs';
-import {GatewayApiBase, GatewayContext, MiddlewareNext, joi as LibJoi} from 'sasdn';
-import { PbJoi } from '../../../lib/PbJoi';
+import { GatewayApiBase, GatewayContext, MiddlewareNext, joi as LibJoi } from 'sasdn';
+import { ProtobufJoiValidation as PbJoi } from '../../../lib/ProtobufJoiValidation';
 {{#each info.protoMsgImportPath}}
-import {{curlyLeft}}{{#each this}}{{this}}, {{/each}}{{curlyRight}} from '{{{@key}}}';
+import {{curlyLeft}} {{#each this}}{{this}}, {{/each}} {{curlyRight}} from '{{{@key}}}';
 {{/each}}
 
 interface RequestParams {

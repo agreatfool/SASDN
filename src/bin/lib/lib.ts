@@ -6,13 +6,12 @@ import {
   Service as ProtobufService, ReflectionObject as ProtobufReflectionObject, Type as ProtobufType,
   Field as ProtobufField
 } from 'protobufjs';
-import * as bluebird from 'bluebird';
 import * as LibMkdirP from 'mkdirp';
 import { Schema as SwaggerSchema, Spec as SwaggerSpec } from 'swagger-schema-official';
-import Bluebird = require('bluebird');
+import * as util from 'util';
 
 const wrappedProtobufjsParse = require('./protobufjs/ParseWrapper');
-const mkdirp: (arg1: string) => Bluebird<string> = bluebird.promisify<string, string>(LibMkdirP);
+const mkdirp:(arg1: string) => Promise<string> = util.promisify<string, string>(LibMkdirP);
 
 const PROTO_BUFFER_BASE_TYPE = [
   'double',
