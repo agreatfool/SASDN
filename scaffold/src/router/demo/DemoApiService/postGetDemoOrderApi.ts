@@ -17,7 +17,10 @@ class PostGetDemoOrderApi extends GatewayApiBase {
     this.type = 'application/json; charset=utf-8';
     this.schemaDefObj = {
       body: LibJoi.object().keys({
-        orderId: PbJoi.vInt64.base().required(),
+        paramInt64: PbJoi.vInt64.activate().required().valid(200,300,400),
+        paramInt32: PbJoi.vInt32.activate().required().greater(3000).less(6000),
+        paramBool: PbJoi.vBool.activate().optional().truthy('1',1,'true').falsy('0',0,'false'),
+        paramString: PbJoi.vString.activate().optional().default('string').max(50).min(5),
       })
     };
   }
