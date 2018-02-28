@@ -24,14 +24,6 @@ export interface GatewayContext extends KoaContext {
 export interface GatewayRequest extends KoaRequest {
     body: any;
 }
-export interface GatewayJoiSchema {
-    type: string;
-    required: boolean;
-    schema?: GatewayJoiSchemaMap;
-}
-export interface GatewayJoiSchemaMap {
-    [name: string]: GatewayJoiSchema;
-}
 export interface GatewayApiParams {
     [key: string]: any;
 }
@@ -39,7 +31,7 @@ export declare abstract class GatewayApiBase {
     method: string;
     uri: string;
     type: string;
-    schemaDefObj: GatewayJoiSchemaMap;
+    schemaDefObj: joi.SchemaMap;
 
     abstract handle(ctx: GatewayContext, next: MiddlewareNext, params: GatewayApiParams): Promise<any>;
 
