@@ -438,8 +438,18 @@ class GatewayCLI {
       extraStr += joiComment.max && (this._isNumber(fieldType) || fieldType === 'string') ? `.max(${joiComment.max})` : '';
       extraStr += joiComment.min && (this._isNumber(fieldType) || fieldType === 'string') ? `.min(${joiComment.min})` : '';
       extraStr += joiComment.regex && fieldType === 'string' ? `.regex(${joiComment.regex})` : '';
-      extraStr += joiComment.truthy && fieldType === 'bool' ? `.truthy(${[...joiComment.truthy]})` : '';
-      extraStr += joiComment.falsy && fieldType === 'bool' ? `.falsy(${[...joiComment.falsy]})` : '';
+      if (joiComment.truthy) {
+        const truthy = joiComment.truthy.map((value) => {
+          return typeof(value) === 'string' ? `'${value}'` : value;
+        });
+        extraStr += `.truthy(${[...truthy]})`;
+      }
+      if (joiComment.falsy) {
+        const falsy = joiComment.falsy.map((value) => {
+          return typeof(value) === 'string' ? `'${value}'` : value;
+        });
+        extraStr += `.falsy(${[...falsy]})`;
+      }
     }
     if (fieldInfo && typeof(fieldInfo) !== 'string') {
       // Means this field is not a base type
