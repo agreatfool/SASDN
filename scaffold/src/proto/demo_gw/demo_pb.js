@@ -61,7 +61,10 @@ proto.demo.GetDemoOrderRequest.prototype.toObject = function(opt_includeInstance
  */
 proto.demo.GetDemoOrderRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
-    orderId: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    paramInt64: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    paramInt32: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    paramBool: jspb.Message.getFieldWithDefault(msg, 3, false),
+    paramString: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
 
   if (includeInstance) {
@@ -100,7 +103,19 @@ proto.demo.GetDemoOrderRequest.deserializeBinaryFromReader = function(msg, reade
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setOrderId(value);
+      msg.setParamInt64(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setParamInt32(value);
+      break;
+    case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setParamBool(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setParamString(value);
       break;
     default:
       reader.skipField();
@@ -131,10 +146,31 @@ proto.demo.GetDemoOrderRequest.prototype.serializeBinary = function() {
  */
 proto.demo.GetDemoOrderRequest.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getOrderId();
+  f = message.getParamInt64();
   if (f !== 0) {
     writer.writeInt64(
       1,
+      f
+    );
+  }
+  f = message.getParamInt32();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
+  f = message.getParamBool();
+  if (f) {
+    writer.writeBool(
+      3,
+      f
+    );
+  }
+  f = message.getParamString();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
       f
     );
   }
@@ -142,17 +178,64 @@ proto.demo.GetDemoOrderRequest.serializeBinaryToWriter = function(message, write
 
 
 /**
- * optional int64 order_id = 1;
+ * optional int64 param_int64 = 1;
  * @return {number}
  */
-proto.demo.GetDemoOrderRequest.prototype.getOrderId = function() {
+proto.demo.GetDemoOrderRequest.prototype.getParamInt64 = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
 
 /** @param {number} value */
-proto.demo.GetDemoOrderRequest.prototype.setOrderId = function(value) {
+proto.demo.GetDemoOrderRequest.prototype.setParamInt64 = function(value) {
   jspb.Message.setField(this, 1, value);
+};
+
+
+/**
+ * optional int32 param_int32 = 2;
+ * @return {number}
+ */
+proto.demo.GetDemoOrderRequest.prototype.getParamInt32 = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/** @param {number} value */
+proto.demo.GetDemoOrderRequest.prototype.setParamInt32 = function(value) {
+  jspb.Message.setField(this, 2, value);
+};
+
+
+/**
+ * optional bool param_bool = 3;
+ * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
+ * You should avoid comparisons like {@code val === true/false} in those cases.
+ * @return {boolean}
+ */
+proto.demo.GetDemoOrderRequest.prototype.getParamBool = function() {
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 3, false));
+};
+
+
+/** @param {boolean} value */
+proto.demo.GetDemoOrderRequest.prototype.setParamBool = function(value) {
+  jspb.Message.setField(this, 3, value);
+};
+
+
+/**
+ * optional string param_string = 4;
+ * @return {string}
+ */
+proto.demo.GetDemoOrderRequest.prototype.getParamString = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/** @param {string} value */
+proto.demo.GetDemoOrderRequest.prototype.setParamString = function(value) {
+  jspb.Message.setField(this, 4, value);
 };
 
 

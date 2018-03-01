@@ -1,15 +1,16 @@
 import { GatewayContext, MiddlewareNext } from 'sasdn';
 import { Order, GetOrderRequest, } from '../../proto/order/order_pb';
 import MSOrderClient from '../../clients/order/MSOrderClient';
+import { GetDemoOrderRequest } from '../../proto/demo/demo_pb';
 
 interface RequestParams {
-  body: GetOrderRequest.AsObject;
+  body: GetDemoOrderRequest.AsObject;
 }
 
 export namespace OrderLogic {
 
   export async function getOrder(ctx: GatewayContext, next?: MiddlewareNext, params?: RequestParams): Promise<Order> {
-    const orderId = params.body.orderId;
+    const orderId = params.body.paramInt32;
 
     if (!orderId) {
       throw new Error('Error: orderId is required!');
