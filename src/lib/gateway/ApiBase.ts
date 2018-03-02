@@ -38,9 +38,11 @@ export abstract class GatewayApiBase {
         await joiValidate(aggregatedParams, this.schemaDefObj, { allowUnknown: true });
         await next();
       } catch (e) {
+        const error = e as joi.ValidationError;
+        const validationDetail = error.details ? `: ${error.details[0].message}` : '';
         const errorObject = {
           code: 1001001,
-          message: 'Invalid Params'
+          message: 'Invalid Params' + validationDetail
         };
         ctx.body = JSON.stringify(errorObject);
       }
