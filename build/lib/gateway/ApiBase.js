@@ -22,9 +22,11 @@ class GatewayApiBase {
                 yield next();
             }
             catch (e) {
+                const error = e;
+                const validationDetail = error.details ? `: ${error.details[0].message}` : '';
                 const errorObject = {
                     code: 1001001,
-                    message: 'Invalid Params'
+                    message: 'Invalid Params' + validationDetail
                 };
                 ctx.body = JSON.stringify(errorObject);
             }
