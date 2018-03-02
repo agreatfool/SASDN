@@ -105,12 +105,7 @@ class ClientCLI {
                 let msgImportInfos = lib_1.parseMsgNamesFromProto(parseResult.result, protoFile);
                 Object.assign(protoMsgImportInfos, msgImportInfos);
             }
-            try {
-                yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'clients'));
-            }
-            catch (e) {
-                // do nothing;
-            }
+            yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'clients'));
             for (let i = 0; i < parseResults.length; i++) {
                 let protoInfo = parseResults[i];
                 let services = lib_1.parseServicesFromProto(protoInfo.result);
@@ -160,12 +155,7 @@ class ClientCLI {
                 const moduleSet = new Set(allMethodImportPath[importPath]);
                 // check same name
                 protoClientInfo.allMethodImportModule = [...moduleSet];
-                try {
-                    yield lib_1.mkdir(LibPath.dirname(outputPath));
-                }
-                catch (e) {
-                    // do nothing
-                }
+                yield lib_1.mkdir(LibPath.dirname(outputPath));
                 let content = template_1.TplEngine.render('rpcs/client', Object.assign({}, protoClientInfo));
                 yield LibFs.writeFile(outputPath, content);
             }

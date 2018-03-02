@@ -2,12 +2,30 @@ import * as LibFs from 'mz/fs';
 import * as program from 'commander';
 import * as LibPath from 'path';
 import {
-  addIntoRpcMethodImportPathInfos, genRpcMethodInfo, mkdir, parseMsgNamesFromProto, parseProto,
-  parseServicesFromProto, Proto, ProtoFile, ProtoMsgImportInfos, ProtoParseResult, readProtoList,
-  RpcMethodImportPathInfos, RpcMethodInfo, RpcProtoClientInfo, RpcProtoServicesInfo, ucfirst
+  genRpcMethodInfo,
+  lcfirst,
+  ucfirst,
+  mkdir,
+  parseMsgNamesFromProto,
+  parseProto,
+  parseServicesFromProto,
+  Proto,
+  ProtoFile,
+  ProtoParseResult,
+  ProtoMsgImportInfos,
+  readProtoList,
+  RpcMethodInfo,
+  RpcProtoServicesInfo,
+  RpcProtoClientInfo,
+  RpcMethodImportPathInfos,
+  addIntoRpcMethodImportPathInfos
 } from './lib/lib';
 import { TplEngine } from './lib/template';
-import { IParserResult as ProtoIParserResult, Service as ProtobufService } from 'protobufjs';
+import {
+  Method as ProtobufMethod,
+  Service as ProtobufService,
+  IParserResult as ProtoIParserResult
+} from 'protobufjs';
 
 const pkg = require('../../package.json');
 
@@ -113,11 +131,7 @@ class ClientCLI {
       Object.assign(protoMsgImportInfos, msgImportInfos);
     }
 
-    try {
-      await mkdir(LibPath.join(OUTPUT_DIR, 'clients'));
-    } catch (e) {
-      // do nothing;
-    }
+    await mkdir(LibPath.join(OUTPUT_DIR, 'clients'));
 
     for (let i = 0; i < parseResults.length; i++) {
       let protoInfo = parseResults[i] as ProtoParseResult;
@@ -172,11 +186,7 @@ class ClientCLI {
       const moduleSet = new Set(allMethodImportPath[importPath]);
       // check same name
       protoClientInfo.allMethodImportModule = [...moduleSet];
-      try {
-        await mkdir(LibPath.dirname(outputPath));
-      } catch (e) {
-        // do nothing
-      }
+      await mkdir(LibPath.dirname(outputPath));
       let content = TplEngine.render('rpcs/client', {
         ...protoClientInfo
       });

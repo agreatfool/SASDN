@@ -251,12 +251,7 @@ class GatewayCLI {
                     }
                 }
                 // make router dir in OUTPUT_DIR
-                try {
-                    yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router'));
-                }
-                catch (e) {
-                    // do nothing
-                }
+                yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router'));
                 // TplEngine RegisterHelper
                 template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
                 template_1.TplEngine.registerHelper('equal', function (v1, v2, options) {
@@ -293,12 +288,7 @@ class GatewayCLI {
                 // write file ${gatewayApiName}.ts in OUTPUT_DIR/router/${gatewayApiService}/
                 for (let gatewayInfo of gatewayInfoList) {
                     const relativePath = this._protoMsgImportInfos[`${gatewayInfo.packageName}${gatewayInfo.serviceName}`].protoFile.relativePath;
-                    try {
-                        yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router', relativePath, gatewayInfo.serviceName));
-                    }
-                    catch (e) {
-                        // do nothing
-                    }
+                    yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router', relativePath, gatewayInfo.serviceName));
                     let apiContent = template_1.TplEngine.render('router/api', {
                         info: gatewayInfo,
                     });
@@ -306,12 +296,7 @@ class GatewayCLI {
                 }
                 // make client dir in OUTPUT_DIR
                 if (API_GATEWAY_CLIENT) {
-                    try {
-                        yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'client'));
-                    }
-                    catch (e) {
-                        // do nothing
-                    }
+                    yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'client'));
                     // write file Router.ts in OUTPUT_DIR/router/
                     template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
                     let clientContent = template_1.TplEngine.render('client/client', {

@@ -83,11 +83,7 @@ class ProtoCLI {
         console.log('ProtoCLI generate proto codes.');
 
         const outputDir = LibPath.join(OUTPUT_DIR, 'proto');
-        try {
-          await mkdir(outputDir);
-        } catch (e) {
-            // do nothing
-        }
+        await mkdir(outputDir);
 
         for (let i = 0; i < this._protoFiles.length; i++) {
             let protoFile = this._protoFiles[i];

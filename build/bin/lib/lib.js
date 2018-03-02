@@ -12,9 +12,10 @@ const LibPath = require("path");
 const LibFs = require("mz/fs");
 const recursive = require("recursive-readdir");
 const protobufjs_1 = require("protobufjs");
+const LibMkdirP = require("mkdirp");
 const LibUtil = require("util");
 const wrappedProtobufjsParse = require('./protobufjs/ParseWrapper');
-const mkdirp = LibUtil.promisify(LibFs.mkdir);
+const mkdirp = LibUtil.promisify(LibMkdirP);
 const PROTO_BUFFER_BASE_TYPE = [
     'double',
     'float',

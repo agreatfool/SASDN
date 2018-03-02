@@ -6,11 +6,12 @@ import {
   Service as ProtobufService, ReflectionObject as ProtobufReflectionObject, Type as ProtobufType,
   Field as ProtobufField
 } from 'protobufjs';
+import * as LibMkdirP from 'mkdirp';
 import { Schema as SwaggerSchema, Spec as SwaggerSpec } from 'swagger-schema-official';
 import * as LibUtil from 'util';
 
 const wrappedProtobufjsParse = require('./protobufjs/ParseWrapper');
-const mkdirp:(arg1: string) => Promise<void> = LibUtil.promisify(LibFs.mkdir);
+const mkdirp:(arg1: string) => Promise<string> = LibUtil.promisify<string, string>(LibMkdirP);
 
 const PROTO_BUFFER_BASE_TYPE = [
   'double',

@@ -98,11 +98,7 @@ class ServiceCLI {
       }
     }
 
-    try {
-      await mkdir(LibPath.join(OUTPUT_DIR, 'services'));
-    } catch (e) {
-      // do nothing
-    }
+    await mkdir(LibPath.join(OUTPUT_DIR, 'services'));
 
     for (let i = 0; i < parseResults.length; i++) {
       let protoInfo = parseResults[i] as ProtoParseResult;
@@ -214,11 +210,7 @@ class ServiceCLI {
 
     // write files
     if (!shallIgnore) {
-      try {
-        await mkdir(LibPath.dirname(outputPath));
-      } catch (e) {
-        // do nothing
-      }
+      await mkdir(LibPath.dirname(outputPath));
       let content = TplEngine.render('rpcs/service', {
         callTypeStr: methodInfo.callTypeStr,
         callGenerics: methodInfo.callGenerics,

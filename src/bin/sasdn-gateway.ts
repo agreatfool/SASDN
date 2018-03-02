@@ -338,11 +338,7 @@ class GatewayCLI {
       }
 
       // make router dir in OUTPUT_DIR
-      try {
-        await mkdir(LibPath.join(OUTPUT_DIR, 'router'));
-      } catch (e) {
-        // do nothing
-      }
+      await mkdir(LibPath.join(OUTPUT_DIR, 'router'));
 
       // TplEngine RegisterHelper
       TplEngine.registerHelper('lcfirst', lcfirst);
@@ -381,11 +377,7 @@ class GatewayCLI {
       // write file ${gatewayApiName}.ts in OUTPUT_DIR/router/${gatewayApiService}/
       for (let gatewayInfo of gatewayInfoList) {
         const relativePath = this._protoMsgImportInfos[`${gatewayInfo.packageName}${gatewayInfo.serviceName}`].protoFile.relativePath;
-        try {
-          await mkdir(LibPath.join(OUTPUT_DIR, 'router', relativePath, gatewayInfo.serviceName));
-        } catch (e) {
-          // do nothing
-        }
+        await mkdir(LibPath.join(OUTPUT_DIR, 'router', relativePath, gatewayInfo.serviceName));
 
         let apiContent = TplEngine.render('router/api', {
           info: gatewayInfo,
@@ -396,11 +388,7 @@ class GatewayCLI {
 
       // make client dir in OUTPUT_DIR
       if (API_GATEWAY_CLIENT) {
-        try {
-          await mkdir(LibPath.join(OUTPUT_DIR, 'client'));
-        } catch (e) {
-          // do nothing
-        }
+        await mkdir(LibPath.join(OUTPUT_DIR, 'client'));
 
         // write file Router.ts in OUTPUT_DIR/router/
         TplEngine.registerHelper('lcfirst', lcfirst);
