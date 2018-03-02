@@ -7,8 +7,17 @@ import * as jspb from "google-protobuf";
 import * as order_order_pb from "../order/order_pb";
 
 export class GetDemoOrderRequest extends jspb.Message { 
-    getOrderId(): number;
-    setOrderId(value: number): void;
+    getParamInt64(): number;
+    setParamInt64(value: number): void;
+
+    getParamInt32(): number;
+    setParamInt32(value: number): void;
+
+    getParamBool(): boolean;
+    setParamBool(value: boolean): void;
+
+    getParamString(): string;
+    setParamString(value: string): void;
 
 
     serializeBinary(): Uint8Array;
@@ -23,6 +32,9 @@ export class GetDemoOrderRequest extends jspb.Message {
 
 export namespace GetDemoOrderRequest {
     export type AsObject = {
-        orderId: number,
+        paramInt64: number,
+        paramInt32: number,
+        paramBool: boolean,
+        paramString: string,
     }
 }
