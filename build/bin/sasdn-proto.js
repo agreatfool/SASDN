@@ -88,7 +88,12 @@ class ProtoCLI {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('ProtoCLI generate proto codes.');
             const outputDir = LibPath.join(OUTPUT_DIR, 'proto');
-            yield lib_1.mkdir(outputDir);
+            try {
+                yield lib_1.mkdir(outputDir);
+            }
+            catch (e) {
+                // do nothing
+            }
             for (let i = 0; i < this._protoFiles.length; i++) {
                 let protoFile = this._protoFiles[i];
                 console.log(`ProtoCLI generate proto: ${protoFile.fileName}`);

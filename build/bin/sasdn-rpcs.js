@@ -96,7 +96,12 @@ class ServiceCLI {
                     this._protoMsgImportInfos[msgTypeStr] = msgImportInfos[msgTypeStr];
                 }
             }
-            yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+            try {
+                yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'services'));
+            }
+            catch (e) {
+                // do nothing
+            }
             for (let i = 0; i < parseResults.length; i++) {
                 let protoInfo = parseResults[i];
                 let services = lib_1.parseServicesFromProto(protoInfo.result);
@@ -200,7 +205,12 @@ class ServiceCLI {
             }
             // write files
             if (!shallIgnore) {
-                yield lib_1.mkdir(LibPath.dirname(outputPath));
+                try {
+                    yield lib_1.mkdir(LibPath.dirname(outputPath));
+                }
+                catch (e) {
+                    // do nothing
+                }
                 let content = template_1.TplEngine.render('rpcs/service', {
                     callTypeStr: methodInfo.callTypeStr,
                     callGenerics: methodInfo.callGenerics,
