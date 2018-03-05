@@ -374,7 +374,7 @@ class GatewayCLI {
             fieldInfo.forEach((nextField) => {
                 returnStr += this._genFieldInfo(nextField, space + '  ', '\n');
             });
-            returnStr += `${space}${isRepeated ? ')' : ''}})${extraStr},${newLine}`;
+            returnStr += `${space}})${isRepeated ? ')' : ''}${extraStr},${newLine}`;
             return returnStr;
         }
         else {
