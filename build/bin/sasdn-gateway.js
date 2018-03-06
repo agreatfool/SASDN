@@ -335,18 +335,9 @@ class GatewayCLI {
                 const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;
                 extraStr += `.default(${defaultValue})`;
             }
-            if (joiComment.valid) {
-                const valid = joiComment.valid.map((value) => {
-                    return typeof (value) === 'string' ? `'${value}'` : value;
-                });
-                extraStr += `.valid([${valid.join(', ')}])`;
-            }
-            if (joiComment.invalid) {
-                const invalid = joiComment.invalid.map((value) => {
-                    return typeof (value) === 'string' ? `'${value}'` : value;
-                });
-                extraStr += `.invalid([${invalid.join(', ')}])`;
-            }
+            extraStr += joiComment.valid ? `.valid([${this._genArrayString(joiComment.valid)}])` : '';
+            extraStr += joiComment.invalid ? `.invalid([${this._genArrayString(joiComment.invalid)}])` : '';
+            extraStr += joiComment.allow ? `.allow([${this._genArrayString(joiComment.allow)}])` : '';
             extraStr += joiComment.interger && this._isNumber(fieldType) ? '.interger()' : '';
             extraStr += joiComment.positive && this._isNumber(fieldType) ? '.positive()' : '';
             extraStr += joiComment.greater && this._isNumber(fieldType) ? `.greater(${joiComment.greater})` : '';
@@ -354,18 +345,10 @@ class GatewayCLI {
             extraStr += joiComment.max && (this._isNumber(fieldType) || fieldType === 'string') ? `.max(${joiComment.max})` : '';
             extraStr += joiComment.min && (this._isNumber(fieldType) || fieldType === 'string') ? `.min(${joiComment.min})` : '';
             extraStr += joiComment.regex && fieldType === 'string' ? `.regex(${joiComment.regex})` : '';
-            if (joiComment.truthy) {
-                const truthy = joiComment.truthy.map((value) => {
-                    return typeof (value) === 'string' ? `'${value}'` : value;
-                });
-                extraStr += `.truthy([${truthy.join(', ')}])`;
-            }
-            if (joiComment.falsy) {
-                const falsy = joiComment.falsy.map((value) => {
-                    return typeof (value) === 'string' ? `'${value}'` : value;
-                });
-                extraStr += `.falsy([${falsy.join(', ')}])`;
-            }
+            extraStr += joiComment.email && fieldType === 'string' ? `.email()` : '';
+            extraStr += joiComment.uri && fieldType === 'string' ? `.uri({schema: [${this._genArrayString(joiComment.uri)}]})` : '';
+            extraStr += joiComment.truthy && fieldType === 'bool' ? `.truthy([${this._genArrayString(joiComment.truthy)}])` : '';
+            extraStr += joiComment.falsy && fieldType === 'bool' ? `.falsy([${this._genArrayString(joiComment.falsy)}])` : '';
         }
         if (fieldInfo && typeof (fieldInfo) !== 'string') {
             // Means this field is not a base type
@@ -397,6 +380,12 @@ class GatewayCLI {
             'sfixed32',
             'sfixed64',
         ].indexOf(type) >= 0;
+    }
+    _genArrayString(arr) {
+        const exchangeArr = arr.map((value) => {
+            return typeof (value) === 'string' ? `'${value}'` : value;
+        });
+        return exchangeArr.join(', ');
     }
 }
 GatewayCLI.instance().run().catch((err) => {

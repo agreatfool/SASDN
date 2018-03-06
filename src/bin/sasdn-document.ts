@@ -148,7 +148,7 @@ class DocumentCLI {
     let gatewayInfoList = [] as Array<GatewayInfo>;
 
     // make router dir in OUTPUT_DIR
-    await mkdir(LibPath.join(OUTPUT_DIR, 'router'));
+    await mkdir(LibPath.join(OUTPUT_DIR, 'document'));
 
     if (GATEWAY) {
 

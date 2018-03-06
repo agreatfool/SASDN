@@ -108,7 +108,7 @@ class DocumentCLI {
             }
             let gatewayInfoList = [];
             // make router dir in OUTPUT_DIR
-            yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'router'));
+            yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'document'));
             if (GATEWAY) {
             }
             if (SERVICE) {
