@@ -336,7 +336,7 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
         try {
           commentObject = JSON.parse(field.comment);
         } catch (e) {
-          console.error(`JSON parse error at ${field.name}`, e.stack);
+          console.error(`JSON parse error at [${protoType.name}.${field.name}]`, e.stack);
         }
 
         const fieldInfo: FieldInfo = {
