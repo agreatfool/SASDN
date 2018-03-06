@@ -2,12 +2,12 @@ import * as LibFs from 'mz/fs';
 import * as program from 'commander';
 import * as LibPath from 'path';
 import {
-  addIntoRpcMethodImportPathInfos, FieldInfo, GatewaySwaggerSchema, lcfirst, mkdir, parseMsgNamesFromProto,
-  parseProto, Proto, ProtoFile, ProtoMsgImportInfo, ProtoMsgImportInfos, ProtoParseResult, readProtoList,
-  readSwaggerList,
-  RpcMethodImportPathInfos, Swagger, ucfirst
+  GatewaySwaggerSchema, mkdir, parseMsgNamesFromProto, parseProto, ProtoFile, ProtoMsgImportInfo,
+  ProtoMsgImportInfos, ProtoParseResult, readProtoList, RpcMethodImportPathInfos
 } from './lib/lib';
-import { TplEngine } from './lib/template';
+import {
+  Method as ProtobufMethod
+} from 'protobufjs';
 
 const pkg = require('../../package.json');
 
@@ -159,101 +159,129 @@ class DocumentCLI {
     }
 
     if (API) {
-      
-    }
-  }
-
-  private _checkFieldInfo(field: FieldInfo): void {
-    if (field.fieldInfo) {
-      const msgTypeStr = field.fieldInfo as string;
-      if (this._protoMsgImportInfos.hasOwnProperty(msgTypeStr)) {
-        const nextFields = this._protoMsgImportInfos[msgTypeStr].fields;
-        nextFields.forEach((nextField) => {
-          this._checkFieldInfo(nextField);
+      Object.keys(this._serviceInfos).forEach(async (key) => {
+        const service = this._serviceInfos[key] as ProtoMsgImportInfo;
+        const servicePath = LibPath.join(OUTPUT_DIR, 'document', 'api', service.namespace);
+        await mkdir(servicePath);
+        service.methods.forEach(async (method) => {
+          await LibFs.writeFile(LibPath.join(OUTPUT_DIR, servicePath, method.methodName + '.md'), this._genMarkDown());
         });
-        field.fieldInfo = nextFields;
-      }
-    }
-  }
-
-  private _genFieldInfo(field: FieldInfo, space: string = '', newLine: string = ''): string {
-    let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
-    fieldName = isRepeated ? fieldName + 'List' : fieldName;
-    if (typeof(fieldComment) === 'string') {
-      // Comments is not JSON
-      fieldComment = {};
-    }
-    let extraStr: string = '';
-    const jsonComment = fieldComment as object;
-    if (jsonComment && jsonComment.hasOwnProperty('Joi')) {
-      const joiComment = jsonComment['Joi'] as JoiComment;
-      extraStr += joiComment.required ? '.required()' : '.optional()';
-      if (joiComment.defaultValue) {
-        const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;
-        extraStr += `.default(${defaultValue})`;
-      }
-      if (joiComment.valid) {
-        const valid = joiComment.valid.map((value) => {
-          return typeof(value) === 'string' ? `'${value}'` : value;
-        });
-        extraStr += `.valid([${valid.join(', ')}])`;
-      }
-      if (joiComment.invalid) {
-        const invalid = joiComment.invalid.map((value) => {
-          return typeof(value) === 'string' ? `'${value}'` : value;
-        });
-        extraStr += `.invalid([${invalid.join(', ')}])`;
-      }
-      extraStr += joiComment.interger && this._isNumber(fieldType) ? '.interger()' : '';
-      extraStr += joiComment.positive && this._isNumber(fieldType) ? '.positive()' : '';
-      extraStr += joiComment.greater && this._isNumber(fieldType) ? `.greater(${joiComment.greater})` : '';
-      extraStr += joiComment.less && this._isNumber(fieldType) ? `.less(${joiComment.less})` : '';
-      extraStr += joiComment.max && (this._isNumber(fieldType) || fieldType === 'string') ? `.max(${joiComment.max})` : '';
-      extraStr += joiComment.min && (this._isNumber(fieldType) || fieldType === 'string') ? `.min(${joiComment.min})` : '';
-      extraStr += joiComment.regex && fieldType === 'string' ? `.regex(${joiComment.regex})` : '';
-      if (joiComment.truthy) {
-        const truthy = joiComment.truthy.map((value) => {
-          return typeof(value) === 'string' ? `'${value}'` : value;
-        });
-        extraStr += `.truthy([${truthy.join(', ')}])`;
-      }
-      if (joiComment.falsy) {
-        const falsy = joiComment.falsy.map((value) => {
-          return typeof(value) === 'string' ? `'${value}'` : value;
-        });
-        extraStr += `.falsy([${falsy.join(', ')}])`;
-      }
-    }
-    if (fieldInfo && typeof(fieldInfo) !== 'string') {
-      // Means this field is not a base type
-      let returnStr = `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}LibJoi.object().keys({\n`;
-      space += newLine ? '' : '        ';
-      fieldInfo.forEach((nextField) => {
-        returnStr += this._genFieldInfo(nextField, space + '  ', '\n');
       });
-      returnStr += `${space}${isRepeated ? ')' : ''}})${extraStr},${newLine}`;
-      return returnStr;
-    } else {
-      // protobuffer base type
-      return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${ucfirst(fieldType)}.activate()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
     }
   }
 
-  private _isNumber(type: string): boolean {
-    return [
-      'double',
-      'float',
-      'int32',
-      'int64',
-      'uint32',
-      'uint64',
-      'sint32',
-      'sint64',
-      'fixed32',
-      'fixed64',
-      'sfixed32',
-      'sfixed64',
-    ].indexOf(type) >= 0;
+  private _genMarkDown(): string {
+    return `
+**简要描述：**
+
+- 游戏用户绑定三方账户接口
+
+**请求URL：**
+- \` http://qa-gateway.shinezone.com/v1/game/bindAccount \`
+
+**请求方式：**
+- POST
+
+**参数：**
+
+|参数名|必选|类型|说明|
+|:----    |:---|:----- |-----   |
+|cpId          | 是  |Int32  |发行渠道编号id   |
+|appId         |是   |Int32  | 应用编号id    |
+|guid           |是   |Uint64 | 游戏角色编号id    |
+|accountType   |是   |Int32  | 账户类型    |
+|thirdPartyId |是   |String | 第三方平台编号id    |
+|accessToken   |是   |String | 登录授权码    |
+|extra          |否   |Object | 扩展信息（字段描述详见下表）    |
+|timestamp      |是   |Int32  | 时间戳    |
+|sign           |是   |String | 秘钥    |
+
+**extra数据格式描述：**
+
+|字段名           |必选|类型|默认值|说明|
+|:----            |:---|:----- |:-----   |-----|
+|guid             | 否  |Uint64  |0   |游戏角色编号id|
+|appId           | 否  |Int32   |0   |应用编号id|
+|accountType     | 否  |Int32   |0   |账户类型|
+|thirdPartyId   | 否  |String  |空字符串   |第三方平台编号id|
+|accessToken     | 否  |String  |空字符串   |登录授权码|
+
+
+ **参数示例**
+
+\`\`\`
+{
+  "cpId": 0,
+  "appId": 0,
+  "guid": "string",
+  "accountType": 0,
+  "thirdPartyId": "string",
+  "accessToken": "string",
+  "extra": {
+    "guid": "string",
+    "appId": 0,
+    "accountType": 0,
+    "thirdPartyId": "string",
+    "accessToken": "string"
+  },
+  "timestamp": 0,
+  "sign": "string"
+}
+\`\`\`
+
+ **返回示例**
+
+\`\`\` 
+{
+  "code": 0,
+  "message": "string",
+  "data": {
+    "guid": "string",
+    "bind": [
+      {
+        "guid": "string",
+        "appId": 0,
+        "account_type": 0,
+        "thirdPartyId": "string",
+        "thirdPartyNickname": "string",
+        "bindTime": 0
+      }
+    ]
+  }
+}
+\`\`\`
+
+ **返回参数说明**
+
+|参数名|类型|说明|
+|:-----  |:-----|-----                           |
+|code     |Int32   |接口返回状态  |
+|message  |String   |状态描述 |
+|data     |Object   |返回数据内容（字段描述详见下表）  |
+
+**data数据格式描述：**
+
+|字段名           |类型|说明|
+|:----            |:-----   |-----|
+|guid             |String   |游戏角色编号id|
+|bind             |Array    |绑定信息数组（字段描述详见下表）|
+
+**bind数据格式描述：**
+
+|字段名           |类型|说明|
+|:----                   |:-----   |-----|
+|guid                    |String    |游戏角色编号id|
+|appId                  |Int32     |应用编号id|
+|accountType            |Int32     |账户类型|
+|thirdPartyId          |String    |第三方平台编号id|
+|thirdPartyNickname    |String    |第三方账户昵称|
+|bindTime               |Int32     |绑定时间戳|
+
+
+ **备注**
+
+- [更多返回错误代码请看首页的错误代码描述](http://172.16.1.26/index.php?s=/1&page_id=2 "更多返回错误代码请看首页的错误代码描述")
+    `;
   }
 }
 

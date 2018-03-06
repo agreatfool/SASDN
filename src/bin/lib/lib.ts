@@ -76,6 +76,7 @@ export interface FieldInfo {
 
 export interface MethodInfo {
   methodName: string;
+  // methodType: string;
   requestType: string;
   requestStream: boolean;
   responseType: string;
@@ -327,11 +328,16 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
            * If type contain '.' means this type is import from other proto file
            * Need change type from {package}.{MessageName} to {package}{MessageName} : order.Order => orderOrder
            */
-          fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', '') : packageName + fieldType;
+          fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', symlink) : packageName + fieldType;
           info = fieldType;
         }
 
-        const commentObject = JSON.parse(field.comment);
+        let commentObject;
+        try {
+          commentObject = JSON.parse(field.comment);
+        } catch (e) {
+          console.error(`JSON parse error at ${field.name}`, e.stack);
+        }
 
         const fieldInfo: FieldInfo = {
           fieldType: fieldType,
@@ -349,7 +355,7 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
       Object.keys(protoService.methods).forEach((methodKey) => {
         const method = protoService.methods[methodKey] as ProtobufMethod;
         const requestAndResponse: string[] = [ method.requestType, method.responseType ].map((value) => {
-          return value.indexOf('.') >= 0 ? value.replace('.', '') : packageName + value;
+          return value.indexOf('.') >= 0 ? value.replace('.', symlink) : packageName + value;
         });
 
         const methodInfo: MethodInfo = {

@@ -144,10 +144,16 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
                      * If type contain '.' means this type is import from other proto file
                      * Need change type from {package}.{MessageName} to {package}{MessageName} : order.Order => orderOrder
                      */
-                    fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', '') : packageName + fieldType;
+                    fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', symlink) : packageName + fieldType;
                     info = fieldType;
                 }
-                const commentObject = JSON.parse(field.comment);
+                let commentObject;
+                try {
+                    commentObject = JSON.parse(field.comment);
+                }
+                catch (e) {
+                    console.error(`JSON parse error at ${field.name}`, e.stack);
+                }
                 const fieldInfo = {
                     fieldType: fieldType,
                     fieldName: field.name,
@@ -164,7 +170,7 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
             Object.keys(protoService.methods).forEach((methodKey) => {
                 const method = protoService.methods[methodKey];
                 const requestAndResponse = [method.requestType, method.responseType].map((value) => {
-                    return value.indexOf('.') >= 0 ? value.replace('.', '') : packageName + value;
+                    return value.indexOf('.') >= 0 ? value.replace('.', symlink) : packageName + value;
                 });
                 const methodInfo = {
                     methodName: method.name,
