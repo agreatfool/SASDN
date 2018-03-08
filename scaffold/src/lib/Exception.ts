@@ -55,7 +55,11 @@ export class Exception extends Error {
 
   public static parseErrorMsg(err: Error) {
     try {
-      return JSON.parse(err.message);
+      let message = err.message;
+      if(err.hasOwnProperty('details')) {
+        message = err['details'];
+      }
+      return JSON.parse(message);
     } catch (e) {
       return Exception.parseErrorMsg(new Exception(6, err.message));
     }
