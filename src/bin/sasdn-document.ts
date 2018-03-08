@@ -2,7 +2,7 @@ import * as LibFs from 'mz/fs';
 import * as program from 'commander';
 import * as LibPath from 'path';
 import {
-  FieldInfo, GatewaySwaggerSchema, lcfirst, MethodInfo, mkdir, parseMsgNamesFromProto, parseProto, ProtoFile,
+  FieldInfo, lcfirst, MethodInfo, mkdir, parseMsgNamesFromProto, parseProto, ProtoFile,
   ProtoMsgImportInfo, ProtoMsgImportInfos, ProtoParseResult, readProtoList, ucfirst
 } from './lib/lib';
 
