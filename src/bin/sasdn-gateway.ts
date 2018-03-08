@@ -50,6 +50,7 @@ interface JoiComment {
   allow?: Array<any>;
   email?: boolean;
   uri?: Array<any>;
+  timestamp?: string;
 }
 
 interface GatewayDefinitionSchemaMap {
@@ -211,10 +212,10 @@ class GatewayCLI {
             );
           }
 
-          let requestType: string = '';
-          let funcParamsStr: string = '';
-          let aggParamsStr: string = '';
-          let requiredParamsStr: string = '';
+          let requestType = '';
+          let funcParamsStr = '';
+          let aggParamsStr = '';
+          let requiredParamsStr = '';
           let fields: string[] = [];
 
           // 循环解析 parameters 字段，并将字段类型和 schema 结构加入到 swaggerSchemaList。
@@ -416,21 +417,25 @@ class GatewayCLI {
     }
   }
 
-  private _genFieldInfo(field: FieldInfo, space: string = '', newLine: string = ''): string {
+  private _genFieldInfo(field: FieldInfo, space?: string, newLine?: string): string {
     let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
     fieldName = isRepeated ? fieldName + 'List' : fieldName;
     if (typeof(fieldComment) === 'string') {
       // Comments is not JSON
       fieldComment = {};
     }
-    let extraStr: string = '';
+    let extraStr = '';
     const jsonComment = fieldComment as object;
+    let timestampType = '';
     if (jsonComment && jsonComment.hasOwnProperty('Joi')) {
       const joiComment = jsonComment['Joi'] as JoiComment;
       extraStr += joiComment.required ? '.required()' : '.optional()';
       if (joiComment.defaultValue) {
         const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;
         extraStr += `.default(${defaultValue})`;
+      }
+      if (joiComment.timestamp && (this._isNumber(fieldType) || fieldType === 'string')) {
+        timestampType = joiComment.timestamp;
       }
       extraStr += joiComment.valid ? `.valid([${this._genArrayString(joiComment.valid)}])` : '';
       extraStr += joiComment.invalid ? `.invalid([${this._genArrayString(joiComment.invalid)}])` : '';
@@ -469,7 +474,8 @@ class GatewayCLI {
       returnStr += `${space}})${isRepeated ? ')' : ''}${extraStr},${field.keyType ? '' : newLine}`;
     } else {
       // protobuffer base type
-      returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${ucfirst(fieldType)}.activate()${extraStr}${isRepeated ? ')' : ''},${newLine}`;
+      const joiContent = timestampType.length > 0 ? `LibJoi.date().timestamp(${timestampType === 'unix' ? 'unix' : 'javascript'})` : `PbJoi.v${ucfirst(fieldType)}.activate()`;
+      returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}${joiContent}${extraStr}${isRepeated ? ')' : ''},${newLine}`;
     }
     if (field.keyType) {
       space = space.substr(0, space.length - 2);
@@ -496,7 +502,7 @@ class GatewayCLI {
   }
 
   private _genArrayString(arr: Array<any>): string {
-    const exchangeArr =  arr.map((value) => {
+    const exchangeArr = arr.map((value) => {
       return typeof(value) === 'string' ? `'${value}'` : value;
     });
 

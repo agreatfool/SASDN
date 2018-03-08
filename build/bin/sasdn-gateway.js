@@ -319,7 +319,7 @@ class GatewayCLI {
             }
         }
     }
-    _genFieldInfo(field, space = '', newLine = '') {
+    _genFieldInfo(field, space, newLine) {
         let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
         fieldName = isRepeated ? fieldName + 'List' : fieldName;
         if (typeof (fieldComment) === 'string') {
@@ -328,12 +328,16 @@ class GatewayCLI {
         }
         let extraStr = '';
         const jsonComment = fieldComment;
+        let timestampType = '';
         if (jsonComment && jsonComment.hasOwnProperty('Joi')) {
             const joiComment = jsonComment['Joi'];
             extraStr += joiComment.required ? '.required()' : '.optional()';
             if (joiComment.defaultValue) {
                 const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;
                 extraStr += `.default(${defaultValue})`;
+            }
+            if (joiComment.timestamp && (this._isNumber(fieldType) || fieldType === 'string')) {
+                timestampType = joiComment.timestamp;
             }
             extraStr += joiComment.valid ? `.valid([${this._genArrayString(joiComment.valid)}])` : '';
             extraStr += joiComment.invalid ? `.invalid([${this._genArrayString(joiComment.invalid)}])` : '';
@@ -372,7 +376,8 @@ class GatewayCLI {
         }
         else {
             // protobuffer base type
-            returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${lib_1.ucfirst(fieldType)}.activate()${extraStr}${isRepeated ? ')' : ''},${newLine}`;
+            const joiContent = timestampType.length > 0 ? `LibJoi.date().timestamp(${timestampType === 'unix' ? 'unix' : 'javascript'})` : `PbJoi.v${lib_1.ucfirst(fieldType)}.activate()`;
+            returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}${joiContent}${extraStr}${isRepeated ? ')' : ''},${newLine}`;
         }
         if (field.keyType) {
             space = space.substr(0, space.length - 2);
