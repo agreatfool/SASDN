@@ -232,7 +232,7 @@ ${services}
       methods += this._genMethod(method);
     });
     if (this._serviceIndex !== -1) {
-      this._serviceIndex ++;
+      this._serviceIndex++;
     }
     return `
 ## ${this._serviceIndex !== -1 ? this._serviceIndex + '. ' : ''}${service.msgType.replace(/^\S+\./, '')}
