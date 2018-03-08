@@ -246,7 +246,62 @@ ${this._genParam(method.responseType, ParamType.RESPONSE, method.googleHttpOptio
     `;
   }
 
-  private _checkFieldInfo(field: FieldInfo, paramType: ParamType, childData?: Array<string>, paramObject?: object): string {
+  private _genParam(paramName: string, paramType: ParamType, isGateway: boolean): string {
+    let childData: Array<string> = [];
+    let param = '';
+    let paramObject = {};
+    let childContent = '';
+    const isRequestStyle: boolean = (paramType === ParamType.REQUEST) && isGateway;
+    if (this._typeInfos.hasOwnProperty(paramName)) {
+      const msgImport = this._typeInfos[paramName] as ProtoMsgImportInfo;
+      msgImport.fields.forEach((field) => {
+        param += this._genFieldInfo(field, paramType, childData, paramObject);
+      });
+    }
+    if (childData.length > 0) {
+      childData = childData.reverse();
+      childData.forEach((childType) => {
+        childContent += this._genChildContent(childType, paramType, isGateway);
+      });
+    }
+    let content = `
+**${paramType === ParamType.REQUEST ? '请求' : '返回'}参数说明：**
+
+${isRequestStyle ? '|参数名|必选|类型|默认值|说明|' : '|参数名|类型|说明|'}
+${isRequestStyle ? '|:---|:---|:---|:---|:---|' : '|:---|:---|:---|'}
+${param}
+${childContent}
+
+**参数示例**
+
+\`\`\`
+${JSON.stringify(paramObject, null, 2)}
+\`\`\`
+    `;
+    return content;
+  }
+
+  private _genChildContent(type: string, paramType: ParamType, isGateway: boolean): string {
+    if (!this._typeInfos.hasOwnProperty(type)) {
+      return '';
+    }
+    const msgImport = this._typeInfos[type] as ProtoMsgImportInfo;
+    let param = '';
+    msgImport.fields.forEach((field) => {
+      param += this._genFieldInfo(field, paramType);
+    });
+    const isRequestStyle: boolean = (paramType === ParamType.REQUEST) && isGateway;
+    let content = `
+**${type.replace(/^\S+\./, '')}数据格式描述：**
+
+${isRequestStyle ? '|字段名|必选|类型|默认值|说明|' : '|字段名|类型|说明|'}
+${isRequestStyle ? '|:---|:---|:---|:---|:---|' : '|:---|:---|:---|'}
+${param}
+    `;
+    return content;
+  }
+
+  private _genFieldInfo(field: FieldInfo, paramType: ParamType, childData?: Array<string>, paramObject?: object): string {
     let isRequired = false;
     let isRepeated = field.isRepeated;
     let keyType = field.keyType;
@@ -266,7 +321,7 @@ ${this._genParam(method.responseType, ParamType.RESPONSE, method.googleHttpOptio
         const nextFields = this._typeInfos[msgTypeStr].fields;
         let childParamObject = {};
         nextFields.forEach((nextField) => {
-          this._checkFieldInfo(nextField, paramType, childData, childParamObject);
+          this._genFieldInfo(nextField, paramType, childData, childParamObject);
         });
         if (childData) {
           childData.push(msgTypeStr);
@@ -300,61 +355,6 @@ ${this._genParam(method.responseType, ParamType.RESPONSE, method.googleHttpOptio
     } else {
       return `|${field.fieldName}|${fieldType}|${desc}|\n`;
     }
-  }
-
-  private _genParam(paramName: string, paramType: ParamType, isGateway: boolean): string {
-    let childData: Array<string> = [];
-    let param = '';
-    let paramObject = {};
-    let childContent = '';
-    const requestStyle: boolean = (paramType === ParamType.REQUEST) && isGateway;
-    if (this._typeInfos.hasOwnProperty(paramName)) {
-      const msgImport = this._typeInfos[paramName] as ProtoMsgImportInfo;
-      msgImport.fields.forEach((field) => {
-        param += this._checkFieldInfo(field, paramType, childData, paramObject);
-      });
-    }
-    if (childData.length > 0) {
-      childData = childData.reverse();
-      childData.forEach((childType) => {
-        childContent += this._genChildContent(childType, paramType, isGateway);
-      });
-    }
-    let content = `
-**${paramType === ParamType.REQUEST ? '请求' : '返回'}参数说明：**
-
-${requestStyle ? '|参数名|必选|类型|默认值|说明|' : '|参数名|类型|说明|'}
-${requestStyle ? '|:---|:---|:---|:---|:---|' : '|:---|:---|:---|'}
-${param}
-${childContent}
-
-**参数示例**
-
-\`\`\`
-${JSON.stringify(paramObject, null, 2)}
-\`\`\`
-    `;
-    return content;
-  }
-
-  private _genChildContent(type: string, paramType: ParamType, isGateway: boolean): string {
-    if (!this._typeInfos.hasOwnProperty(type)) {
-      return '';
-    }
-    const msgImport = this._typeInfos[type] as ProtoMsgImportInfo;
-    let param = '';
-    msgImport.fields.forEach((field) => {
-      param += this._checkFieldInfo(field, paramType);
-    });
-    const requestStyle: boolean = (paramType === ParamType.REQUEST) && isGateway;
-    let content = `
-**${type.replace(/^\S+\./, '')}数据格式描述：**
-
-${requestStyle ? '|字段名|必选|类型|默认值|说明|' : '|字段名|类型|说明|'}
-${requestStyle ? '|:---|:---|:---|:---|:---|' : '|:---|:---|:---|'}
-${param}
-    `;
-    return content;
   }
 }
 
