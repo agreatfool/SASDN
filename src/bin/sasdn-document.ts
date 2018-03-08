@@ -3,29 +3,10 @@ import * as program from 'commander';
 import * as LibPath from 'path';
 import {
   FieldInfo, GatewaySwaggerSchema, lcfirst, MethodInfo, mkdir, parseMsgNamesFromProto, parseProto, ProtoFile,
-  ProtoMsgImportInfo, ProtoMsgImportInfos, ProtoParseResult, readProtoList, RpcMethodImportPathInfos, ucfirst
+  ProtoMsgImportInfo, ProtoMsgImportInfos, ProtoParseResult, readProtoList, ucfirst
 } from './lib/lib';
 
 const pkg = require('../../package.json');
-
-interface GatewayInfo {
-  apiName: string;
-  serviceName: string;
-  fileName: string;
-  packageName: string;
-  method: string;
-  uri: string;
-  protoMsgImportPath: RpcMethodImportPathInfos;
-  funcParamsStr: string;
-  aggParamsStr: string;
-  requiredParamsStr: string;
-  requestTypeStr: string;
-  requestParameters: Array<GatewaySwaggerSchema>;
-  requestFields: Array<string>;
-  responseTypeStr: string;
-  responseParameters: Array<GatewaySwaggerSchema>;
-  injectedCode: string;
-}
 
 interface JoiComment {
   required: boolean;
@@ -68,10 +49,6 @@ const enum ParamType {
   RESPONSE
 }
 
-interface GatewayDefinitionSchemaMap {
-  [definitionName: string]: Array<GatewaySwaggerSchema>;
-}
-
 program.version(pkg.version)
   .option('-p, --proto <dir>', 'directory of proto files')
   .option('-o, --output <dir>', 'directory to output document')
@@ -89,7 +66,6 @@ const IMPORTS = (program as any).import === undefined ? [] : (program as any).im
 const GATEWAY = (program as any).gateway !== undefined;
 const SERVICE = (program as any).service !== undefined;
 const ROUTER = (program as any).router != undefined;
-const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 
 class DocumentCLI {
   private _rootFiles: Array<ProtoFile> = [];
@@ -169,8 +145,6 @@ class DocumentCLI {
         }
       }
     }
-
-    let gatewayInfoList = [] as Array<GatewayInfo>;
 
     // make router dir in OUTPUT_DIR
     await mkdir(LibPath.join(OUTPUT_DIR, 'document'));

@@ -45,7 +45,6 @@ const IMPORTS = program.import === undefined ? [] : program.import;
 const GATEWAY = program.gateway !== undefined;
 const SERVICE = program.service !== undefined;
 const ROUTER = program.router != undefined;
-const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 class DocumentCLI {
     constructor() {
         this._rootFiles = [];
@@ -125,7 +124,6 @@ class DocumentCLI {
                     }
                 }
             }
-            let gatewayInfoList = [];
             // make router dir in OUTPUT_DIR
             yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'document'));
             if (GATEWAY) {
