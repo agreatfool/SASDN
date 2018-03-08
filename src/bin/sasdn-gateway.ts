@@ -404,7 +404,7 @@ class GatewayCLI {
   }
 
   private _checkFieldInfo(field: FieldInfo): void {
-    if (field.fieldInfo) {
+    if (field.fieldInfo && typeof(field.fieldInfo) === 'string') {
       const msgTypeStr = field.fieldInfo as string;
       if (this._protoMsgImportInfos.hasOwnProperty(msgTypeStr)) {
         const nextFields = this._protoMsgImportInfos[msgTypeStr].fields;
@@ -447,19 +447,35 @@ class GatewayCLI {
       extraStr += joiComment.truthy && fieldType === 'bool' ? `.truthy([${this._genArrayString(joiComment.truthy)}])` : '';
       extraStr += joiComment.falsy && fieldType === 'bool' ? `.falsy([${this._genArrayString(joiComment.falsy)}])` : '';
     }
+    let returnStr = '';
+    let addSpace = '';
+    if (field.keyType) {
+      returnStr = `${space}${fieldName}: LibJoi.object({\n`;
+      addSpace += newLine ? '  ' : '          ';
+      space += addSpace;
+      returnStr += `${space}arg: PbJoi.v${ucfirst(field.keyType)}.activate(),\n`;
+    }
+
     if (fieldInfo && typeof(fieldInfo) !== 'string') {
       // Means this field is not a base type
-      let returnStr = `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}LibJoi.object().keys({\n`;
-      space += newLine ? '' : '        ';
+      returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}LibJoi.object().keys({\n`;
+      if (addSpace.length === 0) {
+        addSpace = newLine ? '' : '        ';
+        space += addSpace;
+      }
       fieldInfo.forEach((nextField) => {
         returnStr += this._genFieldInfo(nextField, space + '  ', '\n');
       });
-      returnStr += `${space}})${isRepeated ? ')' : ''}${extraStr},${newLine}`;
-      return returnStr;
+      returnStr += `${space}})${isRepeated ? ')' : ''}${extraStr},${field.keyType ? '' : newLine}`;
     } else {
       // protobuffer base type
-      return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${ucfirst(fieldType)}.activate()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
+      returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${ucfirst(fieldType)}.activate()${extraStr}${isRepeated ? ')' : ''},${newLine}`;
     }
+    if (field.keyType) {
+      space = space.substr(0, space.length - 2);
+      returnStr += `\n${space}})${extraStr},${newLine}`;
+    }
+    return returnStr;
   }
 
   private _isNumber(type: string): boolean {

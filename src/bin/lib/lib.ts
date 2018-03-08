@@ -2,16 +2,16 @@ import * as LibPath from 'path';
 import * as LibFs from 'mz/fs';
 import * as recursive from 'recursive-readdir';
 import {
-  IParserResult as ProtobufIParserResult, Method as ProtobufMethod, Namespace as ProtobufNamespace,
-  Service as ProtobufService, ReflectionObject as ProtobufReflectionObject, Type as ProtobufType,
-  Field as ProtobufField
+  Field as ProtobufField, IParserResult as ProtobufIParserResult, Method as ProtobufMethod,
+  Namespace as ProtobufNamespace, ReflectionObject as ProtobufReflectionObject, Service as ProtobufService,
+  Type as ProtobufType, MapField as ProtobufMapField, FieldBase as ProtobufFieldBase
 } from 'protobufjs';
 import * as LibMkdirP from 'mkdirp';
 import { Schema as SwaggerSchema, Spec as SwaggerSpec } from 'swagger-schema-official';
 import * as LibUtil from 'util';
 
 const wrappedProtobufjsParse = require('./protobufjs/ParseWrapper');
-const mkdirp:(arg1: string) => Promise<string> = LibUtil.promisify<string, string>(LibMkdirP);
+const mkdirp: (arg1: string) => Promise<string> = LibUtil.promisify<string, string>(LibMkdirP);
 
 const PROTO_BUFFER_BASE_TYPE = [
   'double',
@@ -71,16 +71,23 @@ export interface FieldInfo {
   fieldType: string;
   fieldComment: object | string;
   isRepeated: boolean;
+  keyType?: string;
   fieldInfo?: FieldInfo[] | string;
+}
+
+export interface GoogleHttpOption {
+  method: string;
+  router: string;
 }
 
 export interface MethodInfo {
   methodName: string;
-  // methodType: string;
+  methodComment: object | string;
   requestType: string;
   requestStream: boolean;
   responseType: string;
   responseStream: boolean;
+  googleHttpOption?: GoogleHttpOption;
 }
 
 export interface ProtoMsgImportInfos {
@@ -312,39 +319,45 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
   nestedKeys.forEach((nestedKey) => {
     // packageName: 'user' + symlink: '.' + nestedKey: 'UserService' = 'user.UserService'
     let msgTypeStr = pkgRoot.name + symlink + nestedKey;
-    const reflectObj:ProtobufReflectionObject = pkgRoot.lookup(nestedKey);
+    const reflectObj: ProtobufReflectionObject = pkgRoot.lookup(nestedKey);
     const fields: FieldInfo[] = [];
     const methods: MethodInfo[] = [];
     if (reflectObj.hasOwnProperty('fields')) {
       // Means this ReflectionObject is typeof Type
       const protoType = reflectObj as ProtobufType;
       Object.keys(protoType.fields).forEach((fieldKey) => {
-        const field = protoType.fields[fieldKey] as ProtobufField;
-        let fieldType = field.type;
-        let info;
+        const fieldBase = protoType.fields[fieldKey] as ProtobufFieldBase;
+        let keyType;
+        if (fieldBase.hasOwnProperty('keyType')) {
+          const mapField = fieldBase as ProtobufMapField;
+          keyType = mapField.keyType;
+        }
+        let fieldType = fieldBase.type;
+        let childInfo;
         if (PROTO_BUFFER_BASE_TYPE.indexOf(fieldType) < 0) {
           /**
            * Means this field is a custom type
            * If type contain '.' means this type is import from other proto file
            * Need change type from {package}.{MessageName} to {package}{MessageName} : order.Order => orderOrder
            */
-          fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', symlink) : packageName + fieldType;
-          info = fieldType;
+          fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', symlink) : packageName + symlink + fieldType;
+          childInfo = fieldType;
         }
 
         let commentObject;
         try {
-          commentObject = JSON.parse(field.comment);
+          commentObject = JSON.parse(fieldBase.comment);
         } catch (e) {
-          console.error(`JSON parse error at [${protoType.name}.${field.name}]`, e.stack);
+          console.error(`JSON parse error at [${protoType.name}.${fieldBase.name}]`);
         }
 
         const fieldInfo: FieldInfo = {
           fieldType: fieldType,
-          fieldName: field.name,
-          fieldComment: commentObject || field.comment,
-          isRepeated: field.repeated,
-          fieldInfo: info,
+          fieldName: fieldBase.name,
+          fieldComment: commentObject || fieldBase.comment,
+          isRepeated: fieldBase.repeated,
+          fieldInfo: childInfo,
+          keyType
         };
 
         fields.push(fieldInfo);
@@ -354,16 +367,41 @@ export const parseMsgNamesFromProto = function (proto: ProtobufIParserResult, pr
       const protoService = reflectObj as ProtobufService;
       Object.keys(protoService.methods).forEach((methodKey) => {
         const method = protoService.methods[methodKey] as ProtobufMethod;
-        const requestAndResponse: string[] = [ method.requestType, method.responseType ].map((value) => {
-          return value.indexOf('.') >= 0 ? value.replace('.', symlink) : packageName + value;
+        const requestAndResponse: string[] = [method.requestType, method.responseType].map((value) => {
+          return value.indexOf('.') >= 0 ? value.replace('.', symlink) : packageName + symlink + value;
         });
+
+        let googleHttpOption: GoogleHttpOption;
+        if (method.options && Object.keys(method.options).length > 0) {
+          Object.keys(method.options).forEach((option) => {
+            const opt = option.replace('(google.api.http).', '');
+            if (['get', 'head', 'post', 'options', 'put', 'delete', 'trace', 'connect'].indexOf(opt) >= 0) {
+              googleHttpOption = {
+                method: opt.toUpperCase(),
+                router: method.options[option]
+              };
+            }
+          });
+        }
+
+        let commentObject;
+        if (method.comment) {
+          try {
+            commentObject = JSON.parse(method.comment);
+          } catch (e) {
+            console.error(`JSON parse failed at [${protoService.name}.${method.name}]`);
+            commentObject = method.comment;
+          }
+        }
 
         const methodInfo: MethodInfo = {
           methodName: method.name,
+          methodComment: commentObject,
           requestType: requestAndResponse[0],
           requestStream: method.requestStream,
           responseType: requestAndResponse[1],
           responseStream: method.responseStream,
+          googleHttpOption: googleHttpOption,
         };
 
         methods.push(methodInfo);

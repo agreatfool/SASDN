@@ -13,6 +13,22 @@ const program = require("commander");
 const LibPath = require("path");
 const lib_1 = require("./lib/lib");
 const pkg = require('../../package.json');
+const TypeDefaultValue = {
+    double: 0,
+    float: 0,
+    int32: 0,
+    int64: 0,
+    uint32: 0,
+    uint64: 0,
+    sint32: 0,
+    sint64: 0,
+    fixed32: 0,
+    fixed64: 0,
+    sfixed32: 0,
+    sfixed64: 0,
+    string: '',
+    bool: false
+};
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
     .option('-o, --output <dir>', 'directory to output document')
@@ -21,21 +37,23 @@ program.version(pkg.version)
 })
     .option('-g, --gateway', 'generate a md document for gateway')
     .option('-s, --service', 'generate a md document for each service')
-    .option('-a, --api', 'generate a md document for each api')
+    .option('-r, --router', 'generate a md document for each api-router')
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
 const IMPORTS = program.import === undefined ? [] : program.import;
 const GATEWAY = program.gateway !== undefined;
 const SERVICE = program.service !== undefined;
-const API = program.api != undefined;
+const ROUTER = program.router != undefined;
 const METHOD_OPTIONS = ['get', 'put', 'post', 'delete', 'options', 'head', 'patch'];
 class DocumentCLI {
     constructor() {
+        this._rootFiles = [];
         this._protoFiles = [];
-        this._protoMsgImportInfos = {};
         this._serviceInfos = {};
         this._typeInfos = {};
+        this._serviceIndex = -1;
+        this._routerIndex = -1;
     }
     static instance() {
         return new DocumentCLI();
@@ -70,7 +88,8 @@ class DocumentCLI {
     _loadProtos() {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('ServiceCLI load result files.');
-            this._protoFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR);
+            this._rootFiles = yield lib_1.readProtoList(PROTO_DIR, OUTPUT_DIR);
+            this._protoFiles = this._protoFiles.concat(this._rootFiles);
             if (IMPORTS.length > 0) {
                 for (let i = 0; i < IMPORTS.length; i++) {
                     this._protoFiles = this._protoFiles.concat(yield lib_1.readProtoList(LibPath.normalize(IMPORTS[i]), OUTPUT_DIR));
@@ -98,10 +117,10 @@ class DocumentCLI {
                 let msgImportInfos = lib_1.parseMsgNamesFromProto(parseResult.result, protoFile);
                 for (let msgTypeStr in msgImportInfos) {
                     const msgInfo = msgImportInfos[msgTypeStr];
-                    if (msgInfo.methods) {
+                    if (msgInfo.methods && msgInfo.methods.length > 0) {
                         this._serviceInfos[msgTypeStr] = msgInfo;
                     }
-                    else if (msgInfo.fields) {
+                    else if (msgInfo.fields && msgInfo.fields.length > 0) {
                         this._typeInfos[msgTypeStr] = msgInfo;
                     }
                 }
@@ -110,133 +129,205 @@ class DocumentCLI {
             // make router dir in OUTPUT_DIR
             yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'document'));
             if (GATEWAY) {
+                this._serviceIndex = 0;
+                yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'document', 'Api-Gateway.md'), this._genGateway());
             }
             if (SERVICE) {
-            }
-            if (API) {
+                this._routerIndex = 0;
+                this._serviceIndex = -1;
                 Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
                     const service = this._serviceInfos[key];
-                    const servicePath = LibPath.join(OUTPUT_DIR, 'document', 'api', service.namespace);
-                    yield lib_1.mkdir(servicePath);
-                    service.methods.forEach((method) => __awaiter(this, void 0, void 0, function* () {
-                        yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, servicePath, method.methodName + '.md'), this._genMarkDown());
-                    }));
+                    if (this._rootFiles.indexOf(service.protoFile) >= 0) {
+                        const servicePath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'service');
+                        yield lib_1.mkdir(servicePath);
+                        yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, servicePath, service.msgType.replace(/^\S+\./, '') + '.md'), this._genService(service));
+                    }
+                }));
+            }
+            if (ROUTER) {
+                this._routerIndex = -1;
+                Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
+                    const service = this._serviceInfos[key];
+                    if (this._rootFiles.indexOf(service.protoFile) >= 0) {
+                        service.methods.forEach((method) => __awaiter(this, void 0, void 0, function* () {
+                            const routerPath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'router');
+                            yield lib_1.mkdir(routerPath);
+                            yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, routerPath, method.methodName + '.md'), this._genMethod(method));
+                        }));
+                    }
                 }));
             }
         });
     }
-    _genMarkDown() {
+    _genGateway() {
+        let services = '';
+        Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
+            const service = this._serviceInfos[key];
+            if (this._rootFiles.indexOf(service.protoFile) >= 0) {
+                services += this._genService(service);
+            }
+        }));
         return `
+# Api-Gateway 接口文档
+
+[TOC]
+
+${services}
+    `;
+    }
+    _genService(service) {
+        let methods = '';
+        service.methods.forEach((method) => {
+            methods += this._genMethod(method);
+        });
+        if (this._serviceIndex !== -1) {
+            this._serviceIndex++;
+        }
+        return `
+## ${this._serviceIndex !== -1 ? this._serviceIndex + '. ' : ''}${service.msgType.replace(/^\S+\./, '')}
+    
+${this._serviceIndex === -1 ? '[TOC]' : ''}
+    
+${methods}
+    `;
+    }
+    _genMethod(method) {
+        let methodDesc = '无';
+        if (method.methodComment && typeof (method.methodComment) === 'object' && method.methodComment.hasOwnProperty('Desc')) {
+            methodDesc = method.methodComment['Desc'];
+        }
+        if (this._routerIndex !== -1) {
+            this._routerIndex++;
+        }
+        console.log('this._routerIndex = ', this._routerIndex);
+        return `
+### ${this._routerIndex === -1 ? '' : this._routerIndex + '. '}${method.methodName}   
+   
 **简要描述：**
 
-- 游戏用户绑定三方账户接口
+- ${methodDesc}
 
-**请求URL：**
-- \` http://qa-gateway.shinezone.com/v1/game/bindAccount \`
+**请求${method.googleHttpOption ? 'Router:' : '方法:'}**
+- \` ${method.googleHttpOption ? method.googleHttpOption.router : lib_1.lcfirst(method.methodName)} \`
 
 **请求方式：**
-- POST
+- ${method.googleHttpOption ? method.googleHttpOption.method : 'RPC'}
 
-**参数：**
+${this._genParam(method.requestType, 1 /* REQUEST */, method.googleHttpOption !== undefined)}
 
-|参数名|必选|类型|说明|
-|:----    |:---|:----- |-----   |
-|cpId          | 是  |Int32  |发行渠道编号id   |
-|appId         |是   |Int32  | 应用编号id    |
-|guid           |是   |Uint64 | 游戏角色编号id    |
-|accountType   |是   |Int32  | 账户类型    |
-|thirdPartyId |是   |String | 第三方平台编号id    |
-|accessToken   |是   |String | 登录授权码    |
-|extra          |否   |Object | 扩展信息（字段描述详见下表）    |
-|timestamp      |是   |Int32  | 时间戳    |
-|sign           |是   |String | 秘钥    |
+${this._genParam(method.responseType, 2 /* RESPONSE */, method.googleHttpOption !== undefined)}
 
-**extra数据格式描述：**
-
-|字段名           |必选|类型|默认值|说明|
-|:----            |:---|:----- |:-----   |-----|
-|guid             | 否  |Uint64  |0   |游戏角色编号id|
-|appId           | 否  |Int32   |0   |应用编号id|
-|accountType     | 否  |Int32   |0   |账户类型|
-|thirdPartyId   | 否  |String  |空字符串   |第三方平台编号id|
-|accessToken     | 否  |String  |空字符串   |登录授权码|
-
-
- **参数示例**
-
-\`\`\`
-{
-  "cpId": 0,
-  "appId": 0,
-  "guid": "string",
-  "accountType": 0,
-  "thirdPartyId": "string",
-  "accessToken": "string",
-  "extra": {
-    "guid": "string",
-    "appId": 0,
-    "accountType": 0,
-    "thirdPartyId": "string",
-    "accessToken": "string"
-  },
-  "timestamp": 0,
-  "sign": "string"
-}
-\`\`\`
-
- **返回示例**
-
-\`\`\` 
-{
-  "code": 0,
-  "message": "string",
-  "data": {
-    "guid": "string",
-    "bind": [
-      {
-        "guid": "string",
-        "appId": 0,
-        "account_type": 0,
-        "thirdPartyId": "string",
-        "thirdPartyNickname": "string",
-        "bindTime": 0
-      }
-    ]
-  }
-}
-\`\`\`
-
- **返回参数说明**
-
-|参数名|类型|说明|
-|:-----  |:-----|-----                           |
-|code     |Int32   |接口返回状态  |
-|message  |String   |状态描述 |
-|data     |Object   |返回数据内容（字段描述详见下表）  |
-
-**data数据格式描述：**
-
-|字段名           |类型|说明|
-|:----            |:-----   |-----|
-|guid             |String   |游戏角色编号id|
-|bind             |Array    |绑定信息数组（字段描述详见下表）|
-
-**bind数据格式描述：**
-
-|字段名           |类型|说明|
-|:----                   |:-----   |-----|
-|guid                    |String    |游戏角色编号id|
-|appId                  |Int32     |应用编号id|
-|accountType            |Int32     |账户类型|
-|thirdPartyId          |String    |第三方平台编号id|
-|thirdPartyNickname    |String    |第三方账户昵称|
-|bindTime               |Int32     |绑定时间戳|
-
-
- **备注**
-
-- [更多返回错误代码请看首页的错误代码描述](http://172.16.1.26/index.php?s=/1&page_id=2 "更多返回错误代码请看首页的错误代码描述")
     `;
+    }
+    _checkFieldInfo(field, paramType, childData, paramObject) {
+        let isRequired = false;
+        let isRepeated = field.isRepeated;
+        let keyType = field.keyType;
+        let defaultValue = TypeDefaultValue[field.fieldType];
+        defaultValue = defaultValue === undefined ? '{}' : defaultValue;
+        let desc = '无';
+        let fieldType;
+        if (isRepeated) {
+            fieldType = 'Array< T >';
+        }
+        if (keyType) {
+            fieldType = `Map< ${lib_1.ucfirst(keyType)}, T >`;
+        }
+        if (field.fieldInfo && typeof (field.fieldInfo) === 'string') {
+            const msgTypeStr = field.fieldInfo;
+            if (this._typeInfos.hasOwnProperty(msgTypeStr)) {
+                const nextFields = this._typeInfos[msgTypeStr].fields;
+                let childParamObject = {};
+                nextFields.forEach((nextField) => {
+                    this._checkFieldInfo(nextField, paramType, childData, childParamObject);
+                });
+                if (childData) {
+                    childData.push(msgTypeStr);
+                }
+                if (paramObject) {
+                    paramObject[field.fieldName] = isRepeated ? [childParamObject] : childParamObject;
+                }
+                const objectType = `${field.fieldType.replace(/^\S+\./, '')}`;
+                fieldType = fieldType ? fieldType.replace('T', objectType) : objectType;
+            }
+        }
+        else {
+            // |参数名|必选|类型|默认值|说明|
+            if (field.fieldComment && typeof (field.fieldComment) === 'object') {
+                if (field.fieldComment.hasOwnProperty('Joi')) {
+                    const joiComment = field.fieldComment['Joi'];
+                    isRequired = joiComment.required;
+                    defaultValue = joiComment.defaultValue || defaultValue;
+                }
+                if (field.fieldComment.hasOwnProperty('Desc')) {
+                    desc = field.fieldComment['Desc'];
+                }
+            }
+            if (paramObject) {
+                paramObject[field.fieldName] = isRepeated ? [defaultValue] : defaultValue;
+            }
+            fieldType = fieldType ? fieldType.replace('T', lib_1.ucfirst(field.fieldType)) : lib_1.ucfirst(field.fieldType);
+        }
+        if (paramType === 1 /* REQUEST */) {
+            defaultValue = typeof (defaultValue) === 'string' ? `"${defaultValue}"` : defaultValue;
+            return `|${field.fieldName}|${isRequired ? '必传' : '可传'}|${fieldType}|${isRequired ? '---' : defaultValue}|${desc}|\n`;
+        }
+        else {
+            return `|${field.fieldName}|${fieldType}|${desc}|\n`;
+        }
+    }
+    _genParam(paramName, paramType, isGateway) {
+        let childData = [];
+        let param = '';
+        let paramObject = {};
+        let childContent = '';
+        const requestStyle = (paramType === 1 /* REQUEST */) && isGateway;
+        if (this._typeInfos.hasOwnProperty(paramName)) {
+            const msgImport = this._typeInfos[paramName];
+            msgImport.fields.forEach((field) => {
+                param += this._checkFieldInfo(field, paramType, childData, paramObject);
+            });
+        }
+        if (childData.length > 0) {
+            childData = childData.reverse();
+            childData.forEach((childType) => {
+                childContent += this._genChildContent(childType, paramType, isGateway);
+            });
+        }
+        let content = `
+**${paramType === 1 /* REQUEST */ ? '请求' : '返回'}参数说明：**
+
+${requestStyle ? '|参数名|必选|类型|默认值|说明|' : '|参数名|类型|说明|'}
+${requestStyle ? '|:---|:---|:---|:---|:---|' : '|:---|:---|:---|'}
+${param}
+${childContent}
+
+**参数示例**
+
+\`\`\`
+${JSON.stringify(paramObject, null, 2)}
+\`\`\`
+    `;
+        return content;
+    }
+    _genChildContent(type, paramType, isGateway) {
+        if (!this._typeInfos.hasOwnProperty(type)) {
+            return '';
+        }
+        const msgImport = this._typeInfos[type];
+        let param = '';
+        msgImport.fields.forEach((field) => {
+            param += this._checkFieldInfo(field, paramType);
+        });
+        const requestStyle = (paramType === 1 /* REQUEST */) && isGateway;
+        let content = `
+**${type.replace(/^\S+\./, '')}数据格式描述：**
+
+${requestStyle ? '|字段名|必选|类型|默认值|说明|' : '|字段名|类型|说明|'}
+${requestStyle ? '|:---|:---|:---|:---|:---|' : '|:---|:---|:---|'}
+${param}
+    `;
+        return content;
     }
 }
 DocumentCLI.instance().run().catch((err) => {

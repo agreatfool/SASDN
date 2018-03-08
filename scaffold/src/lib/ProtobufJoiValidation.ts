@@ -32,14 +32,14 @@ export namespace ProtobufJoiValidation {
   export const vSfixed64 = vInt64;
 
   export const vUint32 = joi.extend((joi) => ({
-    base: joi.number().integer().positive().max(MAX_INT32_VALUE),
+    base: joi.number().integer().positive().max(MAX_INT32_VALUE).allow(0),
     name: 'activate'
   }));
 
   export const vFixed32 = vUint32;
 
   export const vUint64 = joi.extend((joi) => ({
-    base: joi.number().integer().positive().max(Number.MAX_SAFE_INTEGER),
+    base: joi.number().integer().positive().max(Number.MAX_SAFE_INTEGER).allow(0),
     name: 'activate'
   }));
 

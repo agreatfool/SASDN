@@ -135,31 +135,37 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
             // Means this ReflectionObject is typeof Type
             const protoType = reflectObj;
             Object.keys(protoType.fields).forEach((fieldKey) => {
-                const field = protoType.fields[fieldKey];
-                let fieldType = field.type;
-                let info;
+                const fieldBase = protoType.fields[fieldKey];
+                let keyType;
+                if (fieldBase.hasOwnProperty('keyType')) {
+                    const mapField = fieldBase;
+                    keyType = mapField.keyType;
+                }
+                let fieldType = fieldBase.type;
+                let childInfo;
                 if (PROTO_BUFFER_BASE_TYPE.indexOf(fieldType) < 0) {
                     /**
                      * Means this field is a custom type
                      * If type contain '.' means this type is import from other proto file
                      * Need change type from {package}.{MessageName} to {package}{MessageName} : order.Order => orderOrder
                      */
-                    fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', symlink) : packageName + fieldType;
-                    info = fieldType;
+                    fieldType = fieldType.indexOf('.') >= 0 ? fieldType.replace('.', symlink) : packageName + symlink + fieldType;
+                    childInfo = fieldType;
                 }
                 let commentObject;
                 try {
-                    commentObject = JSON.parse(field.comment);
+                    commentObject = JSON.parse(fieldBase.comment);
                 }
                 catch (e) {
-                    console.error(`JSON parse error at [${protoType.name}.${field.name}]`, e.stack);
+                    console.error(`JSON parse error at [${protoType.name}.${fieldBase.name}]`);
                 }
                 const fieldInfo = {
                     fieldType: fieldType,
-                    fieldName: field.name,
-                    fieldComment: commentObject || field.comment,
-                    isRepeated: field.repeated,
-                    fieldInfo: info,
+                    fieldName: fieldBase.name,
+                    fieldComment: commentObject || fieldBase.comment,
+                    isRepeated: fieldBase.repeated,
+                    fieldInfo: childInfo,
+                    keyType
                 };
                 fields.push(fieldInfo);
             });
@@ -170,14 +176,38 @@ exports.parseMsgNamesFromProto = function (proto, protoFile, symlink = '.') {
             Object.keys(protoService.methods).forEach((methodKey) => {
                 const method = protoService.methods[methodKey];
                 const requestAndResponse = [method.requestType, method.responseType].map((value) => {
-                    return value.indexOf('.') >= 0 ? value.replace('.', symlink) : packageName + value;
+                    return value.indexOf('.') >= 0 ? value.replace('.', symlink) : packageName + symlink + value;
                 });
+                let googleHttpOption;
+                if (method.options && Object.keys(method.options).length > 0) {
+                    Object.keys(method.options).forEach((option) => {
+                        const opt = option.replace('(google.api.http).', '');
+                        if (['get', 'head', 'post', 'options', 'put', 'delete', 'trace', 'connect'].indexOf(opt) >= 0) {
+                            googleHttpOption = {
+                                method: opt.toUpperCase(),
+                                router: method.options[option]
+                            };
+                        }
+                    });
+                }
+                let commentObject;
+                if (method.comment) {
+                    try {
+                        commentObject = JSON.parse(method.comment);
+                    }
+                    catch (e) {
+                        console.error(`JSON parse failed at [${protoService.name}.${method.name}]`);
+                        commentObject = method.comment;
+                    }
+                }
                 const methodInfo = {
                     methodName: method.name,
+                    methodComment: commentObject,
                     requestType: requestAndResponse[0],
                     requestStream: method.requestStream,
                     responseType: requestAndResponse[1],
                     responseStream: method.responseStream,
+                    googleHttpOption: googleHttpOption,
                 };
                 methods.push(methodInfo);
             });
