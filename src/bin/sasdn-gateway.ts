@@ -50,7 +50,7 @@ interface JoiComment {
   allow?: Array<any>;
   email?: boolean;
   uri?: Array<any>;
-  timestamp?: string;
+  timestamp?: 'unix' | 'javascript';
 }
 
 interface GatewayDefinitionSchemaMap {
