@@ -37,14 +37,14 @@ program.version(pkg.version)
 })
     .option('-a, --all', 'generate all service in one md document')
     .option('-s, --service', 'generate a md document for each service')
-    .option('-r, --router', 'generate a md document for each api-router')
+    .option('-m, --method', 'generate a md document for each method')
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
 const IMPORTS = program.import === undefined ? [] : program.import;
 const ALL = program.all !== undefined;
 const SERVICE = program.service !== undefined;
-const ROUTER = program.router != undefined;
+const METHOD = program.method != undefined;
 class DocumentCLI {
     constructor() {
         this._rootFiles = [];
@@ -142,7 +142,7 @@ class DocumentCLI {
                     }
                 }));
             }
-            if (ROUTER) {
+            if (METHOD) {
                 this._routerIndex = -1;
                 Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
                     const service = this._serviceInfos[key];

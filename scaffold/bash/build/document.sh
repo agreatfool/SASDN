@@ -22,4 +22,4 @@ sasdn document \
 --import=${PROTO_3RD} \
 --all \
 --service \
---router
+--method
