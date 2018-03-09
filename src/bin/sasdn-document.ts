@@ -55,7 +55,7 @@ program.version(pkg.version)
   .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
     return val.split(',');
   })
-  .option('-g, --gateway', 'generate a md document for gateway')
+  .option('-a, --all', 'generate all service in one md document')
   .option('-s, --service', 'generate a md document for each service')
   .option('-r, --router', 'generate a md document for each api-router')
   .parse(process.argv);
@@ -63,7 +63,7 @@ program.version(pkg.version)
 const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.normalize((program as any).proto);
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
 const IMPORTS = (program as any).import === undefined ? [] : (program as any).import;
-const GATEWAY = (program as any).gateway !== undefined;
+const ALL = (program as any).all !== undefined;
 const SERVICE = (program as any).service !== undefined;
 const ROUTER = (program as any).router != undefined;
 
@@ -149,7 +149,7 @@ class DocumentCLI {
     // make router dir in OUTPUT_DIR
     await mkdir(LibPath.join(OUTPUT_DIR, 'document'));
 
-    if (GATEWAY) {
+    if (ALL) {
       this._serviceIndex = 0;
       await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'document', 'Api-Gateway.md'), this._genGateway());
     }
