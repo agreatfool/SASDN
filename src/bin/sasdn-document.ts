@@ -73,7 +73,7 @@ class DocumentCLI {
   private _serviceInfos: ProtoMsgImportInfos = {};
   private _typeInfos: ProtoMsgImportInfos = {};
   private _serviceIndex = -1;
-  private _routerIndex = -1;
+  private _methodIndex = -1;
 
   static instance() {
     return new DocumentCLI();
@@ -83,7 +83,7 @@ class DocumentCLI {
     console.log('DocumentCLI start.');
     await this._validate();
     await this._loadProtos();
-    await this._genSpecs();
+    await this._genDocuments();
   }
 
   private async _validate() {
@@ -120,8 +120,8 @@ class DocumentCLI {
     }
   }
 
-  private async _genSpecs() {
-    console.log('DocumentCLI generate router api codes.');
+  private async _genDocuments() {
+    console.log('DocumentCLI generate Documents.');
 
     // 从 proto 文件中解析出 ProtobufIParserResult 数据
     let parseResults = [] as Array<ProtoParseResult>;
@@ -155,7 +155,7 @@ class DocumentCLI {
     }
 
     if (SERVICE) {
-      this._routerIndex = 0;
+      this._methodIndex = 0;
       this._serviceIndex = -1;
       Object.keys(this._serviceInfos).forEach(async (key) => {
         const service = this._serviceInfos[key] as ProtoMsgImportInfo;
@@ -169,12 +169,12 @@ class DocumentCLI {
     }
 
     if (METHOD) {
-      this._routerIndex = -1;
+      this._methodIndex = -1;
       Object.keys(this._serviceInfos).forEach(async (key) => {
         const service = this._serviceInfos[key] as ProtoMsgImportInfo;
         if (this._rootFiles.indexOf(service.protoFile) >= 0) {
           service.methods.forEach(async (method) => {
-            const routerPath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'router');
+            const routerPath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'method');
             await mkdir(routerPath);
             await LibFs.writeFile(LibPath.join(OUTPUT_DIR, routerPath, method.methodName + '.md'), this._genMethod(method));
           });
@@ -222,12 +222,11 @@ ${methods}
     if (method.methodComment && typeof(method.methodComment) === 'object' && method.methodComment.hasOwnProperty('Desc')) {
       methodDesc = method.methodComment['Desc'];
     }
-    if (this._routerIndex !== -1) {
-      this._routerIndex++;
+    if (this._methodIndex !== -1) {
+      this._methodIndex++;
     }
-    console.log('this._routerIndex = ', this._routerIndex);
     return `
-### ${this._routerIndex === -1 ? '' : this._routerIndex + '. '}${method.methodName}   
+### ${this._methodIndex === -1 ? '' : this._methodIndex + '. '}${method.methodName}   
    
 **简要描述：**
 
