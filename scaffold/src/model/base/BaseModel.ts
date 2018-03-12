@@ -2,6 +2,9 @@ import { BaseOrmEntity, DatabaseFactory, EntityStorage } from 'sasdn-database';
 import { Exception } from '../../lib/Exception';
 import { TypeOrmImpl } from 'sasdn-zipkin';
 import { DeepPartial } from 'typeorm/browser/common/DeepPartial';
+import { SelectQueryBuilder } from 'typeorm/query-builder/SelectQueryBuilder';
+import { UpdateQueryBuilder } from 'typeorm/query-builder/UpdateQueryBuilder';
+import { DeleteQueryBuilder } from 'typeorm/query-builder/DeleteQueryBuilder';
 
 export interface FindOptions<T> {
   where?: DeepPartial<T>;
@@ -46,10 +49,11 @@ export class BaseModel<E extends BaseOrmEntity> {
         .values(params)
         .execute();
       const entity = this._EntityClass.create(params);
+      let primaryKey = this._getPrimaryKey(this._EntityClass);
       // 如果是自增主键，则从 result 中获取主键，并且添加到 entity 中
       if (!this._EntityClass.hasId(entity)) {
-        const primaryKey = result.insertId;
-        entity.id = primaryKey;
+        const primaryValue = result.insertId;
+        entity[primaryKey] = primaryValue;
       }
       return entity;
     } catch (err) {
@@ -187,14 +191,19 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   /**
-   * 如果是单表，update 既可以更新单条记录也可以更新多条记录，
-   * 如果分表，仅当更新单条记录的时候用这个方法
+   * 仅当更新单条记录的时候用这个方法
    * @param {DeepPartial<E extends BaseOrmEntity>} queryParams
    * @param {DeepPartial<E extends BaseOrmEntity>} updateParams
    * @returns {Promise<void>}
    */
   public async update(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>): Promise<void> {
-    await this._update(this._EntityClass, queryParams, updateParams);
+    if (!this._ifUniqueExist(queryParams, this._EntityClass)) {
+      throw new Exception(7, `queryParams=${JSON.stringify(queryParams)}`);
+    }
+    let affectedRows = await this._update(this._EntityClass, queryParams, updateParams);
+    if (affectedRows !== 1) {
+      throw new Exception(8, `affectedRows=${affectedRows}`);
+    }
   }
 
   /**
@@ -235,13 +244,18 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   /**
-   * 如果是单表，delete 既可以删除单条记录也可以删除多条记录，
-   * 如果分表，仅当删除单条记录的时候用这个方法
+   * 仅当删除单条记录的时候用这个方法
    * @param {DeepPartial<E extends BaseOrmEntity>} params
    * @returns {Promise<void>}
    */
   public async delete(params: DeepPartial<E>): Promise<void> {
-    await this._delete(this._EntityClass, params);
+    if (!this._ifUniqueExist(params, this._EntityClass)) {
+      throw new Exception(7, `params=${params}`);
+    }
+    let affectedRows = await this._delete(this._EntityClass, params);
+    if (affectedRows !== 1) {
+      throw new Exception(8, `affectedRows=${JSON.stringify(params)}`);
+    }
   }
 
   /**
@@ -280,8 +294,8 @@ export class BaseModel<E extends BaseOrmEntity> {
     }
   }
 
-  private _genFindTempQuery(Entity: any, params: FindOptions<E> | DeepPartial<E>): any {
-    let tempQuery: any = Entity.createQueryBuilder('item');
+  private _genFindTempQuery(Entity: any, params: FindOptions<E> | DeepPartial<E>): SelectQueryBuilder<E> {
+    let tempQuery: SelectQueryBuilder<E> = Entity.createQueryBuilder('item');
     if ((params as FindOptions<E>).where) {
       const whereOptions = Object.keys((params as FindOptions<E>).where);
       for (const w of whereOptions) {
@@ -320,7 +334,7 @@ export class BaseModel<E extends BaseOrmEntity> {
     }
     if ((params as FindOptions<E>).order) {
       const orderKeys = Object.keys((params as FindOptions<E>).order);
-      const options: object = {};
+      const options: { [key: string]: any } = {};
       orderKeys.map(k => options[`item.${k}`] = (params as FindOptions<E>).order[k]);
       tempQuery = tempQuery.orderBy(options);
     }
@@ -350,28 +364,42 @@ export class BaseModel<E extends BaseOrmEntity> {
     }
   }
 
-  protected async _update(Entity: any, queryParams: DeepPartial<E>, updateParams: DeepPartial<E>): Promise<void> {
+  protected async _update(Entity: any, queryParams: DeepPartial<E>, updateParams: DeepPartial<E>): Promise<number> {
+    let tempQuery: UpdateQueryBuilder<E> = Entity.createQueryBuilder()
+      .update()
+      .set(updateParams);
+
+    for (let key of Object.keys(queryParams)) {
+      tempQuery = tempQuery.andWhere(`${key} = :${key}`, { [key]: queryParams[key] });
+    }
+
+    let result: any;
     try {
-      await Entity.update(queryParams, updateParams);
+      result = await tempQuery.execute();
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
     }
+
+    return result.affectedRows as number;
   }
 
-  protected async _delete(Entity: any, params: DeepPartial<E>): Promise<void> {
-    let tempQuery: any = Entity
+  protected async _delete(Entity: any, params: DeepPartial<E>): Promise<number> {
+    let tempQuery: DeleteQueryBuilder<E> = Entity
       .createQueryBuilder()
       .delete();
     const whereOptions = Object.keys(params);
     for (const w of whereOptions) {
       tempQuery = tempQuery.andWhere(`${w} = :${w}`, { [w]: params[w] });
     }
+
+    let result: any;
     try {
-      await tempQuery.execute();
-      return;
+      result = await tempQuery.execute();
     } catch (err) {
       throw new Exception(2, `${err.toString()}`);
     }
+
+    return result.affectedRows as number;
   }
 
   protected async _find(Entity: any, params?: FindOptions<E> | DeepPartial<E>): Promise<any[]> {
@@ -404,7 +432,7 @@ export class BaseModel<E extends BaseOrmEntity> {
           }
         }
       }
-      const tempQuery = this._genFindTempQuery(Entity, params);
+      const tempQuery: SelectQueryBuilder<E> = this._genFindTempQuery(Entity, params);
       const result = await tempQuery.getMany();
       return result;
     } catch (err) {
@@ -461,5 +489,52 @@ export class BaseModel<E extends BaseOrmEntity> {
       obj.orWhere instanceof Object ||
       obj.orWhereIn instanceof Object ||
       obj.orWhereLike instanceof Object;
+  }
+
+  protected _getPrimaryKey(Entity: any): string {
+    let rep = Entity.getRepository();
+    let columns = rep.metadata.ownColumns;
+    for (let column of columns) {
+      if (column.isPrimary) {
+        return column.propertyName;
+      }
+    }
+  }
+
+  protected _ifUniqueExist(params: DeepPartial<E>, Entity: any): boolean {
+    let uniquePropertyList: string[] = [];
+    let uniqueIndicesList: string[][] = [];
+
+    let rep = Entity.getRepository();
+    let columns = rep.metadata.ownColumns;
+    let indices = rep.metadata.indices;
+
+    for (let column of columns) {
+      if (column.isPrimary || column.isUnique) {
+        uniquePropertyList.push(column.propertyName);
+      }
+    }
+
+    for (let indice of indices) {
+      if (indice.isUnique) {
+        uniqueIndicesList.push(indice.columns.map(c => c.propertyName));
+      }
+    }
+
+    let keyList = Object.keys(params);
+    for (let property of uniquePropertyList) {
+      if (keyList.indexOf(property) !== -1) {
+        return true;
+      }
+    }
+
+    for (let uniqueIndices of uniqueIndicesList) {
+      let bool = uniqueIndices.every(property => keyList.indexOf(property) !== -1);
+      if (bool) {
+        return bool;
+      }
+    }
+
+    return false;
   }
 }
