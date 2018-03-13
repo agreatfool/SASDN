@@ -235,7 +235,7 @@ ${this._genParam(method.responseType, 2 /* RESPONSE */, method.googleHttpOption 
             });
         }
         let content = `
-**${paramType === 1 /* REQUEST */ ? '请求' : '返回'}参数说明：**
+**${paramType === 1 /* REQUEST */ ? '请求' : '返回'}结构说明：**
 
 ${isRequestStyle ? '|参数名|必选|类型|默认值|说明|' : '|参数名|类型|说明|'}
 ${isRequestStyle ? '|:---|:---|:---|:---|:---|' : '|:---|:---|:---|'}
