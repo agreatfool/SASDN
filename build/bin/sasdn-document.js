@@ -52,7 +52,7 @@ class DocumentCLI {
         this._serviceInfos = {};
         this._typeInfos = {};
         this._serviceIndex = -1;
-        this._routerIndex = -1;
+        this._methodIndex = -1;
     }
     static instance() {
         return new DocumentCLI();
@@ -62,7 +62,7 @@ class DocumentCLI {
             console.log('DocumentCLI start.');
             yield this._validate();
             yield this._loadProtos();
-            yield this._genSpecs();
+            yield this._genDocuments();
         });
     }
     _validate() {
@@ -99,9 +99,9 @@ class DocumentCLI {
             }
         });
     }
-    _genSpecs() {
+    _genDocuments() {
         return __awaiter(this, void 0, void 0, function* () {
-            console.log('DocumentCLI generate router api codes.');
+            console.log('DocumentCLI generate Documents.');
             // 从 proto 文件中解析出 ProtobufIParserResult 数据
             let parseResults = [];
             for (let i = 0; i < this._protoFiles.length; i++) {
@@ -131,7 +131,7 @@ class DocumentCLI {
                 yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'document', 'Api-Gateway.md'), this._genGateway());
             }
             if (SERVICE) {
-                this._routerIndex = 0;
+                this._methodIndex = 0;
                 this._serviceIndex = -1;
                 Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
                     const service = this._serviceInfos[key];
@@ -143,12 +143,12 @@ class DocumentCLI {
                 }));
             }
             if (METHOD) {
-                this._routerIndex = -1;
+                this._methodIndex = -1;
                 Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
                     const service = this._serviceInfos[key];
                     if (this._rootFiles.indexOf(service.protoFile) >= 0) {
                         service.methods.forEach((method) => __awaiter(this, void 0, void 0, function* () {
-                            const routerPath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'router');
+                            const routerPath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'method');
                             yield lib_1.mkdir(routerPath);
                             yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, routerPath, method.methodName + '.md'), this._genMethod(method));
                         }));
@@ -194,12 +194,11 @@ ${methods}
         if (method.methodComment && typeof (method.methodComment) === 'object' && method.methodComment.hasOwnProperty('Desc')) {
             methodDesc = method.methodComment['Desc'];
         }
-        if (this._routerIndex !== -1) {
-            this._routerIndex++;
+        if (this._methodIndex !== -1) {
+            this._methodIndex++;
         }
-        console.log('this._routerIndex = ', this._routerIndex);
         return `
-### ${this._routerIndex === -1 ? '' : this._routerIndex + '. '}${method.methodName}   
+### ${this._methodIndex === -1 ? '' : this._methodIndex + '. '}${method.methodName}   
    
 **简要描述：**
 
