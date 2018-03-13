@@ -6,6 +6,12 @@ import { SelectQueryBuilder } from 'typeorm/query-builder/SelectQueryBuilder';
 import { UpdateQueryBuilder } from 'typeorm/query-builder/UpdateQueryBuilder';
 import { DeleteQueryBuilder } from 'typeorm/query-builder/DeleteQueryBuilder';
 
+/**
+ * ************************注意****************************
+ * 若要获得 update & delete 操作的 affectRow， 必须使用 mysql
+ * ********************************************************
+ */
+
 export interface FindOptions<T> {
   where?: DeepPartial<T>;
   whereIn?: { [P in keyof T]?: any[]; };
@@ -50,7 +56,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         .execute();
       const entity = this._EntityClass.create(params);
       // 主键如果是自增主键，则从 result 中获取主键的值，并且添加到 entity 中
-      // 主键如果不是自增主键，则调用者必须要传，即 entity 中已包含 primaryKey
+      // 主键如果不是自增主键，则在 params 中必须包含 primaryKey
       if (!this._EntityClass.hasId(entity)) {
         let primaryKey = this._getPrimaryKey(this._EntityClass);
         const primaryValue = result.insertId;
