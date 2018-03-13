@@ -49,9 +49,10 @@ export class BaseModel<E extends BaseOrmEntity> {
         .values(params)
         .execute();
       const entity = this._EntityClass.create(params);
-      let primaryKey = this._getPrimaryKey(this._EntityClass);
-      // 如果是自增主键，则从 result 中获取主键，并且添加到 entity 中
+      // 主键如果是自增主键，则从 result 中获取主键的值，并且添加到 entity 中
+      // 主键如果不是自增主键，则调用者必须要传，即 entity 中已包含 primaryKey
       if (!this._EntityClass.hasId(entity)) {
+        let primaryKey = this._getPrimaryKey(this._EntityClass);
         const primaryValue = result.insertId;
         entity[primaryKey] = primaryValue;
       }
@@ -117,7 +118,7 @@ export class BaseModel<E extends BaseOrmEntity> {
    */
   public async find(params?: FindOptions<E> | DeepPartial<E>, tableIndexList?: number[]): Promise<any[]> {
     // 有 metaData 说明分表了
-    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._EntityClass.name];
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     let result: any[] = [];
     if (!metaData) {
       result = await this._find(this._EntityClass, params);
@@ -155,7 +156,7 @@ export class BaseModel<E extends BaseOrmEntity> {
    * @returns {Promise<[any[] , number]>}
    */
   public async findAndCount(params?: FindOptions<E> | DeepPartial<E>, tableIndexList?: number[]): Promise<[any[], number]> {
-    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._EntityClass.name];
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     let result: [any[], number] = [[], 0];
     if (!metaData) {
       result = await this._findAndCount(this._EntityClass, params);
@@ -191,41 +192,26 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   /**
-   * 仅当更新单条记录的时候用这个方法
+   * 如果分表，需要传入 tableIndexList(即需要执行批量更新操作的表的 index 列表, 如 [0, 1, 2, 3])
    * @param {DeepPartial<E extends BaseOrmEntity>} queryParams
    * @param {DeepPartial<E extends BaseOrmEntity>} updateParams
-   * @returns {Promise<void>}
+   * @param tableIndexList
+   * @returns {Promise<number>} affectedRows，影响的行数
    */
-  public async update(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>): Promise<void> {
-    if (!this._ifUniqueExist(queryParams, this._EntityClass)) {
-      throw new Exception(7, `queryParams=${JSON.stringify(queryParams)}`);
-    }
-    let affectedRows = await this._update(this._EntityClass, queryParams, updateParams);
-    if (affectedRows !== 1) {
-      throw new Exception(8, `affectedRows=${affectedRows}`);
-    }
-  }
-
-  /**
-   *如果分表，需要传入 tableIndexList(即需要执行批量更新操作的表的 index 列表, 如 [0, 1, 2, 3])
-   * @param {DeepPartial<E extends BaseOrmEntity>} queryParams
-   * @param {DeepPartial<E extends BaseOrmEntity>} updateParams
-   * @param {number[]} tableIndexList
-   * @returns {Promise<void>}
-   */
-  public async updateMulti(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>, tableIndexList?: number[]): Promise<void> {
-    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._EntityClass.name];
+  public async update(queryParams: DeepPartial<E>, updateParams: DeepPartial<E>, tableIndexList?: number[]): Promise<number> {
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     // 不分表的情况
     if (!metaData) {
-      await this._update(this._EntityClass, queryParams, updateParams);
+      return await this._update(this._EntityClass, queryParams, updateParams);
       // 分表的情况
     } else {
       const shardCount = metaData.shardCount;
+      let affectedRows: number = 0;
       if (!tableIndexList || tableIndexList.length === 0) {
         for (let i = 0; i < shardCount; i++) {
           let entityName = `${this._entityName}_${i}`;
           let Entity = DatabaseFactory.instance.getEntity(entityName);
-          await this._update(Entity, queryParams, updateParams);
+          affectedRows += await this._update(Entity, queryParams, updateParams);
         }
       } else {
         // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
@@ -237,46 +223,33 @@ export class BaseModel<E extends BaseOrmEntity> {
         for (let tableIndex of [...new Set(tableIndexList)]) {
           let entityName = `${this._entityName}_${tableIndex}`;
           let Entity = DatabaseFactory.instance.getEntity(entityName);
-          await this._update(Entity, queryParams, updateParams);
+          affectedRows += await this._update(Entity, queryParams, updateParams);
         }
       }
-    }
-  }
-
-  /**
-   * 仅当删除单条记录的时候用这个方法
-   * @param {DeepPartial<E extends BaseOrmEntity>} params
-   * @returns {Promise<void>}
-   */
-  public async delete(params: DeepPartial<E>): Promise<void> {
-    if (!this._ifUniqueExist(params, this._EntityClass)) {
-      throw new Exception(7, `params=${params}`);
-    }
-    let affectedRows = await this._delete(this._EntityClass, params);
-    if (affectedRows !== 1) {
-      throw new Exception(8, `affectedRows=${JSON.stringify(params)}`);
+      return affectedRows;
     }
   }
 
   /**
    * 如果分表，需要传入 tableIndexList(即需要执行批量删除操作的表的 index 列表, 如 [0, 1, 2, 3])
    * @param {DeepPartial<E extends BaseOrmEntity>} params
-   * @param {string[]} tableIndexList
-   * @returns {Promise<void>}
+   * @param tableIndexList
+   * @returns {Promise<number>} affectedRows，影响的行数
    */
-  public async deleteMulti(params: DeepPartial<E>, tableIndexList?: number[]): Promise<void> {
-    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._EntityClass.name];
+  public async delete(params: DeepPartial<E>, tableIndexList?: number[]): Promise<number> {
+    const metaData = EntityStorage.instance.shardTableMetadataStorage[this._entityName];
     // 不分表的情况
     if (!metaData) {
-      await this._delete(this._EntityClass, params);
+      return await this._delete(this._EntityClass, params);
       // 分表的情况
     } else {
       let shardCount = metaData.shardCount;
+      let affectedRows: number = 0;
       if (!tableIndexList || tableIndexList.length === 0) {
         for (let i = 0; i < shardCount; i++) {
           let entityName = `${this._entityName}_${i}`;
           let Entity = DatabaseFactory.instance.getEntity(entityName);
-          await this._delete(Entity, params);
+          affectedRows += await this._delete(Entity, params);
         }
       } else {
         // 如果 tableIndex 不在 0 - shardCount 之内，抛出错误.
@@ -288,9 +261,10 @@ export class BaseModel<E extends BaseOrmEntity> {
         for (let tableIndex of [...new Set(tableIndexList)]) {
           let entityName = `${this._entityName}_${tableIndex}`;
           let Entity = DatabaseFactory.instance.getEntity(entityName);
-          await this._delete(Entity, params);
+          affectedRows += await this._delete(Entity, params);
         }
       }
+      return affectedRows;
     }
   }
 
@@ -370,9 +344,14 @@ export class BaseModel<E extends BaseOrmEntity> {
       .set(updateParams);
 
     for (let key of Object.keys(queryParams)) {
-      tempQuery = tempQuery.andWhere(`${key} = :${key}`, { [key]: queryParams[key] });
+      if (queryParams[key] === null) {
+        tempQuery = tempQuery.andWhere(`${key} is :${key}`, { [key]: queryParams[key] });
+      } else {
+        tempQuery = tempQuery.andWhere(`${key} = :${key}`, { [key]: queryParams[key] });
+      }
     }
 
+    // result 是 tempQuery.execute() 的返回值，不同数据库返回值不同，所以是 any
     let result: any;
     try {
       result = await tempQuery.execute();
@@ -380,6 +359,7 @@ export class BaseModel<E extends BaseOrmEntity> {
       throw new Exception(2, `${err.toString()}`);
     }
 
+    // mysql 调 update 方法的返回值中有属性 affectedRows，代表受影响的行数，仅 mysql 返回值中有这个属性
     return result.affectedRows as number;
   }
 
@@ -387,11 +367,15 @@ export class BaseModel<E extends BaseOrmEntity> {
     let tempQuery: DeleteQueryBuilder<E> = Entity
       .createQueryBuilder()
       .delete();
-    const whereOptions = Object.keys(params);
-    for (const w of whereOptions) {
-      tempQuery = tempQuery.andWhere(`${w} = :${w}`, { [w]: params[w] });
+    for (let key of Object.keys(params)) {
+      if (params[key] === null) {
+        tempQuery = tempQuery.andWhere(`${key} is :${key}`, { [key]: params[key] });
+      } else {
+        tempQuery = tempQuery.andWhere(`${key} = :${key}`, { [key]: params[key] });
+      }
     }
 
+    // result 是 tempQuery.execute() 的返回值，不同数据库返回值不同，所以是 any
     let result: any;
     try {
       result = await tempQuery.execute();
@@ -399,6 +383,7 @@ export class BaseModel<E extends BaseOrmEntity> {
       throw new Exception(2, `${err.toString()}`);
     }
 
+    // mysql 调 delete 方法的返回值中有属性 affectedRows，代表受影响的行数，仅 mysql 返回值中有这个属性
     return result.affectedRows as number;
   }
 
@@ -492,49 +477,12 @@ export class BaseModel<E extends BaseOrmEntity> {
   }
 
   protected _getPrimaryKey(Entity: any): string {
-    let rep = Entity.getRepository();
-    let columns = rep.metadata.ownColumns;
+    let repo = Entity.getRepository();
+    let columns = repo.metadata.ownColumns;
     for (let column of columns) {
       if (column.isPrimary) {
         return column.propertyName;
       }
     }
-  }
-
-  protected _ifUniqueExist(params: DeepPartial<E>, Entity: any): boolean {
-    let uniquePropertyList: string[] = [];
-    let uniqueIndicesList: string[][] = [];
-
-    let rep = Entity.getRepository();
-    let columns = rep.metadata.ownColumns;
-    let indices = rep.metadata.indices;
-
-    for (let column of columns) {
-      if (column.isPrimary || column.isUnique) {
-        uniquePropertyList.push(column.propertyName);
-      }
-    }
-
-    for (let indice of indices) {
-      if (indice.isUnique) {
-        uniqueIndicesList.push(indice.columns.map(c => c.propertyName));
-      }
-    }
-
-    let keyList = Object.keys(params);
-    for (let property of uniquePropertyList) {
-      if (keyList.indexOf(property) !== -1) {
-        return true;
-      }
-    }
-
-    for (let uniqueIndices of uniqueIndicesList) {
-      let bool = uniqueIndices.every(property => keyList.indexOf(property) !== -1);
-      if (bool) {
-        return bool;
-      }
-    }
-
-    return false;
   }
 }
