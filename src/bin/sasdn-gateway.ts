@@ -8,7 +8,7 @@ import {
 import {
   addIntoRpcMethodImportPathInfos, FieldInfo, GatewaySwaggerSchema, lcfirst, mkdir, parseMsgNamesFromProto,
   parseProto, Proto, ProtoFile, ProtoMsgImportInfos, ProtoParseResult, readProtoList, readSwaggerList,
-  RpcMethodImportPathInfos, Swagger, ucfirst
+  RpcMethodImportPathInfos, Swagger, ucfirst, JoiComment
 } from './lib/lib';
 import { TplEngine } from './lib/template';
 
@@ -31,26 +31,6 @@ interface GatewayInfo {
   responseTypeStr: string;
   responseParameters: Array<GatewaySwaggerSchema>;
   injectedCode: string;
-}
-
-interface JoiComment {
-  required: boolean;
-  defaultValue?: any;
-  valid?: Array<any>;
-  invalid?: Array<any>;
-  min?: number;
-  max?: number;
-  greater?: number;
-  less?: number;
-  interger?: any;
-  positive?: any;
-  regex?: string;
-  truthy?: Array<any>;
-  falsy?: Array<any>;
-  allow?: Array<any>;
-  email?: boolean;
-  uri?: Array<any>;
-  timestamp?: 'unix' | 'javascript';
 }
 
 interface GatewayDefinitionSchemaMap {
@@ -212,10 +192,10 @@ class GatewayCLI {
             );
           }
 
-          let requestType = '';
-          let funcParamsStr = '';
-          let aggParamsStr = '';
-          let requiredParamsStr = '';
+          let requestType: string = '';
+          let funcParamsStr: string = '';
+          let aggParamsStr: string = '';
+          let requiredParamsStr: string = '';
           let fields: string[] = [];
 
           // 循环解析 parameters 字段，并将字段类型和 schema 结构加入到 swaggerSchemaList。
@@ -405,7 +385,7 @@ class GatewayCLI {
   }
 
   private _checkFieldInfo(field: FieldInfo): void {
-    if (field.fieldInfo && typeof(field.fieldInfo) === 'string') {
+    if (field.fieldInfo && typeof field.fieldInfo === 'string') {
       const msgTypeStr = field.fieldInfo as string;
       if (this._protoMsgImportInfos.hasOwnProperty(msgTypeStr)) {
         const nextFields = this._protoMsgImportInfos[msgTypeStr].fields;
@@ -420,7 +400,7 @@ class GatewayCLI {
   private _genFieldInfo(field: FieldInfo, space?: string, newLine?: string): string {
     let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
     fieldName = isRepeated ? fieldName + 'List' : fieldName;
-    if (typeof(fieldComment) === 'string') {
+    if (typeof fieldComment === 'string') {
       // Comments is not JSON
       fieldComment = {};
     }
@@ -461,7 +441,7 @@ class GatewayCLI {
       returnStr += `${space}arg: PbJoi.v${ucfirst(field.keyType)}.activate(),\n`;
     }
 
-    if (fieldInfo && typeof(fieldInfo) !== 'string') {
+    if (fieldInfo && typeof fieldInfo !== 'string') {
       // Means this field is not a base type
       returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}LibJoi.object().keys({\n`;
       if (addSpace.length === 0) {
@@ -503,7 +483,7 @@ class GatewayCLI {
 
   private _genArrayString(arr: Array<any>): string {
     const exchangeArr = arr.map((value) => {
-      return typeof(value) === 'string' ? `'${value}'` : value;
+      return typeof value === 'string' ? `'${value}'` : value;
     });
 
     return exchangeArr.join(', ');

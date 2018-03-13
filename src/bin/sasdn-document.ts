@@ -3,29 +3,10 @@ import * as program from 'commander';
 import * as LibPath from 'path';
 import {
   FieldInfo, lcfirst, MethodInfo, mkdir, parseMsgNamesFromProto, parseProto, ProtoFile,
-  ProtoMsgImportInfo, ProtoMsgImportInfos, ProtoParseResult, readProtoList, ucfirst
+  ProtoMsgImportInfo, ProtoMsgImportInfos, ProtoParseResult, readProtoList, ucfirst, JoiComment
 } from './lib/lib';
 
 const pkg = require('../../package.json');
-
-interface JoiComment {
-  required: boolean;
-  defaultValue?: any;
-  valid?: Array<any>;
-  invalid?: Array<any>;
-  min?: number;
-  max?: number;
-  greater?: number;
-  less?: number;
-  interger?: any;
-  positive?: any;
-  regex?: string;
-  truthy?: Array<any>;
-  falsy?: Array<any>;
-  allow?: Array<any>;
-  email?: boolean;
-  uri?: Array<any>;
-}
 
 const TypeDefaultValue = {
   double: 0,
@@ -157,11 +138,11 @@ class DocumentCLI {
     if (SERVICE) {
       this._methodIndex = 0;
       this._serviceIndex = -1;
+      const servicePath = LibPath.join(OUTPUT_DIR, 'document', 'service');
+      await mkdir(servicePath);
       Object.keys(this._serviceInfos).forEach(async (key) => {
         const service = this._serviceInfos[key] as ProtoMsgImportInfo;
         if (this._rootFiles.indexOf(service.protoFile) >= 0) {
-          const servicePath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'service');
-          await mkdir(servicePath);
           await LibFs.writeFile(LibPath.join(OUTPUT_DIR, servicePath,
             service.msgType.replace(/^\S+\./, '') + '.md'), this._genService(service));
         }
@@ -170,12 +151,12 @@ class DocumentCLI {
 
     if (METHOD) {
       this._methodIndex = -1;
+      const routerPath = LibPath.join(OUTPUT_DIR, 'document', 'method');
+      await mkdir(routerPath);
       Object.keys(this._serviceInfos).forEach(async (key) => {
         const service = this._serviceInfos[key] as ProtoMsgImportInfo;
         if (this._rootFiles.indexOf(service.protoFile) >= 0) {
           service.methods.forEach(async (method) => {
-            const routerPath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'method');
-            await mkdir(routerPath);
             await LibFs.writeFile(LibPath.join(OUTPUT_DIR, routerPath, method.methodName + '.md'), this._genMethod(method));
           });
         }
@@ -219,7 +200,7 @@ ${methods}
 
   private _genMethod(method: MethodInfo): string {
     let methodDesc = '无';
-    if (method.methodComment && typeof(method.methodComment) === 'object' && method.methodComment.hasOwnProperty('Desc')) {
+    if (method.methodComment && typeof method.methodComment === 'object' && method.methodComment.hasOwnProperty('Desc')) {
       methodDesc = method.methodComment['Desc'];
     }
     if (this._methodIndex !== -1) {
@@ -314,7 +295,7 @@ ${param}
     if (keyType) {
       fieldType = `Map< ${ucfirst(keyType)}, T >`;
     }
-    if (field.fieldInfo && typeof(field.fieldInfo) === 'string') {
+    if (field.fieldInfo && typeof field.fieldInfo === 'string') {
       const msgTypeStr = field.fieldInfo as string;
       if (this._typeInfos.hasOwnProperty(msgTypeStr)) {
         const nextFields = this._typeInfos[msgTypeStr].fields;
@@ -333,7 +314,7 @@ ${param}
       }
     } else {
       // |参数名|必选|类型|默认值|说明|
-      if (field.fieldComment && typeof(field.fieldComment) === 'object') {
+      if (field.fieldComment && typeof field.fieldComment === 'object') {
         if (field.fieldComment.hasOwnProperty('Joi')) {
           const joiComment = field.fieldComment['Joi'] as JoiComment;
           isRequired = joiComment.required;
@@ -349,7 +330,7 @@ ${param}
       fieldType = fieldType ? fieldType.replace('T', ucfirst(field.fieldType)) : ucfirst(field.fieldType);
     }
     if (paramType === ParamType.REQUEST) {
-      defaultValue = typeof(defaultValue) === 'string' ? `"${defaultValue}"` : defaultValue;
+      defaultValue = typeof defaultValue === 'string' ? `"${defaultValue}"` : defaultValue;
       return `|${field.fieldName}|${isRequired ? '必传' : '可传'}|${fieldType}|${isRequired ? '---' : defaultValue}|${desc}|\n`;
     } else {
       return `|${field.fieldName}|${fieldType}|${desc}|\n`;

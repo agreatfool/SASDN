@@ -133,23 +133,23 @@ class DocumentCLI {
             if (SERVICE) {
                 this._methodIndex = 0;
                 this._serviceIndex = -1;
+                const servicePath = LibPath.join(OUTPUT_DIR, 'document', 'service');
+                yield lib_1.mkdir(servicePath);
                 Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
                     const service = this._serviceInfos[key];
                     if (this._rootFiles.indexOf(service.protoFile) >= 0) {
-                        const servicePath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'service');
-                        yield lib_1.mkdir(servicePath);
                         yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, servicePath, service.msgType.replace(/^\S+\./, '') + '.md'), this._genService(service));
                     }
                 }));
             }
             if (METHOD) {
                 this._methodIndex = -1;
+                const routerPath = LibPath.join(OUTPUT_DIR, 'document', 'method');
+                yield lib_1.mkdir(routerPath);
                 Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
                     const service = this._serviceInfos[key];
                     if (this._rootFiles.indexOf(service.protoFile) >= 0) {
                         service.methods.forEach((method) => __awaiter(this, void 0, void 0, function* () {
-                            const routerPath = LibPath.join(OUTPUT_DIR, 'document', service.namespace, 'method');
-                            yield lib_1.mkdir(routerPath);
                             yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, routerPath, method.methodName + '.md'), this._genMethod(method));
                         }));
                     }
@@ -191,7 +191,7 @@ ${methods}
     }
     _genMethod(method) {
         let methodDesc = '无';
-        if (method.methodComment && typeof (method.methodComment) === 'object' && method.methodComment.hasOwnProperty('Desc')) {
+        if (method.methodComment && typeof method.methodComment === 'object' && method.methodComment.hasOwnProperty('Desc')) {
             methodDesc = method.methodComment['Desc'];
         }
         if (this._methodIndex !== -1) {
@@ -283,7 +283,7 @@ ${param}
         if (keyType) {
             fieldType = `Map< ${lib_1.ucfirst(keyType)}, T >`;
         }
-        if (field.fieldInfo && typeof (field.fieldInfo) === 'string') {
+        if (field.fieldInfo && typeof field.fieldInfo === 'string') {
             const msgTypeStr = field.fieldInfo;
             if (this._typeInfos.hasOwnProperty(msgTypeStr)) {
                 const nextFields = this._typeInfos[msgTypeStr].fields;
@@ -303,7 +303,7 @@ ${param}
         }
         else {
             // |参数名|必选|类型|默认值|说明|
-            if (field.fieldComment && typeof (field.fieldComment) === 'object') {
+            if (field.fieldComment && typeof field.fieldComment === 'object') {
                 if (field.fieldComment.hasOwnProperty('Joi')) {
                     const joiComment = field.fieldComment['Joi'];
                     isRequired = joiComment.required;
@@ -319,7 +319,7 @@ ${param}
             fieldType = fieldType ? fieldType.replace('T', lib_1.ucfirst(field.fieldType)) : lib_1.ucfirst(field.fieldType);
         }
         if (paramType === 1 /* REQUEST */) {
-            defaultValue = typeof (defaultValue) === 'string' ? `"${defaultValue}"` : defaultValue;
+            defaultValue = typeof defaultValue === 'string' ? `"${defaultValue}"` : defaultValue;
             return `|${field.fieldName}|${isRequired ? '必传' : '可传'}|${fieldType}|${isRequired ? '---' : defaultValue}|${desc}|\n`;
         }
         else {

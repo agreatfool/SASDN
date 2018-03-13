@@ -128,6 +128,26 @@ export interface RpcMethodInfo {
   protoMsgImportPath: RpcMethodImportPathInfos;
 }
 
+export interface JoiComment {
+  required: boolean;
+  defaultValue?: any;
+  valid?: Array<any>;
+  invalid?: Array<any>;
+  min?: number;
+  max?: number;
+  greater?: number;
+  less?: number;
+  interger?: any;
+  positive?: any;
+  regex?: string;
+  truthy?: Array<any>;
+  falsy?: Array<any>;
+  allow?: Array<any>;
+  email?: boolean;
+  uri?: Array<any>;
+  timestamp?: 'unix' | 'javascript';
+}
+
 /**
  * Used: Command rpcs, generating services stubs.
  * When handling proto to generate services files, it's necessary to know

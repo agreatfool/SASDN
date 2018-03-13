@@ -308,7 +308,7 @@ class GatewayCLI {
         });
     }
     _checkFieldInfo(field) {
-        if (field.fieldInfo && typeof (field.fieldInfo) === 'string') {
+        if (field.fieldInfo && typeof field.fieldInfo === 'string') {
             const msgTypeStr = field.fieldInfo;
             if (this._protoMsgImportInfos.hasOwnProperty(msgTypeStr)) {
                 const nextFields = this._protoMsgImportInfos[msgTypeStr].fields;
@@ -322,7 +322,7 @@ class GatewayCLI {
     _genFieldInfo(field, space, newLine) {
         let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
         fieldName = isRepeated ? fieldName + 'List' : fieldName;
-        if (typeof (fieldComment) === 'string') {
+        if (typeof fieldComment === 'string') {
             // Comments is not JSON
             fieldComment = {};
         }
@@ -362,7 +362,7 @@ class GatewayCLI {
             space += addSpace;
             returnStr += `${space}arg: PbJoi.v${lib_1.ucfirst(field.keyType)}.activate(),\n`;
         }
-        if (fieldInfo && typeof (fieldInfo) !== 'string') {
+        if (fieldInfo && typeof fieldInfo !== 'string') {
             // Means this field is not a base type
             returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}LibJoi.object().keys({\n`;
             if (addSpace.length === 0) {
@@ -403,7 +403,7 @@ class GatewayCLI {
     }
     _genArrayString(arr) {
         const exchangeArr = arr.map((value) => {
-            return typeof (value) === 'string' ? `'${value}'` : value;
+            return typeof value === 'string' ? `'${value}'` : value;
         });
         return exchangeArr.join(', ');
     }
