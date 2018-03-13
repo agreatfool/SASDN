@@ -308,7 +308,7 @@ class GatewayCLI {
         });
     }
     _checkFieldInfo(field) {
-        if (field.fieldInfo) {
+        if (field.fieldInfo && typeof field.fieldInfo === 'string') {
             const msgTypeStr = field.fieldInfo;
             if (this._protoMsgImportInfos.hasOwnProperty(msgTypeStr)) {
                 const nextFields = this._protoMsgImportInfos[msgTypeStr].fields;
@@ -319,15 +319,16 @@ class GatewayCLI {
             }
         }
     }
-    _genFieldInfo(field, space = '', newLine = '') {
+    _genFieldInfo(field, space, newLine) {
         let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
         fieldName = isRepeated ? fieldName + 'List' : fieldName;
-        if (typeof (fieldComment) === 'string') {
+        if (typeof fieldComment === 'string') {
             // Comments is not JSON
             fieldComment = {};
         }
         let extraStr = '';
         const jsonComment = fieldComment;
+        let timestampType = '';
         if (jsonComment && jsonComment.hasOwnProperty('Joi')) {
             const joiComment = jsonComment['Joi'];
             extraStr += joiComment.required ? '.required()' : '.optional()';
@@ -335,54 +336,56 @@ class GatewayCLI {
                 const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;
                 extraStr += `.default(${defaultValue})`;
             }
-            if (joiComment.valid) {
-                const valid = joiComment.valid.map((value) => {
-                    return typeof (value) === 'string' ? `'${value}'` : value;
-                });
-                extraStr += `.valid([${valid.join(', ')}])`;
+            if (joiComment.timestamp && (this._isProtoTypeNumber(fieldType) || fieldType === 'string')) {
+                timestampType = joiComment.timestamp;
             }
-            if (joiComment.invalid) {
-                const invalid = joiComment.invalid.map((value) => {
-                    return typeof (value) === 'string' ? `'${value}'` : value;
-                });
-                extraStr += `.invalid([${invalid.join(', ')}])`;
-            }
-            extraStr += joiComment.interger && this._isNumber(fieldType) ? '.interger()' : '';
-            extraStr += joiComment.positive && this._isNumber(fieldType) ? '.positive()' : '';
-            extraStr += joiComment.greater && this._isNumber(fieldType) ? `.greater(${joiComment.greater})` : '';
-            extraStr += joiComment.less && this._isNumber(fieldType) ? `.less(${joiComment.less})` : '';
-            extraStr += joiComment.max && (this._isNumber(fieldType) || fieldType === 'string') ? `.max(${joiComment.max})` : '';
-            extraStr += joiComment.min && (this._isNumber(fieldType) || fieldType === 'string') ? `.min(${joiComment.min})` : '';
+            extraStr += joiComment.valid ? `.valid([${this._genArrayString(joiComment.valid)}])` : '';
+            extraStr += joiComment.invalid ? `.invalid([${this._genArrayString(joiComment.invalid)}])` : '';
+            extraStr += joiComment.allow ? `.allow([${this._genArrayString(joiComment.allow)}])` : '';
+            extraStr += joiComment.interger && this._isProtoTypeNumber(fieldType) ? '.interger()' : '';
+            extraStr += joiComment.positive && this._isProtoTypeNumber(fieldType) ? '.positive()' : '';
+            extraStr += joiComment.greater && this._isProtoTypeNumber(fieldType) ? `.greater(${joiComment.greater})` : '';
+            extraStr += joiComment.less && this._isProtoTypeNumber(fieldType) ? `.less(${joiComment.less})` : '';
+            extraStr += joiComment.max && (this._isProtoTypeNumber(fieldType) || fieldType === 'string') ? `.max(${joiComment.max})` : '';
+            extraStr += joiComment.min && (this._isProtoTypeNumber(fieldType) || fieldType === 'string') ? `.min(${joiComment.min})` : '';
             extraStr += joiComment.regex && fieldType === 'string' ? `.regex(${joiComment.regex})` : '';
-            if (joiComment.truthy) {
-                const truthy = joiComment.truthy.map((value) => {
-                    return typeof (value) === 'string' ? `'${value}'` : value;
-                });
-                extraStr += `.truthy([${truthy.join(', ')}])`;
-            }
-            if (joiComment.falsy) {
-                const falsy = joiComment.falsy.map((value) => {
-                    return typeof (value) === 'string' ? `'${value}'` : value;
-                });
-                extraStr += `.falsy([${falsy.join(', ')}])`;
-            }
+            extraStr += joiComment.email && fieldType === 'string' ? `.email()` : '';
+            extraStr += joiComment.uri && fieldType === 'string' ? `.uri({schema: [${this._genArrayString(joiComment.uri)}]})` : '';
+            extraStr += joiComment.truthy && fieldType === 'bool' ? `.truthy([${this._genArrayString(joiComment.truthy)}])` : '';
+            extraStr += joiComment.falsy && fieldType === 'bool' ? `.falsy([${this._genArrayString(joiComment.falsy)}])` : '';
         }
-        if (fieldInfo && typeof (fieldInfo) !== 'string') {
+        let returnStr = '';
+        let addSpace = '';
+        if (field.keyType) {
+            returnStr = `${space}${fieldName}: LibJoi.object({\n`;
+            addSpace += newLine ? '  ' : '          ';
+            space += addSpace;
+            returnStr += `${space}arg: PbJoi.v${lib_1.ucfirst(field.keyType)}.activate(),\n`;
+        }
+        if (fieldInfo && typeof fieldInfo !== 'string') {
             // Means this field is not a base type
-            let returnStr = `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}LibJoi.object().keys({\n`;
-            space += newLine ? '' : '        ';
+            returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}LibJoi.object().keys({\n`;
+            if (addSpace.length === 0) {
+                addSpace = newLine ? '' : '        ';
+                space += addSpace;
+            }
             fieldInfo.forEach((nextField) => {
                 returnStr += this._genFieldInfo(nextField, space + '  ', '\n');
             });
-            returnStr += `${space}${isRepeated ? ')' : ''}})${extraStr},${newLine}`;
-            return returnStr;
+            returnStr += `${space}})${isRepeated ? ')' : ''}${extraStr},${field.keyType ? '' : newLine}`;
         }
         else {
             // protobuffer base type
-            return `${space}${fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}PbJoi.v${lib_1.ucfirst(fieldType)}.activate()${isRepeated ? ')' : ''}${extraStr},${newLine}`;
+            const joiContent = timestampType.length > 0 ? `LibJoi.date().timestamp(${timestampType === 'unix' ? 'unix' : 'javascript'})` : `PbJoi.v${lib_1.ucfirst(fieldType)}.activate()`;
+            returnStr += `${space}${field.keyType ? 'value' : fieldName}: ${isRepeated ? 'LibJoi.array().items(' : ''}${joiContent}${extraStr}${isRepeated ? ')' : ''},${newLine}`;
         }
+        if (field.keyType) {
+            space = space.substr(0, space.length - 2);
+            returnStr += `\n${space}})${extraStr},${newLine}`;
+        }
+        return returnStr;
     }
-    _isNumber(type) {
+    _isProtoTypeNumber(type) {
         return [
             'double',
             'float',
@@ -397,6 +400,12 @@ class GatewayCLI {
             'sfixed32',
             'sfixed64',
         ].indexOf(type) >= 0;
+    }
+    _genArrayString(arr) {
+        const exchangeArr = arr.map((value) => {
+            return typeof value === 'string' ? `'${value}'` : value;
+        });
+        return exchangeArr.join(', ');
     }
 }
 GatewayCLI.instance().run().catch((err) => {

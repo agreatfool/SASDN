@@ -18,6 +18,10 @@ echo "Proto 3rd dir: ${PROTO_3RD}"
 echo "Output dir: ${OUTPUT}"
 
 echo "***********************"
+echo "Delete dir: ${OUTPUT}/proto"
+rm -rf ${OUTPUT}/proto
+
+echo "***********************"
 echo "Generate js codes ..."
 sasdn proto \
 --proto=${PROTO_ROOT} \
@@ -45,6 +49,9 @@ sasdn proto \
 --all
 
 if [ "${IS_GATEWAY}" = true ] ; then
+    echo "Delete old gateway router code ..."
+    rm -rf ${OUTPUT}/router
+
     echo "Generate gateway router codes ..."
     sasdn gateway \
     --proto=${PROTO_ROOT} \
@@ -54,6 +61,9 @@ if [ "${IS_GATEWAY}" = true ] ; then
 fi
 
 if [ "${IS_MICROSERVICE}" = true ] ; then
+    echo "Delete old microservice service code ..."
+    rm -rf ${OUTPUT}/services
+
     echo "Generate microservice service codes ..."
     sasdn rpcs \
     --proto=${PROTO_ROOT} \

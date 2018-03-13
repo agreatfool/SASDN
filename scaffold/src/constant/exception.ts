@@ -8,6 +8,8 @@ export const ERROR_CODE = {
   4: '[%m] Item not found',
   5: '[%m] Function cannot be used when table is sharded. %s',
   6: '[%m] Unknown Error, %s',
+  7: '[%m] Unique key must be provided. %s',
+  8: '[%m] [affetcedRows] must be 1. %s',
 
   101: '[%m] Some Error',
 };

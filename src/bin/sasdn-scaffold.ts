@@ -136,18 +136,21 @@ class ScaffoldCLI {
       const gwIndexPath = LibPath.join(outputDir, 'src', 'GWIndex.ts');
       const gwPbPath = LibPath.join(outputDir, 'src', 'proto', 'demo_gw');
       const gwEnterPath = LibPath.join(outputDir, 'src', 'entrance', 'GWDemo.ts');
+      const gwDocPath = LibPath.join(outputDir, 'document_gw');
 
       const msProtoPath = LibPath.join(outputDir, 'proto', 'demo', 'demo_ms.proto');
       const msLogicPath = LibPath.join(outputDir, 'src', 'logic', 'order');
       const msIndexPath = LibPath.join(outputDir, 'src', 'MSIndex.ts');
       const msPbPath = LibPath.join(outputDir, 'src', 'proto', 'demo_ms');
       const msEnterPath = LibPath.join(outputDir, 'src', 'entrance', 'MSOrder.ts');
+      const msDocPath = LibPath.join(outputDir, 'document_ms');
 
       const servicesPath = LibPath.join(outputDir, 'src', 'services');
       const routerPath = LibPath.join(outputDir, 'src', 'router');
       const indexPath = LibPath.join(outputDir, 'src', 'index.ts');
       const protoPath = LibPath.join(outputDir, 'proto', 'demo', 'demo.proto');
       const pbPath = LibPath.join(outputDir, 'src', 'proto', 'demo');
+      const docPath = LibPath.join(outputDir, 'document');
 
       const gwRemoveList = [
         gwIndexPath,
@@ -156,12 +159,14 @@ class ScaffoldCLI {
         gwPbPath,
         gwLogicPath,
         gwEnterPath,
+        gwDocPath,
       ];
 
       const gwRenameList = [
         [msIndexPath, indexPath],
         [msProtoPath, protoPath],
         [msPbPath, pbPath],
+        [msDocPath, docPath],
       ];
 
       const msRemoveList = [
@@ -171,12 +176,14 @@ class ScaffoldCLI {
         msPbPath,
         msLogicPath,
         msEnterPath,
+        msDocPath,
       ];
 
       const msRenameList = [
         [gwIndexPath, indexPath],
         [gwProtoPath, protoPath],
         [gwPbPath, pbPath],
+        [gwDocPath, docPath],
       ];
 
       if (MICROSERVICE) {

@@ -5,10 +5,35 @@ import "google/api/annotations.proto";
 package order;
 
 message Order {
+    /**
+     {
+       "Desc": "This is order_id Description"
+     }
+   */
     int64 order_id = 1;
+    /**
+       {
+         "Desc": "This is user_id Description"
+       }
+     */
     string user_id = 2;
+    /**
+       {
+         "Desc": "This is price Description"
+       }
+     */
     string price = 3;
+    /**
+       {
+         "Desc": "This is ispayed Description"
+       }
+     */
     bool ispayed = 4;
+    /**
+       {
+         "Desc": "This is items Description"
+       }
+     */
     map<int64, string> items = 5;
 }
 
