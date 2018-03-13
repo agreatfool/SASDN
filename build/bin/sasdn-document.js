@@ -128,7 +128,7 @@ class DocumentCLI {
             yield lib_1.mkdir(LibPath.join(OUTPUT_DIR, 'document'));
             if (ALL) {
                 this._serviceIndex = 0;
-                yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'document', 'Api-Gateway.md'), this._genGateway());
+                yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'document', 'Document.md'), this._genAll());
             }
             if (SERVICE) {
                 this._methodIndex = 0;
@@ -138,7 +138,7 @@ class DocumentCLI {
                 Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
                     const service = this._serviceInfos[key];
                     if (this._rootFiles.indexOf(service.protoFile) >= 0) {
-                        yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, servicePath, service.msgType.replace(/^\S+\./, '') + '.md'), this._genService(service));
+                        yield LibFs.writeFile(LibPath.join(servicePath, service.msgType.replace(/^\S+\./, '') + '.md'), this._genService(service));
                     }
                 }));
             }
@@ -150,14 +150,14 @@ class DocumentCLI {
                     const service = this._serviceInfos[key];
                     if (this._rootFiles.indexOf(service.protoFile) >= 0) {
                         service.methods.forEach((method) => __awaiter(this, void 0, void 0, function* () {
-                            yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, routerPath, method.methodName + '.md'), this._genMethod(method));
+                            yield LibFs.writeFile(LibPath.join(routerPath, method.methodName + '.md'), this._genMethod(method));
                         }));
                     }
                 }));
             }
         });
     }
-    _genGateway() {
+    _genAll() {
         let services = '';
         Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
             const service = this._serviceInfos[key];
@@ -166,7 +166,7 @@ class DocumentCLI {
             }
         }));
         return `
-# Api-Gateway 接口文档
+# 接口文档
 
 [TOC]
 

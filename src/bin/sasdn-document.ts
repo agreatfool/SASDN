@@ -132,7 +132,7 @@ class DocumentCLI {
 
     if (ALL) {
       this._serviceIndex = 0;
-      await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'document', 'Api-Gateway.md'), this._genGateway());
+      await LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'document', 'Document.md'), this._genAll());
     }
 
     if (SERVICE) {
@@ -143,7 +143,7 @@ class DocumentCLI {
       Object.keys(this._serviceInfos).forEach(async (key) => {
         const service = this._serviceInfos[key] as ProtoMsgImportInfo;
         if (this._rootFiles.indexOf(service.protoFile) >= 0) {
-          await LibFs.writeFile(LibPath.join(OUTPUT_DIR, servicePath,
+          await LibFs.writeFile(LibPath.join(servicePath,
             service.msgType.replace(/^\S+\./, '') + '.md'), this._genService(service));
         }
       });
@@ -157,14 +157,14 @@ class DocumentCLI {
         const service = this._serviceInfos[key] as ProtoMsgImportInfo;
         if (this._rootFiles.indexOf(service.protoFile) >= 0) {
           service.methods.forEach(async (method) => {
-            await LibFs.writeFile(LibPath.join(OUTPUT_DIR, routerPath, method.methodName + '.md'), this._genMethod(method));
+            await LibFs.writeFile(LibPath.join(routerPath, method.methodName + '.md'), this._genMethod(method));
           });
         }
       });
     }
   }
 
-  private _genGateway(): string {
+  private _genAll(): string {
     let services = '';
     Object.keys(this._serviceInfos).forEach(async (key) => {
       const service = this._serviceInfos[key] as ProtoMsgImportInfo;
@@ -173,7 +173,7 @@ class DocumentCLI {
       }
     });
     return `
-# Api-Gateway 接口文档
+# 接口文档
 
 [TOC]
 

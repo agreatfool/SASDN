@@ -4,11 +4,27 @@ import "order/order.proto";
 
 package demo;
 
+/**
+   {
+     "Desc": "This is GetDemoOrderRequest Description"
+   }
+ */
 message GetDemoOrderRequest {
+    /**
+       {
+         "Desc": "This is GetDemoOrderRequest Description"
+       }
+     */
     int64 order_id = 1;
 }
 
 // gPRC-MicroService Demo
 service DemoService {
-    rpc GetDemoOrder (GetDemoOrderRequest) returns (order.Order) {}
+    /**
+       {
+         "Desc": "This is GetDemoOrder Description"
+       }
+     */
+    rpc GetDemoOrder (GetDemoOrderRequest) returns (order.Order) {
+    }
 }

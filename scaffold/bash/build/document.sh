@@ -6,7 +6,7 @@ ROOT=${PWD}
 
 PROTO_ROOT=${ROOT}/proto
 PROTO_3RD=${ROOT}/spm_protos
-OUTPUT=${ROOT}/src
+OUTPUT=${ROOT}
 
 echo "***********************"
 echo "Working dir: ${ROOT}"
