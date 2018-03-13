@@ -414,18 +414,18 @@ class GatewayCLI {
         const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;
         extraStr += `.default(${defaultValue})`;
       }
-      if (joiComment.timestamp && (this._isNumber(fieldType) || fieldType === 'string')) {
+      if (joiComment.timestamp && (this._isProtoTypeNumber(fieldType) || fieldType === 'string')) {
         timestampType = joiComment.timestamp;
       }
       extraStr += joiComment.valid ? `.valid([${this._genArrayString(joiComment.valid)}])` : '';
       extraStr += joiComment.invalid ? `.invalid([${this._genArrayString(joiComment.invalid)}])` : '';
       extraStr += joiComment.allow ? `.allow([${this._genArrayString(joiComment.allow)}])` : '';
-      extraStr += joiComment.interger && this._isNumber(fieldType) ? '.interger()' : '';
-      extraStr += joiComment.positive && this._isNumber(fieldType) ? '.positive()' : '';
-      extraStr += joiComment.greater && this._isNumber(fieldType) ? `.greater(${joiComment.greater})` : '';
-      extraStr += joiComment.less && this._isNumber(fieldType) ? `.less(${joiComment.less})` : '';
-      extraStr += joiComment.max && (this._isNumber(fieldType) || fieldType === 'string') ? `.max(${joiComment.max})` : '';
-      extraStr += joiComment.min && (this._isNumber(fieldType) || fieldType === 'string') ? `.min(${joiComment.min})` : '';
+      extraStr += joiComment.interger && this._isProtoTypeNumber(fieldType) ? '.interger()' : '';
+      extraStr += joiComment.positive && this._isProtoTypeNumber(fieldType) ? '.positive()' : '';
+      extraStr += joiComment.greater && this._isProtoTypeNumber(fieldType) ? `.greater(${joiComment.greater})` : '';
+      extraStr += joiComment.less && this._isProtoTypeNumber(fieldType) ? `.less(${joiComment.less})` : '';
+      extraStr += joiComment.max && (this._isProtoTypeNumber(fieldType) || fieldType === 'string') ? `.max(${joiComment.max})` : '';
+      extraStr += joiComment.min && (this._isProtoTypeNumber(fieldType) || fieldType === 'string') ? `.min(${joiComment.min})` : '';
       extraStr += joiComment.regex && fieldType === 'string' ? `.regex(${joiComment.regex})` : '';
       extraStr += joiComment.email && fieldType === 'string' ? `.email()` : '';
       extraStr += joiComment.uri && fieldType === 'string' ? `.uri({schema: [${this._genArrayString(joiComment.uri)}]})` : '';
@@ -464,7 +464,7 @@ class GatewayCLI {
     return returnStr;
   }
 
-  private _isNumber(type: string): boolean {
+  private _isProtoTypeNumber(type: string): boolean {
     return [
       'double',
       'float',
