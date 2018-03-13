@@ -3,7 +3,7 @@
    
 **简要描述：**
 
-- 无
+- This is GetDemoOrder Description
 
 **请求方法:**
 - ` getDemoOrder `
@@ -16,7 +16,7 @@
 
 |参数名|类型|说明|
 |:---|:---|:---|
-|orderId|可传|Int64|0|无|
+|orderId|可传|Int64|0|This is GetDemoOrderRequest Description|
 
 
 
@@ -34,10 +34,10 @@
 
 |参数名|类型|说明|
 |:---|:---|:---|
-|orderId|Int64|无|
-|userId|String|无|
-|price|String|无|
-|ispayed|Bool|无|
+|orderId|Int64|This is order_id Description|
+|userId|String|This is user_id Description|
+|price|String|This is price Description|
+|ispayed|Bool|This is ispayed Description|
 |items|Map< Int64, String >|无|
 
 
