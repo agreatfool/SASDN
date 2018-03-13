@@ -20,6 +20,4 @@ sasdn document \
 --proto=${PROTO_ROOT} \
 --output=${OUTPUT} \
 --import=${PROTO_3RD} \
---all \
---service \
---method
+--service

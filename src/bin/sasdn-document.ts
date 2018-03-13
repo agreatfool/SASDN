@@ -45,7 +45,7 @@ const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.nor
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
 const IMPORTS = (program as any).import === undefined ? [] : (program as any).import;
 const ALL = (program as any).all !== undefined;
-const SERVICE = (program as any).service !== undefined;
+const SERVICE = (program as any).service !== undefined || true;
 const METHOD = (program as any).method != undefined;
 
 class DocumentCLI {
@@ -138,7 +138,7 @@ class DocumentCLI {
     if (SERVICE) {
       this._methodIndex = 0;
       this._serviceIndex = -1;
-      const servicePath = LibPath.join(OUTPUT_DIR, 'document', 'service');
+      const servicePath = LibPath.join(OUTPUT_DIR, 'document');
       await mkdir(servicePath);
       Object.keys(this._serviceInfos).forEach(async (key) => {
         const service = this._serviceInfos[key] as ProtoMsgImportInfo;

@@ -43,7 +43,7 @@ const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(pr
 const OUTPUT_DIR = program.output === undefined ? undefined : LibPath.normalize(program.output);
 const IMPORTS = program.import === undefined ? [] : program.import;
 const ALL = program.all !== undefined;
-const SERVICE = program.service !== undefined;
+const SERVICE = program.service !== undefined || true;
 const METHOD = program.method != undefined;
 class DocumentCLI {
     constructor() {
@@ -133,7 +133,7 @@ class DocumentCLI {
             if (SERVICE) {
                 this._methodIndex = 0;
                 this._serviceIndex = -1;
-                const servicePath = LibPath.join(OUTPUT_DIR, 'document', 'service');
+                const servicePath = LibPath.join(OUTPUT_DIR, 'document');
                 yield lib_1.mkdir(servicePath);
                 Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
                     const service = this._serviceInfos[key];
