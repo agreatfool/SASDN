@@ -22,7 +22,7 @@ process.on('SIGINT', () => {
   if (server && server.app && server.app.server) {
     server.app.server.tryShutdown(() => {
       Logger.instance.warn('MSOrder shutdown by SIGINT');
-    })
+    });
   }
   process.exit(0);
 });
