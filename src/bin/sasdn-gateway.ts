@@ -6,9 +6,9 @@ import {
   Spec as SwaggerSpec
 } from 'swagger-schema-official';
 import {
-  addIntoRpcMethodImportPathInfos, FieldInfo, GatewaySwaggerSchema, lcfirst, mkdir, parseMsgNamesFromProto,
-  parseProto, Proto, ProtoFile, ProtoMsgImportInfos, ProtoParseResult, readProtoList, readSwaggerList,
-  RpcMethodImportPathInfos, Swagger, ucfirst, JoiComment
+  addIntoRpcMethodImportPathInfos, FieldInfo, GatewaySwaggerSchema, JoiComment, lcfirst, mkdir,
+  parseMsgNamesFromProto, parseProto, Proto, ProtoFile, ProtoMsgImportInfos, ProtoParseResult, readProtoList,
+  readSwaggerList, RpcMethodImportPathInfos, Swagger, ucfirst
 } from './lib/lib';
 import { TplEngine } from './lib/template';
 
@@ -397,7 +397,7 @@ class GatewayCLI {
     }
   }
 
-  private _genFieldInfo(field: FieldInfo, space?: string, newLine?: string): string {
+  private _genFieldInfo(field: FieldInfo, space: string = '', newLine: string = ''): string {
     let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
     fieldName = isRepeated ? fieldName + 'List' : fieldName;
     if (typeof fieldComment === 'string') {
@@ -407,8 +407,8 @@ class GatewayCLI {
     let extraStr = '';
     const jsonComment = fieldComment as object;
     let timestampType = '';
-    if (jsonComment && jsonComment.hasOwnProperty('Joi')) {
-      const joiComment = jsonComment['Joi'] as JoiComment;
+    if (jsonComment) {
+      const joiComment = (jsonComment['Joi'] || {}) as JoiComment;
       extraStr += joiComment.required ? '.required()' : '.optional()';
       if (joiComment.defaultValue) {
         const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;

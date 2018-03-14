@@ -319,7 +319,7 @@ class GatewayCLI {
             }
         }
     }
-    _genFieldInfo(field, space, newLine) {
+    _genFieldInfo(field, space = '', newLine = '') {
         let { fieldName, fieldType, fieldComment, isRepeated, fieldInfo } = field;
         fieldName = isRepeated ? fieldName + 'List' : fieldName;
         if (typeof fieldComment === 'string') {
@@ -329,8 +329,8 @@ class GatewayCLI {
         let extraStr = '';
         const jsonComment = fieldComment;
         let timestampType = '';
-        if (jsonComment && jsonComment.hasOwnProperty('Joi')) {
-            const joiComment = jsonComment['Joi'];
+        if (jsonComment) {
+            const joiComment = (jsonComment['Joi'] || {});
             extraStr += joiComment.required ? '.required()' : '.optional()';
             if (joiComment.defaultValue) {
                 const defaultValue = fieldType === 'string' ? `'${joiComment.defaultValue}'` : joiComment.defaultValue;
