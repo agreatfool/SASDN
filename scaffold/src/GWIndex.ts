@@ -17,3 +17,8 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (error) => {
   Logger.instance.error(`Process on unhandledRejection error = ${error.stack}`);
 });
+
+process.on('SIGINT', () => {
+  Logger.instance.warn('MSOrder shutdown by SIGINT');
+  process.exit(0);
+});
