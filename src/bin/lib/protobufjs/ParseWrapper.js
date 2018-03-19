@@ -6,29 +6,29 @@ const protobuf = require('protobufjs');
 const parse = protobuf.parse;
 
 parse.filename = null;
-parse.defaults = { keepCase: false };
+parse.defaults = {keepCase: false};
 
-var tokenize  = protobuf.tokenize,
-    Root      = protobuf.Root,
-    Type      = protobuf.Type,
-    Field     = protobuf.Field,
-    MapField  = protobuf.MapField,
-    OneOf     = protobuf.OneOf,
-    Enum      = protobuf.Enum,
-    Service   = protobuf.Service,
-    Method    = protobuf.Method,
-    types     = protobuf.types,
-    util      = protobuf.util;
+var tokenize = protobuf.tokenize,
+    Root = protobuf.Root,
+    Type = protobuf.Type,
+    Field = protobuf.Field,
+    MapField = protobuf.MapField,
+    OneOf = protobuf.OneOf,
+    Enum = protobuf.Enum,
+    Service = protobuf.Service,
+    Method = protobuf.Method,
+    types = protobuf.types,
+    util = protobuf.util;
 
-var base10Re    = /^[1-9][0-9]*$/,
+var base10Re = /^[1-9][0-9]*$/,
     base10NegRe = /^-?[1-9][0-9]*$/,
-    base16Re    = /^0[x][0-9a-fA-F]+$/,
+    base16Re = /^0[x][0-9a-fA-F]+$/,
     base16NegRe = /^-?0[x][0-9a-fA-F]+$/,
-    base8Re     = /^0[0-7]+$/,
-    base8NegRe  = /^-?0[0-7]+$/,
-    numberRe    = /^(?![eE])[0-9]*(?:\.[0-9]*)?(?:[eE][+-]?[0-9]+)?$/,
-    nameRe      = /^[a-zA-Z_][a-zA-Z_0-9]*$/,
-    typeRefRe   = /^(?:\.?[a-zA-Z_][a-zA-Z_0-9]*)+$/,
+    base8Re = /^0[0-7]+$/,
+    base8NegRe = /^-?0[0-7]+$/,
+    numberRe = /^(?![eE])[0-9]*(?:\.[0-9]*)?(?:[eE][+-]?[0-9]+)?$/,
+    nameRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/,
+    typeRefRe = /^(?:\.?[a-zA-Z_][a-zA-Z_0-9]*)+$/,
     fqTypeRefRe = /^(?:\.[a-zA-Z][a-zA-Z_0-9]*)+$/;
 
 function wrappedProtobufjsParse(source, root, options) {
@@ -55,7 +55,9 @@ function wrappedProtobufjsParse(source, root, options) {
 
     var ptr = root;
 
-    var applyCase = options.keepCase ? function(name) { return name; } : util.camelCase;
+    var applyCase = options.keepCase ? function (name) {
+        return name;
+    } : util.camelCase;
 
     /* istanbul ignore next */
     function illegal(token, name, insideTryCatch) {
@@ -87,10 +89,12 @@ function wrappedProtobufjsParse(source, root, options) {
             case "\"":
                 push(token);
                 return readString();
-            case "true": case "TRUE":
-            return true;
-            case "false": case "FALSE":
-            return false;
+            case "true":
+            case "TRUE":
+                return true;
+            case "false":
+            case "FALSE":
+                return false;
         }
         try {
             return parseNumber(token, /* insideTryCatch */ true);
@@ -111,7 +115,7 @@ function wrappedProtobufjsParse(source, root, options) {
             if (acceptStrings && ((token = peek()) === "\"" || token === "'"))
                 target.push(readString());
             else
-                target.push([ start = parseId(next()), skip("to", true) ? parseId(next()) : start ]);
+                target.push([start = parseId(next()), skip("to", true) ? parseId(next()) : start]);
         } while (skip(",", true));
         skip(";");
     }
@@ -123,10 +127,15 @@ function wrappedProtobufjsParse(source, root, options) {
             token = token.substring(1);
         }
         switch (token) {
-            case "inf": case "INF": case "Inf":
-            return sign * Infinity;
-            case "nan": case "NAN": case "Nan": case "NaN":
-            return NaN;
+            case "inf":
+            case "INF":
+            case "Inf":
+                return sign * Infinity;
+            case "nan":
+            case "NAN":
+            case "Nan":
+            case "NaN":
+                return NaN;
             case "0":
                 return 0;
         }
@@ -147,8 +156,10 @@ function wrappedProtobufjsParse(source, root, options) {
 
     function parseId(token, acceptNegative) {
         switch (token) {
-            case "max": case "MAX": case "Max":
-            return 536870911;
+            case "max":
+            case "MAX":
+            case "Max":
+                return 536870911;
             case "0":
                 return 0;
         }
@@ -341,7 +352,7 @@ function wrappedProtobufjsParse(source, root, options) {
         //-* CHANGED: 2018-02-08
         //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
         var _comment = cmnt();
-        var field = new Field(name, parseId(next()), type, rule, extend,null);
+        var field = new Field(name, parseId(next()), type, rule, extend, null);
         ifBlock(field, function parseField_block(token) {
 
             /* istanbul ignore else */
@@ -429,6 +440,10 @@ function wrappedProtobufjsParse(source, root, options) {
             throw illegal(name, "name");
 
         skip("=");
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        //-* CHANGED: 2018-02-08
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        var _comment = cmnt();
         var field = new MapField(applyCase(name), parseId(next()), keyType, valueType);
         ifBlock(field, function parseMapField_block(token) {
 
@@ -442,6 +457,10 @@ function wrappedProtobufjsParse(source, root, options) {
         }, function parseMapField_line() {
             parseInlineOptions(field);
         });
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        //-* CHANGED: 2018-02-08
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        field.comment = _comment;
         parent.add(field);
     }
 
@@ -472,7 +491,7 @@ function wrappedProtobufjsParse(source, root, options) {
 
         var enm = new Enum(token);
         ifBlock(enm, function parseEnum_block(token) {
-            switch(token) {
+            switch (token) {
                 case "option":
                     parseOption(enm, token);
                     skip(";");
@@ -616,7 +635,9 @@ function wrappedProtobufjsParse(source, root, options) {
             throw illegal(token);
 
         requestType = token;
-        skip(")"); skip("returns"); skip("(");
+        skip(")");
+        skip("returns");
+        skip("(");
         if (skip("stream", true))
             responseStream = true;
 
@@ -728,11 +749,11 @@ function wrappedProtobufjsParse(source, root, options) {
 
     parse.filename = null;
     return {
-        "package"     : pkg,
-        "imports"     : imports,
-        weakImports  : weakImports,
-        syntax       : syntax,
-        root         : root
+        "package": pkg,
+        "imports": imports,
+        weakImports: weakImports,
+        syntax: syntax,
+        root: root
     };
 }
 

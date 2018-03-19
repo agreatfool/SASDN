@@ -11,7 +11,7 @@
   },
   "betterScripts": {
     "deploy": {
-      "command": "gulp typescript && gulp protoc-copy",
+      "command": "gulp clean && gulp typescript && gulp protoc-copy",
       "env": {
         "DEBUG": "SASDN:*"
       }
@@ -57,6 +57,7 @@
     "koa-bodyparser": "4.2.0",
     "koa-router": "7.2.1",
     "merge2": "1.0.3",
+    "del": "3.0.0",
     "mz": "2.6.0",
     "supertest": "3.0.0",
     "ts-jest": "21.0.0",

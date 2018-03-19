@@ -2,9 +2,14 @@ const gulp = require('gulp');
 const ts = require('gulp-typescript');
 const merge = require('merge2');
 const copy = require('gulp-copy');
+const del = require('del');
 
 const tsProject = ts.createProject('tsconfig.json', {
   // declaration: true
+});
+
+gulp.task('clean', function() {
+  return del('build/**/*');
 });
 
 gulp.task('protoc-copy', function () {
@@ -20,7 +25,8 @@ gulp.task('typescript', function () {
   ]);
 });
 
-gulp.task('watch', ['typescript', 'protoc-copy'], function () {
+gulp.task('watch', ['clean', 'typescript', 'protoc-copy'], function () {
+  gulp.watch('build/**/*', ['clean']);
   gulp.watch('src/**/*.ts', ['typescript']);
   gulp.watch('result/**/*.result', ['protoc-copy']);
 });
