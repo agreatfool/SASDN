@@ -136,13 +136,13 @@ class DocumentCLI {
     }
 
     if (SERVICE) {
-      this._methodIndex = 0;
       this._serviceIndex = -1;
       const servicePath = LibPath.join(OUTPUT_DIR, 'document');
       await mkdir(servicePath);
       Object.keys(this._serviceInfos).forEach(async (key) => {
         const service = this._serviceInfos[key] as ProtoMsgImportInfo;
         if (this._rootFiles.indexOf(service.protoFile) >= 0) {
+          this._methodIndex = 0;
           await LibFs.writeFile(LibPath.join(servicePath,
             service.msgType.replace(/^\S+\./, '') + '.md'), this._genService(service));
         }

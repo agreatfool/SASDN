@@ -440,6 +440,10 @@ function wrappedProtobufjsParse(source, root, options) {
             throw illegal(name, "name");
 
         skip("=");
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        //-* CHANGED: 2018-02-08
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        var _comment = cmnt();
         var field = new MapField(applyCase(name), parseId(next()), keyType, valueType);
         ifBlock(field, function parseMapField_block(token) {
 
@@ -453,6 +457,10 @@ function wrappedProtobufjsParse(source, root, options) {
         }, function parseMapField_line() {
             parseInlineOptions(field);
         });
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        //-* CHANGED: 2018-02-08
+        //-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-
+        field.comment = _comment;
         parent.add(field);
     }
 
