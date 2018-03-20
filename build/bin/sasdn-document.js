@@ -131,13 +131,13 @@ class DocumentCLI {
                 yield LibFs.writeFile(LibPath.join(OUTPUT_DIR, 'document', 'Document.md'), this._genAll());
             }
             if (SERVICE) {
-                this._methodIndex = 0;
                 this._serviceIndex = -1;
                 const servicePath = LibPath.join(OUTPUT_DIR, 'document');
                 yield lib_1.mkdir(servicePath);
                 Object.keys(this._serviceInfos).forEach((key) => __awaiter(this, void 0, void 0, function* () {
                     const service = this._serviceInfos[key];
                     if (this._rootFiles.indexOf(service.protoFile) >= 0) {
+                        this._methodIndex = 0;
                         yield LibFs.writeFile(LibPath.join(servicePath, service.msgType.replace(/^\S+\./, '') + '.md'), this._genService(service));
                     }
                 }));
