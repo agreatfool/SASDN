@@ -8,6 +8,7 @@
     "apitest": "jest --collectCoverage false --testRegex /src/router/RouterAPITest.ts",
     "deploy": "better-npm-run deploy",
     "envdeploy": "better-npm-run envdeploy",
+    "build": "better-npm-run build",
     "dev": "better-npm-run dev"
   },
   "betterScripts": {
