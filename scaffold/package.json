@@ -7,6 +7,7 @@
     "test": "jest",
     "apitest": "jest --collectCoverage false --testRegex /src/router/RouterAPITest.ts",
     "deploy": "better-npm-run deploy",
+    "envdeploy": "better-npm-run envdeploy",
     "dev": "better-npm-run dev"
   },
   "betterScripts": {
@@ -16,10 +17,22 @@
         "DEBUG": "SASDN:*"
       }
     },
+    "envdeploy": {
+      "command": "gulp clean && gulp typescript && gulp protoc-copy && gulp env-copy",
+      "env": {
+        "DEBUG": "SASDN:*"
+      }
+    },
     "dev": {
-      "command": "npm run deploy && node index.js",
+      "command": "npm run envdeploy && node build/build.js && node index.js",
       "env": {
         "NODE_ENV": "development",
+        "DEBUG": "SASDN:*"
+      }
+    },
+    "build": {
+      "command": "npm run envdeploy && node build/build.js",
+      "env": {
         "DEBUG": "SASDN:*"
       }
     }
@@ -50,6 +63,7 @@
     "grpc_tools_node_protoc_ts": "^2.2.2",
     "gulp": "3.9.1",
     "gulp-copy": "1.0.0",
+    "gulp-rename": "1.2.2",
     "gulp-shell": "0.6.3",
     "gulp-typescript": "3.1.7",
     "jest": "21.0.1",
