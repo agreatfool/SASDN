@@ -1,0 +1,59 @@
+{
+  "shardingStrategies": [
+    {
+      "connctionName": "demo_0",
+      "entities": [
+        "DemoEntity_0",
+        "DemoEntity_3",
+      ]
+    },
+    {
+      "connctionName": "demo_1",
+      "entities": [
+        "DemoEntity_1",
+        "DemoEntity_4",
+      ]
+    },
+    {
+      "connctionName": "demo_2",
+      "entities": [
+        "DemoEntity_2",
+      ]
+    }
+  ],
+  "connectionList": [
+    {
+      "name": "demo_0",
+      "type": "mysql",
+      "host": "",
+      "port": "",
+      "username": "",
+      "password": "",
+      "database": "",
+      "synchronize": false,
+      "entities": ["build/entities/*.js"]
+    },
+    {
+      "name": "demo_1",
+      "type": "mysql",
+      "host": "",
+      "port": "",
+      "username": "",
+      "password": "",
+      "database": "",
+      "synchronize": false,
+      "entities": ["build/entities/*.js"]
+    },
+    {
+      "name": "demo_2",
+      "type": "mysql",
+      "host": "",
+      "port": "",
+      "username": "",
+      "password": "",
+      "database": "",
+      "synchronize": false,
+      "entities": ["build/entities/*.js"]
+    }
+  ]
+}
