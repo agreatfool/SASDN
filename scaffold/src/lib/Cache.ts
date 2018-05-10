@@ -2,15 +2,7 @@ import { BaseOrmEntity } from 'sasdn-database';
 import { DeepPartial } from 'typeorm/browser/common/DeepPartial';
 import { ObjectType } from 'typeorm';
 import { Logger } from './Logger';
-import {
-  AddRequest as MemAddRequest,
-  SetRequest as MemSetRequest,
-  GetRequest as MemGetRequest,
-  DelRequest as MemDelRequest,
-  SetMultiRequest as MemSetMultiRequest,
-  GetMultiRequest as MemGetMultiRequest,
-} from '../proto/memcached/memcached_pb';
-import MSMemcachedClient from '../clients/memcached/MSMemcachedClient';
+import { Memcached, setDefine } from './Memcached';
 
 export interface MemcachedObject {
   key: string;
@@ -28,13 +20,9 @@ export namespace Cache {
       return false;
     }
     const cacheKey = `${entity.constructor.name}:${(entity.constructor as any).getId(entity)}`;
-    const setReq = new MemSetRequest();
-    setReq.setKey(cacheKey);
-    setReq.setValue(JSON.stringify(entity));
-    setReq.setLifeTime(expire);
+    const res = await Memcached.instance.syncSet(cacheKey, JSON.stringify(entity), expire);
 
-    const client = new MSMemcachedClient();
-    return (await client.memSet(setReq)).getResult();
+    return res.result;
   }
 
   export async function getSingle<T extends BaseOrmEntity>(Entity: ObjectType<T>, options: DeepPartial<T>): Promise<T | boolean> {
@@ -46,13 +34,11 @@ export namespace Cache {
 
     const primaryKey = (Entity as any).getId(entity);
     const cacheKey = `${Entity.name}:${primaryKey}`;
-    const getReq = new MemGetRequest();
-    getReq.setKey(cacheKey);
 
-    const client = new MSMemcachedClient();
-    const result = (await client.memGet(getReq)).getResult();
-    if (result) {
-      const parse = JSON.parse(result);
+    const res = await Memcached.instance.syncGet(cacheKey);
+
+    if (res && res.result) {
+      const parse = JSON.parse(res.result);
       if (parse) {
         return (Entity as any).create(parse) as T;
       }
@@ -70,11 +56,9 @@ export namespace Cache {
     const primaryKey = (Entity as any).getId(entity);
     const cacheKey = `${Entity.name}:${primaryKey}`;
 
-    const delReq = new MemDelRequest();
-    delReq.setKey(cacheKey);
+    const res = await Memcached.instance.syncDel(cacheKey);
 
-    const client = new MSMemcachedClient();
-    return (await client.memDel(delReq)).getResult();
+    return res.result;
   }
 
   export async function setMulti(entities: BaseOrmEntity[], expire?: number): Promise<boolean> {
@@ -97,22 +81,15 @@ export namespace Cache {
       return false;
     }
 
-    const setReq = new MemSetRequest();
-    setReq.setKey(key);
-    setReq.setValue(stringify);
-    setReq.setLifeTime(expire);
+    const res = await Memcached.instance.syncSet(key, stringify, expire);
 
-    const client = new MSMemcachedClient();
-    return (await client.memSet(setReq)).getResult();
+    return res.result;
   }
 
   export async function getMutliWithKey<T extends BaseOrmEntity>(Entity: ObjectType<T>, key: string): Promise<T[] | boolean> {
-    const getReq = new MemGetRequest();
-    getReq.setKey(key);
+    const res = await Memcached.instance.syncGet(key);
 
-    const client = new MSMemcachedClient();
-    const memResult = await client.memGet(getReq);
-    const foundCache = memResult.getResult();
+    const foundCache = res.result;
     if (!foundCache) {
       return false;
     }
@@ -133,75 +110,37 @@ export namespace Cache {
 
   export async function memSet(setObj: MemcachedObject): Promise<boolean> {
     const { key, value, expire } = setObj;
-    const setReq = new MemSetRequest();
 
-    setReq.setKey(key);
-    setReq.setValue(value);
-    setReq.setLifeTime(expire);
-
-    const client = new MSMemcachedClient();
-    return (await client.memSet(setReq)).getResult();
+    const res = await Memcached.instance.syncSet(key, value, expire || DEFAULT_CACHE_EXPIRE);
+    return res.result;
   }
 
   export async function memGet(key: string): Promise<string> {
-    const getReq = new MemGetRequest();
+    const res = await Memcached.instance.syncGet(key);
 
-    getReq.setKey(key);
-
-    const client = new MSMemcachedClient();
-    return (await client.memGet(getReq)).getResult();
+    return res.result;
   }
 
   export async function memSetMulti(setObjs: MemcachedObject[]): Promise<boolean[]> {
-    const setMultiReq = new MemSetMultiRequest();
-    setObjs.forEach((obj) => {
-      const { key, value, expire } = obj;
-      const setReq = new MemSetRequest();
-
-      setReq.setKey(key);
-      setReq.setValue(value);
-      setReq.setLifeTime(expire);
-
-      setMultiReq.addMultiSets(setReq);
-    });
-
-    const client = new MSMemcachedClient();
-    return (await client.memSetMulti(setMultiReq)).getResultList();
+    return await Memcached.instance.syncSetMulti(setObjs as setDefine[]);
   }
 
   export async function memGetMulti(keys: string[]): Promise<{ [key: string]: string }> {
-    const getMultiReq = new MemGetMultiRequest();
-    keys.forEach((key) => {
-      getMultiReq.addKeys(key);
-    });
+    const res = await Memcached.instance.syncGetMulti(keys);
 
-    const client = new MSMemcachedClient();
-    const resultList = (await client.memGetMulti(getMultiReq)).getResultList();
-    const resultMap: { [key: string]: string } = {};
-    resultList.forEach((result) => {
-      resultMap[result.getKey()] = result.getValue();
-    });
-    return resultMap;
+    return res.result;
   }
 
   export async function memAdd(setObj: MemcachedObject): Promise<boolean> {
     const { key, value, expire } = setObj;
-    const addReq = new MemAddRequest();
+    const res = await Memcached.instance.syncAdd(key, value, expire || DEFAULT_CACHE_EXPIRE);
 
-    addReq.setKey(key);
-    addReq.setValue(value);
-    addReq.setLifeTime(expire);
-
-    const client = new MSMemcachedClient();
-    return (await client.memAdd(addReq)).getResult();
+    return res.result;
   }
 
   export async function memDel(key: string): Promise<boolean> {
-    const delReq = new MemDelRequest();
+    const res = await Memcached.instance.syncDel(key);
 
-    delReq.setKey(key);
-
-    const client = new MSMemcachedClient();
-    return (await client.memDel(delReq)).getResult();
+    return res.result;
   }
 }

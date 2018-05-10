@@ -8,6 +8,7 @@ import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
 import { DatabaseOption } from '../model/DatabaseOptions';
 import { ContainerEnv } from '../constant/const';
+import { Memcached } from '../lib/Memcached';
 
 export default class MSOrder {
   private _initialized: boolean;
@@ -31,6 +32,8 @@ export default class MSOrder {
       loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
       loggerLevel: LEVEL.INFO,
     });
+
+    await Memcached.instance.initalize();
 
     GrpcImpl.init(Config.instance.getAddress(ConfigConst.CONNECT_ZIPKIN), {
       serviceName: Config.instance.getConfig(ConfigConst.CONNECT_ORDER),
