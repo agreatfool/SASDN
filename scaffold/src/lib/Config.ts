@@ -13,6 +13,7 @@ export class ConfigConst {
   public static DATABASE0: string = 'DATABASE0';
   public static DATABASE1: string = 'DATABASE1';
   public static DATABASE2: string = 'DATABASE2';
+  public static MEMCACHED_URLS: string = 'MEMCACHED_URLS';
 }
 
 const debug = require('debug')('SASDN:DEMO');

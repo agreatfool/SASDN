@@ -7,6 +7,7 @@ import { LEVEL } from 'sasdn-log';
 import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
 import { ContainerEnv } from '../constant/const';
+import { Memcached } from '../lib/Memcached';
 
 export default class GWDemo {
   private _initialized: boolean;
@@ -31,6 +32,8 @@ export default class GWDemo {
       loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
       loggerLevel: LEVEL.INFO
     });
+
+    await Memcached.instance.initalize();
 
     await RouterLoader.instance().init();
 
