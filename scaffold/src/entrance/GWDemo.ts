@@ -8,6 +8,8 @@ import { Logger, TOPIC } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
 import { ContainerEnv } from '../constant/const';
 import { Memcached } from '../lib/Memcached';
+import * as LibPath from 'path';
+import { ModuleName } from '../constant/exception';
 
 export default class GWDemo {
   private _initialized: boolean;
@@ -28,7 +30,6 @@ export default class GWDemo {
     await Config.instance.initalize();
 
     await Logger.instance.initalize({
-      kafkaTopic: TOPIC.BUSINESS,
       loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
       loggerLevel: LEVEL.INFO
     });
@@ -37,7 +38,9 @@ export default class GWDemo {
 
     await RouterLoader.instance().init();
 
-    KoaImpl.init(Config.instance.getAddress(ConfigConst.CONNECT_ZIPKIN), {
+    KoaImpl.init({
+      transType: 'FILE',
+      filePath: LibPath.join(process.env.ZIPKIN_LOG_FILE_PATH, `${ModuleName}.log`),
       serviceName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
       port: Config.instance.getPort(ConfigConst.CONNECT_GATEWAY),
     });

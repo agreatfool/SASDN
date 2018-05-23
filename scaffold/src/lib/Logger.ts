@@ -1,8 +1,11 @@
 import { SendRequest, SendResponse } from '../proto/kafkaqueue/kafkaqueue_pb';
 import MSKafkaqueueClient from '../clients/kafkaqueue/MSKafkaqueueClient';
-import { Logger as SasdnLogger, LogOptions, KafkaOptions, LEVEL } from 'sasdn-log';
+import { KafkaOptions, LEVEL, Logger as SasdnLogger, LogOptions } from 'sasdn-log';
+import * as LibPath from 'path';
+import * as LibWinston from 'winston';
+import { ModuleName } from '../constant/exception';
 
-const debug = require('debug')('SASDN:Demo');
+const debug = require('debug')('SASDN:Gateway');
 
 export enum TOPIC {
   SYSTEM = 'SystemTopic',
@@ -11,11 +14,11 @@ export enum TOPIC {
 }
 
 export enum LogType {
-  Kafka = 1, Syslog
+  Kafka = 1, Winston,
 }
 
 class KafkaLogger extends SasdnLogger {
-  async sendMessage(message: string, options?: KafkaOptions): Promise<boolean> {
+  async sendMessage(message: string, level: LEVEL, options?: KafkaOptions): Promise<boolean> {
     if (process.env.NODE_ENV !== 'development') {
       const client = new MSKafkaqueueClient();
       const request = new SendRequest();
@@ -25,10 +28,37 @@ class KafkaLogger extends SasdnLogger {
       try {
         response = await client.send(request);
         return response.getResult();
-      }
-      catch (error) {
+      } catch (error) {
         return false;
       }
+    }
+    return true;
+  }
+}
+
+class WinstonLogger extends SasdnLogger {
+  private _winstonLogger;
+  constructor(options: LogOptions) {
+    super(options);
+    const filename = LibPath.join(process.env.LOG_FILE_PATH, `${ModuleName}.log`);
+    this._winstonLogger = new LibWinston.Logger({
+      transports: [
+        new LibWinston.transports.File({ filename }),
+      ],
+    });
+  }
+  async sendMessage(message: string, level: LEVEL, options?: LogOptions): Promise<boolean> {
+    if (process.env.NODE_ENV !== 'development') {
+      if (!this._winstonLogger) {
+        const filename = LibPath.join(process.env.LOG_FILE_PATH, `${ModuleName}.log`);
+        this._winstonLogger = new LibWinston.Logger({
+          transports: [
+            new LibWinston.transports.File({ filename }),
+          ],
+        });
+      }
+      const funcList = ['alert', 'alert', 'error', 'warn', 'info', 'debug', 'verbose'];
+      this._winstonLogger[funcList[level]].call(this, message);
     }
     return true;
   }
@@ -50,13 +80,16 @@ export class Logger {
     this._initialized = false;
   }
 
-  public async initalize(option: LogOptions, logType: LogType = LogType.Kafka): Promise<any> {
+  public async initalize(option: LogOptions, logType: LogType = LogType.Winston): Promise<any> {
     switch (logType) {
       case LogType.Kafka:
         this._logger = new KafkaLogger(option);
         break;
+      case LogType.Winston:
+        this._logger = new WinstonLogger(option);
+        break;
       default:
-        this._logger = new KafkaLogger(option);
+        this._logger = new WinstonLogger(option);
     }
     this._initialized = true;
 

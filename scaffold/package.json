@@ -34,6 +34,7 @@
     "build": {
       "command": "npm run envdeploy && node build/build.js",
       "env": {
+        "NODE_ENV": "build",
         "DEBUG": "SASDN:*"
       }
     }

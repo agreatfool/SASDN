@@ -122,7 +122,11 @@ export namespace Cache {
   }
 
   export async function memSetMulti(setObjs: MemcachedObject[]): Promise<boolean[]> {
-    return await Memcached.instance.syncSetMulti(setObjs as setDefine[]);
+    const objs = setObjs.map(obj => {
+      obj.expire = obj.expire || DEFAULT_CACHE_EXPIRE;
+      return obj;
+    });
+    return await Memcached.instance.syncSetMulti(objs as setDefine[]);
   }
 
   export async function memGetMulti(keys: string[]): Promise<{ [key: string]: string }> {
