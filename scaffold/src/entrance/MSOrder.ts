@@ -9,6 +9,8 @@ import * as LibDotEnv from 'dotenv';
 import { DatabaseOption } from '../model/DatabaseOptions';
 import { ContainerEnv } from '../constant/const';
 import { Memcached } from '../lib/Memcached';
+import * as LibPath from 'path';
+import { ModuleName } from '../constant/exception';
 
 export default class MSOrder {
   private _initialized: boolean;
@@ -28,14 +30,15 @@ export default class MSOrder {
 
     await Config.instance.initalize();
     await Logger.instance.initalize({
-      kafkaTopic: TOPIC.BUSINESS,
       loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
       loggerLevel: LEVEL.INFO,
     });
 
     await Memcached.instance.initalize();
 
-    GrpcImpl.init(Config.instance.getAddress(ConfigConst.CONNECT_ZIPKIN), {
+    GrpcImpl.init({
+      transType: 'FILE',
+      filePath: LibPath.join(process.env.ZIPKIN_LOG_FILE_PATH, `${ModuleName}.log`),
       serviceName: Config.instance.getConfig(ConfigConst.CONNECT_ORDER),
       port: Config.instance.getPort(ConfigConst.CONNECT_ORDER),
     });
