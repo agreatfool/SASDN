@@ -295,7 +295,7 @@ ${param}
                     childData.push(msgTypeStr);
                 }
                 if (paramObject) {
-                    paramObject[field.fieldName] = isRepeated ? [childParamObject] : childParamObject;
+                    paramObject[`${field.fieldName}${isRepeated ? 'List' : ''}`] = isRepeated ? [childParamObject] : childParamObject;
                 }
                 const objectType = `${field.fieldType.replace(/^\S+\./, '')}`;
                 fieldType = fieldType ? fieldType.replace('T', objectType) : objectType;
