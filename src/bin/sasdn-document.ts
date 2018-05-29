@@ -331,9 +331,9 @@ ${param}
     }
     if (paramType === ParamType.REQUEST) {
       defaultValue = typeof defaultValue === 'string' ? `"${defaultValue}"` : defaultValue;
-      return `|${field.fieldName}|${isRequired ? '必传' : '可传'}|${fieldType}|${isRequired ? '---' : defaultValue}|${desc}|\n`;
+      return `|${field.fieldName}${isRepeated ? 'List' : ''}|${isRequired ? '必传' : '可传'}|${fieldType}|${isRequired ? '---' : defaultValue}|${desc}|\n`;
     } else {
-      return `|${field.fieldName}|${fieldType}|${desc}|\n`;
+      return `|${field.fieldName}${isRepeated ? 'List' : ''}|${fieldType}|${desc}|\n`;
     }
   }
 }
