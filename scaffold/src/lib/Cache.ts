@@ -111,14 +111,21 @@ export namespace Cache {
   export async function memSet(setObj: MemcachedObject): Promise<boolean> {
     const { key, value, expire } = setObj;
 
-    const res = await Memcached.instance.syncSet(key, value, expire || DEFAULT_CACHE_EXPIRE);
-    return res.result;
+    try {
+      const res = await Memcached.instance.syncSet(key, value, expire || DEFAULT_CACHE_EXPIRE);
+      return res.result;
+    } catch (e) {
+      return false;
+    }
   }
 
   export async function memGet(key: string): Promise<string> {
-    const res = await Memcached.instance.syncGet(key);
-
-    return res.result;
+    try {
+      const res = await Memcached.instance.syncGet(key);
+      return res.result;
+    } catch (e) {
+      return '';
+    }
   }
 
   export async function memSetMulti(setObjs: MemcachedObject[]): Promise<boolean[]> {
@@ -126,25 +133,38 @@ export namespace Cache {
       obj.expire = obj.expire || DEFAULT_CACHE_EXPIRE;
       return obj;
     });
-    return await Memcached.instance.syncSetMulti(objs as setDefine[]);
+    try {
+      return await Memcached.instance.syncSetMulti(objs as setDefine[]);
+    } catch (e) {
+      return [];
+    }
   }
 
   export async function memGetMulti(keys: string[]): Promise<{ [key: string]: string }> {
-    const res = await Memcached.instance.syncGetMulti(keys);
-
-    return res.result;
+    try {
+      const res = await Memcached.instance.syncGetMulti(keys);
+      return res.result;
+    } catch (e) {
+      return {};
+    }
   }
 
   export async function memAdd(setObj: MemcachedObject): Promise<boolean> {
     const { key, value, expire } = setObj;
-    const res = await Memcached.instance.syncAdd(key, value, expire || DEFAULT_CACHE_EXPIRE);
-
-    return res.result;
+    try {
+      const res = await Memcached.instance.syncAdd(key, value, expire || DEFAULT_CACHE_EXPIRE);
+      return res.result;
+    } catch (e) {
+      return false;
+    }
   }
 
   export async function memDel(key: string): Promise<boolean> {
-    const res = await Memcached.instance.syncDel(key);
-
-    return res.result;
+    try {
+      const res = await Memcached.instance.syncDel(key);
+      return res.result;
+    } catch (e) {
+      return false;
+    }
   }
 }
