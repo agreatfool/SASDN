@@ -2,42 +2,33 @@ import * as LibFs from 'mz/fs';
 import * as program from 'commander';
 import * as LibPath from 'path';
 import {
+  addIntoRpcMethodImportPathInfos,
   genRpcMethodInfo,
-  lcfirst,
-  ucfirst,
   mkdir,
   parseMsgNamesFromProto,
   parseProto,
   parseServicesFromProto,
   Proto,
   ProtoFile,
-  ProtoParseResult,
   ProtoMsgImportInfos,
+  ProtoParseResult,
   readProtoList,
-  RpcMethodInfo,
-  RpcProtoServicesInfo,
-  RpcProtoClientInfo,
   RpcMethodImportPathInfos,
-  addIntoRpcMethodImportPathInfos
+  RpcMethodInfo,
+  RpcProtoClientInfo,
+  RpcProtoServicesInfo,
+  ucfirst,
 } from './lib/lib';
 import { TplEngine } from './lib/template';
-import {
-  Method as ProtobufMethod,
-  Service as ProtobufService,
-  IParserResult as ProtoIParserResult
-} from 'protobufjs';
+import { IParserResult as ProtoIParserResult, Service as ProtobufService } from 'protobufjs';
 
 const pkg = require('../../package.json');
 
 program.version(pkg.version)
   .option('-p, --proto <dir>', 'directory of proto files')
-  .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
-    return val.split(',');
-  })
+  .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', val => val.split(','))
   .option('-o, --output <dir>', 'directory to output service codes')
-  .option('-e, --exclude <items>', 'files or paths in -p shall be excluded: e.g file1,path1,path2,file2', function list(val) {
-    return val.split(',');
-  })
+  .option('-e, --exclude <items>', 'files or paths in -p shall be excluded: e.g file1,path1,path2,file2', val => val.split(','))
   .option('-z, --zipkin', 'need add zipkin plugin')
   .parse(process.argv);
 
@@ -156,6 +147,9 @@ class ClientCLI {
           }
         });
       }
+      if (shallIgnore) {
+        continue;
+      }
 
       const protoName: string = protoInfo.result.package;
       const ucBaseName: string = ucfirst(protoName);
@@ -170,7 +164,7 @@ class ClientCLI {
         useZipkin: ZIPKIN,
       } as RpcProtoClientInfo;
       const outputPath = Proto.genFullOutputClientPath(protoInfo.protoFile);
-      let methodInfos = this._genMethodInfos(protoInfo.protoFile, service, outputPath, protoMsgImportInfos, shallIgnore);
+      let methodInfos = this._genMethodInfos(protoInfo.protoFile, service, outputPath, protoMsgImportInfos);
       protoClientInfo.clientName = service.name;
       protoClientInfo.methodList = methodInfos;
       let allMethodImportPath: RpcMethodImportPathInfos = {};
@@ -188,13 +182,13 @@ class ClientCLI {
       protoClientInfo.allMethodImportModule = [...moduleSet];
       await mkdir(LibPath.dirname(outputPath));
       let content = TplEngine.render('rpcs/client', {
-        ...protoClientInfo
+        ...protoClientInfo,
       });
       await LibFs.writeFile(outputPath, content);
     }
   }
 
-  private _genMethodInfos(protoFile: ProtoFile, service: ProtobufService, outputPath: string, importInfos: ProtoMsgImportInfos, shallIgnore: boolean = false): Array<RpcMethodInfo> {
+  private _genMethodInfos(protoFile: ProtoFile, service: ProtobufService, outputPath: string, importInfos: ProtoMsgImportInfos): Array<RpcMethodInfo> {
     console.log('ClientCLI generate method infos: %s', service.name);
 
     let methodKeys = Object.keys(service.methods);
