@@ -16,7 +16,6 @@ import {
   RpcMethodImportPathInfos,
   RpcMethodInfo,
   RpcProtoClientInfo,
-  RpcProtoServicesInfo,
   ucfirst,
 } from './lib/lib';
 import { TplEngine } from './lib/template';
@@ -104,7 +103,6 @@ class ClientCLI {
   private async _genProtoDependencyClients() {
     console.log('ClientCLI generate clients.');
 
-    let protoServicesInfos = [] as Array<RpcProtoServicesInfo>;
     let protoMsgImportInfos: ProtoMsgImportInfos = {};
 
     let parseResults = [] as Array<ProtoParseResult>;
