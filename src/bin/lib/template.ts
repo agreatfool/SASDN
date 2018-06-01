@@ -38,7 +38,7 @@ handlebars.registerHelper('setVar', (varName: string, varValue: string, options)
 });
 
 handlebars.registerHelper('capitalize', (v: string): string => {
-  return v[0].toUpperCase() + v.slice(1);
+  return v.replace(/(^.)|(?:_(.))/g, (v1, v2, v3) => (v2 || v3).toUpperCase());
 });
 
 const TPL_BASE_PATH = LibPath.join(__dirname, '..', 'template');

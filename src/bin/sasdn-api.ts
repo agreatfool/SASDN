@@ -21,16 +21,15 @@ program.version(pkg.version)
   .option('-p, --proto <dir>', 'directory of proto files')
   .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', val => val.split(','))
   .option('-o, --output <dir>', 'directory to output service codes')
-  .option('-g, --gateway <gateway>', 'gateway to generate.')
   .parse(process.argv);
 
 const PROTO_DIR = (program as any).proto === undefined ? undefined : LibPath.normalize((program as any).proto);
 const IMPORTS = (program as any).import === undefined ? [] : (program as any).import;
 const OUTPUT_DIR = (program as any).output === undefined ? undefined : LibPath.normalize((program as any).output);
-const GATEWAY_NAME = (program as any).gateway;
 
 class ApiClientCLI {
-  private _selfNamespace: string = GATEWAY_NAME;
+  private _selfNamespaceList: string[] = [];
+  private _rootProtoFiles: Array<ProtoFile> = [];
   private _protoFiles: Array<ProtoFile> = [];
   private _serviceInfos: ProtoMsgImportInfos = {};
   private _typeInfos: ProtoMsgImportInfos = {};
@@ -50,19 +49,20 @@ class ApiClientCLI {
     string: 'string',
     bool: 'boolean',
   };
+  private _namespaceList: string[];
 
   static instance() {
     return new ApiClientCLI();
   }
 
   public async run() {
-    pp1('this._selfNamespace: ', this._selfNamespace);
     console.log('ApiClientCLI start.');
     await this._validate();
     await this._loadProtos();
     await this._genInfos();
-    // await this._addAttriToInfos();
+    await this._addAttriToInfos();
     await this._filterUselessTypeInfos();
+    await this._filterUselessNamespaces();
     await this._genApiClient();
   }
 
@@ -87,8 +87,9 @@ class ApiClientCLI {
   private async _loadProtos() {
     console.log('ApiClientCLI load proto files.');
 
-    const selfProtoFile: ProtoFile = (await readProtoList(PROTO_DIR, OUTPUT_DIR))[0];
-    this._protoFiles.push(selfProtoFile);
+    this._rootProtoFiles = await readProtoList(PROTO_DIR, OUTPUT_DIR);
+    this._selfNamespaceList = this._rootProtoFiles.map(item => item.relativePath);
+    this._protoFiles = this._protoFiles.concat(this._rootProtoFiles);
     for (let i = 0; i < IMPORTS.length; i++) {
       this._protoFiles = this._protoFiles.concat(await readProtoList(LibPath.normalize(IMPORTS[i]), OUTPUT_DIR));
     }
@@ -122,6 +123,8 @@ class ApiClientCLI {
         }
       }
     }
+    // 生成 namespaceList
+    this._namespaceList = [...new Set(Object.keys(this._serviceInfos).map(item => item.split('.')[0]))];
   }
 
   private async _addAttriToInfos() {
@@ -140,20 +143,15 @@ class ApiClientCLI {
    * @private
    */
   private async _filterUselessTypeInfos() {
-    let a = Object.keys(this._serviceInfos);
-    let b = a.filter(i => /^gateway/.test(i));
-    pp1(b);
     let tempTypeInfos: ProtoMsgImportInfos = {};
     for (let typeName in this._typeInfos) {
       const typeInfo: ProtoMsgImportInfo = this._typeInfos[typeName];
-      if (typeInfo.namespace === this._selfNamespace && (typeInfo.isReq || typeInfo.isRes)) {
+      if (this._selfNamespaceList.indexOf(typeInfo.namespace) !== -1 && (typeInfo.isReq || typeInfo.isRes)) {
         tempTypeInfos[typeName] = typeInfo;
+        await this._recurFilterTypeInfo(tempTypeInfos, typeInfo);
       }
-      await this._recurFilterTypeInfo(tempTypeInfos, typeInfo);
     }
     this._typeInfos = tempTypeInfos;
-
-    // pp1(Object.keys(tempTypeInfos));
   }
 
   /**
@@ -172,16 +170,29 @@ class ApiClientCLI {
     }
   }
 
+  /**
+   * 过滤不必要的 namespace
+   * @returns {Promise<void>}
+   * @private
+   */
+  private async _filterUselessNamespaces() {
+    let tempNamespaceSet: Set<string> = new Set();
+    for (let typeName in this._typeInfos) {
+      let typeInfo = this._typeInfos[typeName];
+      tempNamespaceSet.add(typeInfo.namespace);
+    }
+    this._namespaceList = [...tempNamespaceSet];
+  }
+
   private async _genApiClient() {
     let outputDir = LibPath.join(OUTPUT_DIR, 'api_client');
     await mkdir(outputDir);
-    let namespaceList: string[] = [...new Set(Object.keys(this._serviceInfos).map(item => item.split('.')[0]))];
     let content: string = TplEngine.render('client/apiClient', {
       serviceInfos: this._serviceInfos,
       typeInfos: this._typeInfos,
-      selfNamespace: this._selfNamespace,
+      selfNamespaceList: this._selfNamespaceList,
       protoTsTypeMap: this._protoTsTypeMap,
-      namespaceList: namespaceList,
+      namespaceList: this._namespaceList,
     });
     await LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.ts'), content);
   }
