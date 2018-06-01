@@ -1,0 +1,66 @@
+export interface ReqOptions {
+  method?: 'GET' | 'POST' | 'DELETE' | 'PATCH' | 'PUT' | 'HEAD' | 'OPTIONS' | 'CONNECT';
+  headers?: Object;
+  body?: string;
+  mode?: 'cors' | 'no-cors' | 'same-origin';
+  credentials?: 'omit' | 'same-origin' | 'include';
+  cache?: 'default' | 'no-store' | 'reload' | 'no-cache' | 'force-cache' | 'only-if-cached';
+  redirect?: 'follow' | 'error' | 'manual';
+  referrer?: string;
+  referrerPolicy?: 'referrer' | 'no-referrer-when-downgrade' | 'origin' | 'origin-when-cross-origin' | 'unsafe-url';
+  integrity?: any;
+  timeout?: number;
+}
+{{#each @root.namespaceList}}
+
+export namespace {{capitalize this}}{ {{setVar 'namespace' this}}
+  {{#each @root.typeInfos}}
+  {{#ifCond this.namespace '===' @root.namespace}}
+
+  export interface {{this.msgType}} {
+  {{#each this.fields}}
+    {{#unless this.isRepeated}}
+    {{setVar 'tsType' (lookup @root.protoTsTypeMap this.fieldType)~}}
+    {{this.fieldName}}{{nowrap~}}
+    {{~#ifCond this.fieldComment '&&' this.fieldComment.Joi~}}
+    {{~#unless this.fieldComment.Joi.required}}?{{/unless~}}
+    {{~/ifCond~}}
+    : {{#if @root.tsType}}{{@root.tsType}}{{else}}{{capitalize this.fieldType}}{{/if}};
+    {{else}}
+    {{setVar 'tsType' (lookup @root.protoTsTypeMap this.fieldType)~}}
+    {{this.fieldName}}List{{nowrap~}}
+    {{#ifCond this.fieldComment '&&' this.fieldComment.Joi~}}
+    {{#unless this.fieldComment.Joi.required}}?{{/unless~}}
+    {{/ifCond~}}
+    : {{#if @root.tsType}}{{@root.tsType}}{{else}}{{capitalize this.fieldType}}{{/if}}[];
+    {{/unless}}
+  {{/each}}
+  }
+  {{/ifCond}}
+  {{/each}}
+}
+{{/each}}
+
+const TIMEOUT = 15000;
+
+export default abstract class ApiClient {
+  private _domain: string;
+  private _defaultOptions: ReqOptions;
+
+  constructor(domain: string) {
+    this._domain = domain;
+    this._defaultOptions = {
+      method: 'POST',
+      timeout: TIMEOUT,
+    };
+  }
+
+  abstract async _request(url: string, options?: ReqOptions): Promise<any>;
+
+  async changeNewsState(body: ChangeNewsStateReqParams, options?: ReqOptions): Promise<ChangeNewsStateRes> {
+    const path = '/v1/news/changeState';
+    const url = this._domain + path;
+    const requestOptions: ReqOptions = Object.assign({}, this._defaultOptions, options, { body: JSON.stringify(body) });
+    return await this._request(url, requestOptions) as ChangeNewsStateRes;
+  }
+}

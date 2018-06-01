@@ -64,6 +64,8 @@ export interface ProtoMsgImportInfo {
   protoFile: ProtoFile;
   fields?: Array<FieldInfo>;
   methods?: Array<MethodInfo>;
+  isReq?: boolean;
+  isRes?: boolean;
 }
 
 export interface FieldInfo {
