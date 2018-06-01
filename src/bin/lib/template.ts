@@ -41,6 +41,10 @@ handlebars.registerHelper('capitalize', (v: string): string => {
   return v.replace(/(^.)|(?:_(.))/g, (v1, v2, v3) => (v2 || v3).toUpperCase());
 });
 
+handlebars.registerHelper('lowercase', (v: string): string => {
+  return v.replace(/(^.)/g, v => v.toLowerCase());
+});
+
 const TPL_BASE_PATH = LibPath.join(__dirname, '..', 'template');
 
 export namespace TplEngine {

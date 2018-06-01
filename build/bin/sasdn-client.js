@@ -16,13 +16,9 @@ const template_1 = require("./lib/template");
 const pkg = require('../../package.json');
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
-    .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', function list(val) {
-    return val.split(',');
-})
+    .option('-i, --import <items>', 'third party proto import path: e.g path1,path2,path3', val => val.split(','))
     .option('-o, --output <dir>', 'directory to output service codes')
-    .option('-e, --exclude <items>', 'files or paths in -p shall be excluded: e.g file1,path1,path2,file2', function list(val) {
-    return val.split(',');
-})
+    .option('-e, --exclude <items>', 'files or paths in -p shall be excluded: e.g file1,path1,path2,file2', val => val.split(','))
     .option('-z, --zipkin', 'need add zipkin plugin')
     .parse(process.argv);
 const PROTO_DIR = program.proto === undefined ? undefined : LibPath.normalize(program.proto);
@@ -90,7 +86,6 @@ class ClientCLI {
     _genProtoDependencyClients() {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('ClientCLI generate clients.');
-            let protoServicesInfos = [];
             let protoMsgImportInfos = {};
             let parseResults = [];
             for (let i = 0; i < this._protoFiles.length; i++) {
@@ -126,6 +121,9 @@ class ClientCLI {
                         }
                     });
                 }
+                if (shallIgnore) {
+                    continue;
+                }
                 const protoName = protoInfo.result.package;
                 const ucBaseName = lib_1.ucfirst(protoName);
                 let protoClientInfo = {
@@ -139,7 +137,7 @@ class ClientCLI {
                     useZipkin: ZIPKIN,
                 };
                 const outputPath = lib_1.Proto.genFullOutputClientPath(protoInfo.protoFile);
-                let methodInfos = this._genMethodInfos(protoInfo.protoFile, service, outputPath, protoMsgImportInfos, shallIgnore);
+                let methodInfos = this._genMethodInfos(protoInfo.protoFile, service, outputPath, protoMsgImportInfos);
                 protoClientInfo.clientName = service.name;
                 protoClientInfo.methodList = methodInfos;
                 let allMethodImportPath = {};
@@ -161,7 +159,7 @@ class ClientCLI {
             }
         });
     }
-    _genMethodInfos(protoFile, service, outputPath, importInfos, shallIgnore = false) {
+    _genMethodInfos(protoFile, service, outputPath, importInfos) {
         console.log('ClientCLI generate method infos: %s', service.name);
         let methodKeys = Object.keys(service.methods);
         if (methodKeys.length === 0) {
@@ -179,4 +177,3 @@ class ClientCLI {
 ClientCLI.instance().run().catch((err) => {
     console.log('err: ', err.message);
 });
-//# sourceMappingURL=sasdn-client.js.map

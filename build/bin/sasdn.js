@@ -10,5 +10,5 @@ program.version(pkg.version)
     .command('gateway [options]', 'generate gateway koa api stubs from swagger spec files')
     .command('document [options]', 'generate api document from proto files')
     .command('scaffold [options]', 'create a new scaffold project')
+    .command('api [options]', 'generate http api client stubs from proto files')
     .parse(process.argv);
-//# sourceMappingURL=sasdn.js.map

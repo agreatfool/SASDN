@@ -32,6 +32,7 @@ class ApiClientCLI {
   private _rootProtoFiles: Array<ProtoFile> = [];
   private _protoFiles: Array<ProtoFile> = [];
   private _serviceInfos: ProtoMsgImportInfos = {};
+  private _selfServiceInfos: ProtoMsgImportInfos = {};
   private _typeInfos: ProtoMsgImportInfos = {};
   private _protoTsTypeMap = {
     double: 'number',
@@ -63,6 +64,7 @@ class ApiClientCLI {
     await this._addAttriToInfos();
     await this._filterUselessTypeInfos();
     await this._filterUselessNamespaces();
+    await this._filterUselessService();
     await this._genApiClient();
   }
 
@@ -184,6 +186,22 @@ class ApiClientCLI {
     this._namespaceList = [...tempNamespaceSet];
   }
 
+  /**
+   * 过滤不必要的 service
+   * @returns {Promise<void>}
+   * @private
+   */
+  private async _filterUselessService() {
+    let tempServiceMap: ProtoMsgImportInfos = {};
+    for (let serviceName in this._serviceInfos) {
+      let service = this._serviceInfos[serviceName];
+      if (this._selfNamespaceList.indexOf(service.namespace) !== -1) {
+        tempServiceMap[serviceName] = service;
+      }
+    }
+    this._selfServiceInfos = tempServiceMap;
+  }
+
   private async _genApiClient() {
     let outputDir = LibPath.join(OUTPUT_DIR, 'api_client');
     await mkdir(outputDir);
@@ -193,6 +211,7 @@ class ApiClientCLI {
       selfNamespaceList: this._selfNamespaceList,
       protoTsTypeMap: this._protoTsTypeMap,
       namespaceList: this._namespaceList,
+      selfServiceInfos: this._selfServiceInfos,
     });
     await LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.ts'), content);
   }
