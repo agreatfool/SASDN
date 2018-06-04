@@ -209,15 +209,18 @@ class ApiClientCLI {
         return __awaiter(this, void 0, void 0, function* () {
             let outputDir = LibPath.join(OUTPUT_DIR, 'api_client');
             yield lib_1.mkdir(outputDir);
-            let content = template_1.TplEngine.render('client/apiClient', {
+            let context = {
                 serviceInfos: this._serviceInfos,
                 typeInfos: this._typeInfos,
                 selfNamespaceList: this._selfNamespaceList,
                 protoTsTypeMap: this._protoTsTypeMap,
                 namespaceList: this._namespaceList,
                 selfServiceInfos: this._selfServiceInfos,
-            });
-            yield LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.ts'), content);
+            };
+            let tsContent = template_1.TplEngine.render('client/tsApiClient', context);
+            yield LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.ts'), tsContent);
+            let jsContent = template_1.TplEngine.render('client/jsApiClient', context);
+            yield LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.js'), jsContent);
         });
     }
 }

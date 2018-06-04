@@ -205,15 +205,18 @@ class ApiClientCLI {
   private async _genApiClient() {
     let outputDir = LibPath.join(OUTPUT_DIR, 'api_client');
     await mkdir(outputDir);
-    let content: string = TplEngine.render('client/apiClient', {
+    let context = {
       serviceInfos: this._serviceInfos,
       typeInfos: this._typeInfos,
       selfNamespaceList: this._selfNamespaceList,
       protoTsTypeMap: this._protoTsTypeMap,
       namespaceList: this._namespaceList,
       selfServiceInfos: this._selfServiceInfos,
-    });
-    await LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.ts'), content);
+    };
+    let tsContent: string = TplEngine.render('client/tsApiClient', context);
+    await LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.ts'), tsContent);
+    let jsContent: string = TplEngine.render('client/jsApiClient', context);
+    await LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.js'), jsContent);
   }
 }
 
