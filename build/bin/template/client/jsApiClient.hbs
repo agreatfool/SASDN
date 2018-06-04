@@ -5,11 +5,10 @@ const defaultOptions = {
   timeout: TIMEOUT,
   headers: { 'Content-Type': 'application/json' },
 }
-
 {{#each @root.selfServiceInfos}}
 {{#each this.methods}}
 
-export async function {{lowercase this.methodName}}(body, request, options) {
+export async function {{lowercaseFirst this.methodName}}(body, request, options) {
   const path = '{{this.googleHttpOption.router}}';
   const requestOptions = Object.assign({}, defaultOptions, options, { body: JSON.stringify(body) });
   return await request(path, requestOptions);
@@ -20,7 +19,7 @@ export async function {{lowercase this.methodName}}(body, request, options) {
 export default {
   {{#each @root.selfServiceInfos}}
   {{#each this.methods}}
-  {{lowercase this.methodName}},
+  {{lowercaseFirst this.methodName}},
   {{/each}}
   {{/each}}
 }

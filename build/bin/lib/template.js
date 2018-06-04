@@ -7,39 +7,15 @@ const helpers = require("handlebars-helpers");
 helpers({ handlebars: handlebars });
 handlebars.registerHelper('curlyLeft', () => '{');
 handlebars.registerHelper('curlyRight', () => '}');
-handlebars.registerHelper('ifCond', function (v1, operator, v2, options) {
-    switch (operator) {
-        case '==':
-            return (v1 === v2) ? options.fn(this) : options.inverse(this);
-        case '===':
-            return (v1 === v2) ? options.fn(this) : options.inverse(this);
-        case '!==':
-            return (v1 !== v2) ? options.fn(this) : options.inverse(this);
-        case '<':
-            return (v1 < v2) ? options.fn(this) : options.inverse(this);
-        case '<=':
-            return (v1 <= v2) ? options.fn(this) : options.inverse(this);
-        case '>':
-            return (v1 > v2) ? options.fn(this) : options.inverse(this);
-        case '>=':
-            return (v1 >= v2) ? options.fn(this) : options.inverse(this);
-        case '&&':
-            return (v1 && v2) ? options.fn(this) : options.inverse(this);
-        case '||':
-            return (v1 || v2) ? options.fn(this) : options.inverse(this);
-        default:
-            return options.inverse(this);
-    }
-});
 handlebars.registerHelper('setVar', (varName, varValue, options) => {
     options.data.root[varName] = varValue;
     return;
 });
-handlebars.registerHelper('capitalize', (v) => {
+handlebars.registerHelper('uppercaseAndReplaceUnderline', (v) => {
     return v.replace(/(^.)|(?:_(.))/g, (v1, v2, v3) => (v2 || v3).toUpperCase());
 });
-handlebars.registerHelper('lowercase', (v) => {
-    return v.replace(/(^.)/g, v => v.toLowerCase());
+handlebars.registerHelper('lowercaseFirst', (v) => {
+    return v.replace(/(^.)/, (v) => v.toLowerCase());
 });
 const TPL_BASE_PATH = LibPath.join(__dirname, '..', 'template');
 var TplEngine;

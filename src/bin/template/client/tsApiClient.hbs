@@ -13,30 +13,30 @@ export interface ReqOptions {
 }
 {{#each @root.namespaceList}}
 
-export namespace {{capitalize this}}{ {{setVar 'namespace' this}}
+export namespace {{capitalize this}} { {{setVar 'namespace' this}}
   {{#each @root.typeInfos}}
-  {{#ifCond this.namespace '===' @root.namespace}}
+  {{#eq this.namespace @root.namespace}}
 
   export interface {{this.msgType}} {
   {{#each this.fields}}
     {{#unless this.isRepeated}}
     {{setVar 'tsType' (lookup @root.protoTsTypeMap this.fieldType)~}}
     {{this.fieldName}}{{nowrap~}}
-    {{~#ifCond this.fieldComment '&&' this.fieldComment.Joi~}}
+    {{~#and this.fieldComment this.fieldComment.Joi~}}
     {{~#unless this.fieldComment.Joi.required}}?{{/unless~}}
-    {{~/ifCond~}}
-    : {{#if @root.tsType}}{{@root.tsType}}{{else}}{{capitalize this.fieldType}}{{/if}};
+    {{~/and~}}
+    : {{#if @root.tsType}}{{@root.tsType}}{{else}}{{uppercaseAndReplaceUnderline this.fieldType}}{{/if}};
     {{else}}
     {{setVar 'tsType' (lookup @root.protoTsTypeMap this.fieldType)~}}
     {{this.fieldName}}List{{nowrap~}}
-    {{#ifCond this.fieldComment '&&' this.fieldComment.Joi~}}
+    {{#and this.fieldComment this.fieldComment.Joi~}}
     {{#unless this.fieldComment.Joi.required}}?{{/unless~}}
-    {{/ifCond~}}
-    : {{#if @root.tsType}}{{@root.tsType}}{{else}}{{capitalize this.fieldType}}{{/if}}[];
+    {{/and~}}
+    : {{#if @root.tsType}}{{@root.tsType}}{{else}}{{uppercaseAndReplaceUnderline this.fieldType}}{{/if}}[];
     {{/unless}}
   {{/each}}
   }
-  {{/ifCond}}
+  {{/eq}}
   {{/each}}
 }
 {{/each}}
@@ -57,7 +57,7 @@ namespace ApiClient {
 {{#each @root.selfServiceInfos}}
 {{#each this.methods}}
 
-  export async function {{lowercase this.methodName}}(body: {{capitalize this.requestType}}, request: ReqFunc, options?: ReqOptions): Promise<{{capitalize this.responseType}}> {
+  export async function {{lowercaseFirst this.methodName}}(body: {{capitalize this.requestType}}, request: ReqFunc, options?: ReqOptions): Promise<{{capitalize this.responseType}}> {
     const path = '{{this.googleHttpOption.router}}';
     const requestOptions: ReqOptions = Object.assign({}, defaultOptions, options, { body: JSON.stringify(body) });
     return await request(path, requestOptions) as {{capitalize this.responseType}};

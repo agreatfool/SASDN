@@ -13,8 +13,6 @@ const program = require("commander");
 const LibPath = require("path");
 const lib_1 = require("./lib/lib");
 const template_1 = require("./lib/template");
-const debug_1 = require("debug");
-const pp1 = debug_1.default('pp1');
 const pkg = require('../../package.json');
 program.version(pkg.version)
     .option('-p, --proto <dir>', 'directory of proto files')
@@ -58,7 +56,6 @@ class ApiClientCLI {
             yield this._validate();
             yield this._loadProtos();
             yield this._genInfos();
-            yield this._addAttriToInfos();
             yield this._filterUselessTypeInfos();
             yield this._filterUselessNamespaces();
             yield this._filterUselessService();
@@ -127,15 +124,23 @@ class ApiClientCLI {
             this._namespaceList = [...new Set(Object.keys(this._serviceInfos).map(item => item.split('.')[0]))];
         });
     }
-    _addAttriToInfos() {
+    /**
+     * 生成 type 是请求或者响应类型的列表,示例如下:
+     * ['gateway.UserGetRequest', 'gateway.UserGetResponse']
+     * @returns {Promise<string[]>}
+     * @private
+     */
+    _genReqOrResTypeList() {
         return __awaiter(this, void 0, void 0, function* () {
+            const reqOrResTypeList = [];
             for (let serviceInfoName in this._serviceInfos) {
                 const serviceInfo = this._serviceInfos[serviceInfoName];
                 for (let method of serviceInfo.methods) {
-                    this._typeInfos[method.requestType].isReq = true;
-                    this._typeInfos[method.responseType].isRes = true;
+                    reqOrResTypeList.push(method.requestType);
+                    reqOrResTypeList.push(method.responseType);
                 }
             }
+            return reqOrResTypeList;
         });
     }
     /**
@@ -146,9 +151,10 @@ class ApiClientCLI {
     _filterUselessTypeInfos() {
         return __awaiter(this, void 0, void 0, function* () {
             let tempTypeInfos = {};
+            let reqOrResTypeList = yield this._genReqOrResTypeList();
             for (let typeName in this._typeInfos) {
                 const typeInfo = this._typeInfos[typeName];
-                if (this._selfNamespaceList.indexOf(typeInfo.namespace) !== -1 && (typeInfo.isReq || typeInfo.isRes)) {
+                if (this._selfNamespaceList.indexOf(typeInfo.namespace) !== -1 && reqOrResTypeList.indexOf(typeName) !== -1) {
                     tempTypeInfos[typeName] = typeInfo;
                     yield this._recurFilterTypeInfo(tempTypeInfos, typeInfo);
                 }
@@ -168,7 +174,7 @@ class ApiClientCLI {
             for (let field of typeInfo.fields) {
                 if (!this._protoTsTypeMap[field.fieldType] && !/^(google\.)|(bytes)/.test(field.fieldType)) {
                     tempTypeInfos[field.fieldType] = this._typeInfos[field.fieldType];
-                    this._recurFilterTypeInfo(tempTypeInfos, this._typeInfos[field.fieldType]);
+                    yield this._recurFilterTypeInfo(tempTypeInfos, this._typeInfos[field.fieldType]);
                 }
             }
         });

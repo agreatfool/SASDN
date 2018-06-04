@@ -12,9 +12,7 @@ import {
   readProtoList,
 } from './lib/lib';
 import { TplEngine } from './lib/template';
-import debug from 'debug';
 
-const pp1 = debug('pp1');
 const pkg = require('../../package.json');
 
 program.version(pkg.version)
@@ -61,7 +59,6 @@ class ApiClientCLI {
     await this._validate();
     await this._loadProtos();
     await this._genInfos();
-    await this._addAttriToInfos();
     await this._filterUselessTypeInfos();
     await this._filterUselessNamespaces();
     await this._filterUselessService();
@@ -129,14 +126,22 @@ class ApiClientCLI {
     this._namespaceList = [...new Set(Object.keys(this._serviceInfos).map(item => item.split('.')[0]))];
   }
 
-  private async _addAttriToInfos() {
+  /**
+   * 生成 type 是请求或者响应类型的列表,示例如下:
+   * ['gateway.UserGetRequest', 'gateway.UserGetResponse']
+   * @returns {Promise<string[]>}
+   * @private
+   */
+  private async _genReqOrResTypeList(): Promise<string[]> {
+    const reqOrResTypeList: string[] = [];
     for (let serviceInfoName in this._serviceInfos) {
       const serviceInfo = this._serviceInfos[serviceInfoName];
       for (let method of serviceInfo.methods) {
-        this._typeInfos[method.requestType].isReq = true;
-        this._typeInfos[method.responseType].isRes = true;
+        reqOrResTypeList.push(method.requestType);
+        reqOrResTypeList.push(method.responseType);
       }
     }
+    return reqOrResTypeList;
   }
 
   /**
@@ -146,9 +151,10 @@ class ApiClientCLI {
    */
   private async _filterUselessTypeInfos() {
     let tempTypeInfos: ProtoMsgImportInfos = {};
+    let reqOrResTypeList = await this._genReqOrResTypeList();
     for (let typeName in this._typeInfos) {
       const typeInfo: ProtoMsgImportInfo = this._typeInfos[typeName];
-      if (this._selfNamespaceList.indexOf(typeInfo.namespace) !== -1 && (typeInfo.isReq || typeInfo.isRes)) {
+      if (this._selfNamespaceList.indexOf(typeInfo.namespace) !== -1 && reqOrResTypeList.indexOf(typeName) !== -1) {
         tempTypeInfos[typeName] = typeInfo;
         await this._recurFilterTypeInfo(tempTypeInfos, typeInfo);
       }
@@ -167,7 +173,7 @@ class ApiClientCLI {
     for (let field of typeInfo.fields) {
       if (!this._protoTsTypeMap[field.fieldType] && !/^(google\.)|(bytes)/.test(field.fieldType)) {
         tempTypeInfos[field.fieldType] = this._typeInfos[field.fieldType];
-        this._recurFilterTypeInfo(tempTypeInfos, this._typeInfos[field.fieldType]);
+        await this._recurFilterTypeInfo(tempTypeInfos, this._typeInfos[field.fieldType]);
       }
     }
   }
