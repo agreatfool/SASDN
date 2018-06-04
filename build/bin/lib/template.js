@@ -5,12 +5,8 @@ const LibPath = require("path");
 const handlebars = require("handlebars");
 const helpers = require("handlebars-helpers");
 helpers({ handlebars: handlebars });
-handlebars.registerHelper('curlyLeft', function () {
-    return '{';
-});
-handlebars.registerHelper('curlyRight', function () {
-    return '}';
-});
+handlebars.registerHelper('curlyLeft', () => '{');
+handlebars.registerHelper('curlyRight', () => '}');
 const TPL_BASE_PATH = LibPath.join(__dirname, '..', 'template');
 var TplEngine;
 (function (TplEngine) {

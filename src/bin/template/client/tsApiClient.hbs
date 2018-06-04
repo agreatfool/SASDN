@@ -1,0 +1,67 @@
+export interface ReqOptions {
+  method?: 'GET' | 'POST' | 'DELETE' | 'PATCH' | 'PUT' | 'HEAD' | 'OPTIONS' | 'CONNECT';
+  headers?: Object;
+  body?: string;
+  mode?: 'cors' | 'no-cors' | 'same-origin';
+  credentials?: 'omit' | 'same-origin' | 'include';
+  cache?: 'default' | 'no-store' | 'reload' | 'no-cache' | 'force-cache' | 'only-if-cached';
+  redirect?: 'follow' | 'error' | 'manual';
+  referrer?: string;
+  referrerPolicy?: 'referrer' | 'no-referrer-when-downgrade' | 'origin' | 'origin-when-cross-origin' | 'unsafe-url';
+  integrity?: any;
+  timeout?: number;
+}
+{{#each @root.namespaceList}}
+
+export namespace {{capitalize this}} { {{setVar 'namespace' this}}
+  {{#each @root.typeInfos}}
+  {{#eq this.namespace @root.namespace}}
+
+  export interface {{this.msgType}} {
+  {{#each this.fields}}
+    {{#unless this.isRepeated}}
+    {{setVar 'tsType' (lookup @root.protoTsTypeMap this.fieldType)~}}
+    {{this.fieldName}}{{nowrap~}}
+    {{~#and this.fieldComment this.fieldComment.Joi~}}
+    {{~#unless this.fieldComment.Joi.required}}?{{/unless~}}
+    {{~/and~}}
+    : {{#if @root.tsType}}{{@root.tsType}}{{else}}{{uppercaseAndReplaceUnderline this.fieldType}}{{/if}};
+    {{else}}
+    {{setVar 'tsType' (lookup @root.protoTsTypeMap this.fieldType)~}}
+    {{this.fieldName}}List{{nowrap~}}
+    {{#and this.fieldComment this.fieldComment.Joi~}}
+    {{#unless this.fieldComment.Joi.required}}?{{/unless~}}
+    {{/and~}}
+    : {{#if @root.tsType}}{{@root.tsType}}{{else}}{{uppercaseAndReplaceUnderline this.fieldType}}{{/if}}[];
+    {{/unless}}
+  {{/each}}
+  }
+  {{/eq}}
+  {{/each}}
+}
+{{/each}}
+
+export interface ReqFunc {
+  (path: string, options: ReqOptions): Promise<any>;
+}
+
+const TIMEOUT = 15000;
+
+const defaultOptions = {
+  method: 'POST',
+  timeout: TIMEOUT,
+  headers: { 'Content-Type': 'application/json' },
+};
+
+namespace ApiClient {
+{{#each @root.selfServiceInfos}}
+{{#each this.methods}}
+
+  export async function {{lcfirst this.methodName}}(body: {{capitalize this.requestType}}, request: ReqFunc, options?: ReqOptions): Promise<{{capitalize this.responseType}}> {
+    const path = '{{this.googleHttpOption.router}}';
+    const requestOptions: ReqOptions = Object.assign({}, defaultOptions, options, { body: JSON.stringify(body) });
+    return await request(path, requestOptions) as {{capitalize this.responseType}};
+  }
+{{/each}}
+{{/each}}
+}
