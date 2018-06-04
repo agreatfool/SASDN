@@ -57,7 +57,7 @@ namespace ApiClient {
 {{#each @root.selfServiceInfos}}
 {{#each this.methods}}
 
-  export async function {{lowercaseFirst this.methodName}}(body: {{capitalize this.requestType}}, request: ReqFunc, options?: ReqOptions): Promise<{{capitalize this.responseType}}> {
+  export async function {{lcfirst this.methodName}}(body: {{capitalize this.requestType}}, request: ReqFunc, options?: ReqOptions): Promise<{{capitalize this.responseType}}> {
     const path = '{{this.googleHttpOption.router}}';
     const requestOptions: ReqOptions = Object.assign({}, defaultOptions, options, { body: JSON.stringify(body) });
     return await request(path, requestOptions) as {{capitalize this.responseType}};

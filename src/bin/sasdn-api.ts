@@ -2,6 +2,7 @@ import * as LibFs from 'mz/fs';
 import * as program from 'commander';
 import * as LibPath from 'path';
 import {
+  lcfirst,
   mkdir,
   parseMsgNamesFromProto,
   parseProto,
@@ -59,9 +60,9 @@ class ApiClientCLI {
     await this._validate();
     await this._loadProtos();
     await this._genInfos();
-    await this._filterUselessTypeInfos();
-    await this._filterUselessNamespaces();
-    await this._filterUselessService();
+    this._filterUselessTypeInfos();
+    this._filterUselessNamespaces();
+    this._filterUselessService();
     await this._genApiClient();
   }
 
@@ -132,7 +133,7 @@ class ApiClientCLI {
    * @returns {Promise<string[]>}
    * @private
    */
-  private async _genReqOrResTypeList(): Promise<string[]> {
+  private _genReqOrResTypeList(): string[] {
     const reqOrResTypeList: string[] = [];
     for (let serviceInfoName in this._serviceInfos) {
       const serviceInfo = this._serviceInfos[serviceInfoName];
@@ -149,14 +150,14 @@ class ApiClientCLI {
    * @returns {Promise<void>}
    * @private
    */
-  private async _filterUselessTypeInfos() {
+  private _filterUselessTypeInfos() {
     let tempTypeInfos: ProtoMsgImportInfos = {};
-    let reqOrResTypeList = await this._genReqOrResTypeList();
+    let reqOrResTypeList = this._genReqOrResTypeList();
     for (let typeName in this._typeInfos) {
       const typeInfo: ProtoMsgImportInfo = this._typeInfos[typeName];
       if (this._selfNamespaceList.indexOf(typeInfo.namespace) !== -1 && reqOrResTypeList.indexOf(typeName) !== -1) {
         tempTypeInfos[typeName] = typeInfo;
-        await this._recurFilterTypeInfo(tempTypeInfos, typeInfo);
+        this._recurFilterTypeInfo(tempTypeInfos, typeInfo);
       }
     }
     this._typeInfos = tempTypeInfos;
@@ -169,11 +170,11 @@ class ApiClientCLI {
    * @returns {Promise<void>}
    * @private
    */
-  private async _recurFilterTypeInfo(tempTypeInfos: ProtoMsgImportInfos, typeInfo: ProtoMsgImportInfo) {
+  private _recurFilterTypeInfo(tempTypeInfos: ProtoMsgImportInfos, typeInfo: ProtoMsgImportInfo) {
     for (let field of typeInfo.fields) {
       if (!this._protoTsTypeMap[field.fieldType] && !/^(google\.)|(bytes)/.test(field.fieldType)) {
         tempTypeInfos[field.fieldType] = this._typeInfos[field.fieldType];
-        await this._recurFilterTypeInfo(tempTypeInfos, this._typeInfos[field.fieldType]);
+        this._recurFilterTypeInfo(tempTypeInfos, this._typeInfos[field.fieldType]);
       }
     }
   }
@@ -183,7 +184,7 @@ class ApiClientCLI {
    * @returns {Promise<void>}
    * @private
    */
-  private async _filterUselessNamespaces() {
+  private _filterUselessNamespaces() {
     let tempNamespaceSet: Set<string> = new Set();
     for (let typeName in this._typeInfos) {
       let typeInfo = this._typeInfos[typeName];
@@ -197,7 +198,7 @@ class ApiClientCLI {
    * @returns {Promise<void>}
    * @private
    */
-  private async _filterUselessService() {
+  private _filterUselessService() {
     let tempServiceMap: ProtoMsgImportInfos = {};
     for (let serviceName in this._serviceInfos) {
       let service = this._serviceInfos[serviceName];
@@ -206,6 +207,19 @@ class ApiClientCLI {
       }
     }
     this._selfServiceInfos = tempServiceMap;
+  }
+
+  private _registerHelpers() {
+    TplEngine.registerHelper('lcfirst', lcfirst);
+
+    TplEngine.registerHelper('setVar', (varName: string, varValue: string, options): void => {
+      options.data.root[varName] = varValue;
+      return;
+    });
+
+    TplEngine.registerHelper('uppercaseAndReplaceUnderline', (v: string): string => {
+      return v.replace(/(^.)|(?:_(.))/g, (v1, v2, v3) => (v2 || v3).toUpperCase());
+    });
   }
 
   private async _genApiClient() {
@@ -219,6 +233,7 @@ class ApiClientCLI {
       namespaceList: this._namespaceList,
       selfServiceInfos: this._selfServiceInfos,
     };
+    this._registerHelpers();
     let tsContent: string = TplEngine.render('client/tsApiClient', context);
     await LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.ts'), tsContent);
     let jsContent: string = TplEngine.render('client/jsApiClient', context);

@@ -56,9 +56,9 @@ class ApiClientCLI {
             yield this._validate();
             yield this._loadProtos();
             yield this._genInfos();
-            yield this._filterUselessTypeInfos();
-            yield this._filterUselessNamespaces();
-            yield this._filterUselessService();
+            this._filterUselessTypeInfos();
+            this._filterUselessNamespaces();
+            this._filterUselessService();
             yield this._genApiClient();
         });
     }
@@ -131,17 +131,15 @@ class ApiClientCLI {
      * @private
      */
     _genReqOrResTypeList() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const reqOrResTypeList = [];
-            for (let serviceInfoName in this._serviceInfos) {
-                const serviceInfo = this._serviceInfos[serviceInfoName];
-                for (let method of serviceInfo.methods) {
-                    reqOrResTypeList.push(method.requestType);
-                    reqOrResTypeList.push(method.responseType);
-                }
+        const reqOrResTypeList = [];
+        for (let serviceInfoName in this._serviceInfos) {
+            const serviceInfo = this._serviceInfos[serviceInfoName];
+            for (let method of serviceInfo.methods) {
+                reqOrResTypeList.push(method.requestType);
+                reqOrResTypeList.push(method.responseType);
             }
-            return reqOrResTypeList;
-        });
+        }
+        return reqOrResTypeList;
     }
     /**
      * 过滤不必要的类型
@@ -149,18 +147,16 @@ class ApiClientCLI {
      * @private
      */
     _filterUselessTypeInfos() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let tempTypeInfos = {};
-            let reqOrResTypeList = yield this._genReqOrResTypeList();
-            for (let typeName in this._typeInfos) {
-                const typeInfo = this._typeInfos[typeName];
-                if (this._selfNamespaceList.indexOf(typeInfo.namespace) !== -1 && reqOrResTypeList.indexOf(typeName) !== -1) {
-                    tempTypeInfos[typeName] = typeInfo;
-                    yield this._recurFilterTypeInfo(tempTypeInfos, typeInfo);
-                }
+        let tempTypeInfos = {};
+        let reqOrResTypeList = this._genReqOrResTypeList();
+        for (let typeName in this._typeInfos) {
+            const typeInfo = this._typeInfos[typeName];
+            if (this._selfNamespaceList.indexOf(typeInfo.namespace) !== -1 && reqOrResTypeList.indexOf(typeName) !== -1) {
+                tempTypeInfos[typeName] = typeInfo;
+                this._recurFilterTypeInfo(tempTypeInfos, typeInfo);
             }
-            this._typeInfos = tempTypeInfos;
-        });
+        }
+        this._typeInfos = tempTypeInfos;
     }
     /**
      * 递归过滤不必要的类型
@@ -170,14 +166,12 @@ class ApiClientCLI {
      * @private
      */
     _recurFilterTypeInfo(tempTypeInfos, typeInfo) {
-        return __awaiter(this, void 0, void 0, function* () {
-            for (let field of typeInfo.fields) {
-                if (!this._protoTsTypeMap[field.fieldType] && !/^(google\.)|(bytes)/.test(field.fieldType)) {
-                    tempTypeInfos[field.fieldType] = this._typeInfos[field.fieldType];
-                    yield this._recurFilterTypeInfo(tempTypeInfos, this._typeInfos[field.fieldType]);
-                }
+        for (let field of typeInfo.fields) {
+            if (!this._protoTsTypeMap[field.fieldType] && !/^(google\.)|(bytes)/.test(field.fieldType)) {
+                tempTypeInfos[field.fieldType] = this._typeInfos[field.fieldType];
+                this._recurFilterTypeInfo(tempTypeInfos, this._typeInfos[field.fieldType]);
             }
-        });
+        }
     }
     /**
      * 过滤不必要的 namespace
@@ -185,14 +179,12 @@ class ApiClientCLI {
      * @private
      */
     _filterUselessNamespaces() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let tempNamespaceSet = new Set();
-            for (let typeName in this._typeInfos) {
-                let typeInfo = this._typeInfos[typeName];
-                tempNamespaceSet.add(typeInfo.namespace);
-            }
-            this._namespaceList = [...tempNamespaceSet];
-        });
+        let tempNamespaceSet = new Set();
+        for (let typeName in this._typeInfos) {
+            let typeInfo = this._typeInfos[typeName];
+            tempNamespaceSet.add(typeInfo.namespace);
+        }
+        this._namespaceList = [...tempNamespaceSet];
     }
     /**
      * 过滤不必要的 service
@@ -200,15 +192,23 @@ class ApiClientCLI {
      * @private
      */
     _filterUselessService() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let tempServiceMap = {};
-            for (let serviceName in this._serviceInfos) {
-                let service = this._serviceInfos[serviceName];
-                if (this._selfNamespaceList.indexOf(service.namespace) !== -1) {
-                    tempServiceMap[serviceName] = service;
-                }
+        let tempServiceMap = {};
+        for (let serviceName in this._serviceInfos) {
+            let service = this._serviceInfos[serviceName];
+            if (this._selfNamespaceList.indexOf(service.namespace) !== -1) {
+                tempServiceMap[serviceName] = service;
             }
-            this._selfServiceInfos = tempServiceMap;
+        }
+        this._selfServiceInfos = tempServiceMap;
+    }
+    _registerHelpers() {
+        template_1.TplEngine.registerHelper('lcfirst', lib_1.lcfirst);
+        template_1.TplEngine.registerHelper('setVar', (varName, varValue, options) => {
+            options.data.root[varName] = varValue;
+            return;
+        });
+        template_1.TplEngine.registerHelper('uppercaseAndReplaceUnderline', (v) => {
+            return v.replace(/(^.)|(?:_(.))/g, (v1, v2, v3) => (v2 || v3).toUpperCase());
         });
     }
     _genApiClient() {
@@ -223,6 +223,7 @@ class ApiClientCLI {
                 namespaceList: this._namespaceList,
                 selfServiceInfos: this._selfServiceInfos,
             };
+            this._registerHelpers();
             let tsContent = template_1.TplEngine.render('client/tsApiClient', context);
             yield LibFs.writeFile(LibPath.join(outputDir, 'ApiClient.ts'), tsContent);
             let jsContent = template_1.TplEngine.render('client/jsApiClient', context);

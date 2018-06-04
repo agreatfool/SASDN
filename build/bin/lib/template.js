@@ -7,16 +7,6 @@ const helpers = require("handlebars-helpers");
 helpers({ handlebars: handlebars });
 handlebars.registerHelper('curlyLeft', () => '{');
 handlebars.registerHelper('curlyRight', () => '}');
-handlebars.registerHelper('setVar', (varName, varValue, options) => {
-    options.data.root[varName] = varValue;
-    return;
-});
-handlebars.registerHelper('uppercaseAndReplaceUnderline', (v) => {
-    return v.replace(/(^.)|(?:_(.))/g, (v1, v2, v3) => (v2 || v3).toUpperCase());
-});
-handlebars.registerHelper('lowercaseFirst', (v) => {
-    return v.replace(/(^.)/, (v) => v.toLowerCase());
-});
 const TPL_BASE_PATH = LibPath.join(__dirname, '..', 'template');
 var TplEngine;
 (function (TplEngine) {
