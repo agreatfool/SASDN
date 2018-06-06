@@ -28,7 +28,7 @@ export abstract class GatewayApiBase {
 
   public register(): Array<string | KoaMiddleware> {
     return [this.uri, this._validate(), this._mock(), this._execute()];
-  };
+  }
 
   protected _validate(): KoaMiddleware {
     return async (ctx: GatewayContext, next: MiddlewareNext): Promise<void> => {
@@ -42,9 +42,10 @@ export abstract class GatewayApiBase {
         const validationDetail = error.details ? `: ${error.details[0].message}` : '';
         const errorObject = {
           code: 1001001,
-          message: 'Invalid Params' + validationDetail
+          message: 'Invalid Params' + validationDetail,
         };
         ctx.body = JSON.stringify(errorObject);
+        ctx.set('Content-Type', 'application/json; charset=utf-8');
       }
     };
   }
