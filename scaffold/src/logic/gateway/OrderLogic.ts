@@ -1,5 +1,5 @@
 import { GatewayContext, MiddlewareNext } from 'sasdn';
-import { Order, GetOrderRequest, } from '../../proto/order/order_pb';
+import { Order, GetOrderRequest } from '../../proto/order/order_pb';
 import MSOrderClient from '../../clients/order/MSOrderClient';
 import { GetDemoOrderRequest } from '../../proto/demo/demo_pb';
 

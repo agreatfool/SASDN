@@ -25,7 +25,7 @@
       }
     },
     "dev": {
-      "command": "npm run envdeploy && node build/build.js && node index.js",
+      "command": "source .env && npm run build && node index.js",
       "env": {
         "NODE_ENV": "development",
         "DEBUG": "SASDN:*"
@@ -41,13 +41,16 @@
   },
   "license": "MIT",
   "dependencies": {
+    "koa2-cors": "2.0.5",
+    "memcached": "2.2.2",
+    "mysql": "2.15.0",
     "better-npm-run": "0.1.0",
     "sasdn": "^1.6.2",
     "dotenv": "4.0.0",
     "mockjs": "1.0.1-beta3",
     "sasdn-zipkin": "^1.0.8",
     "sasdn-log": "^1.0.1",
-    "sasdn-database": "^1.0.8",
+    "sasdn-database": "^1.0.13",
     "protobufjs": "5.0.2"
   },
   "devDependencies": {

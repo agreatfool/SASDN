@@ -1,10 +1,16 @@
 import { DatabaseOptions } from 'sasdn-database';
 import { ContainerEnv } from '../constant/const';
+import * as LibPath from 'path';
 
 const dbOptions = require('../../dboptions.json');
 
 export namespace DatabaseOption {
+
   export function getOptions(): DatabaseOptions {
+    dbOptions.connectionList = dbOptions.connectionList.map((value) => {
+      value.entities = [LibPath.join(__dirname, '..', 'entities/*.js')];
+      return value;
+    });
     return {
       name: 'mysql',
       type: 'mysql',
@@ -14,5 +20,5 @@ export namespace DatabaseOption {
       shardingStrategies: dbOptions.shardingStrategies,
       connectionList: dbOptions.connectionList,
     };
-  };
+  }
 }

@@ -16,9 +16,6 @@ export interface FindOptions<T> {
   where?: DeepPartial<T>;
   whereIn?: { [P in keyof T]?: any[]; };
   whereLike?: { [P in keyof T]?: string; };
-  orWhere?: DeepPartial<T>;
-  orWhereIn?: { [P in keyof T]?: any[]; };
-  orWhereLike?: { [P in keyof T]?: string; };
   order?: { [P in keyof T]?: 'ASC' | 'DESC' | 1 | -1; };
   start?: number;
   limit?: number;
@@ -294,24 +291,6 @@ export class BaseModel<E extends BaseOrmEntity> {
         tempQuery = tempQuery.andWhere(`item.${w} LIKE :${w}`, { [w]: `%${(params as FindOptions<E>).whereLike[w]}%` });
       }
     }
-    if ((params as FindOptions<E>).orWhere) {
-      const whereOptions = Object.keys((params as FindOptions<E>).where);
-      for (const w of whereOptions) {
-        tempQuery = tempQuery.orWhere(`item.${w} = :${w}`, { [w]: (params as FindOptions<E>).where[w] });
-      }
-    }
-    if ((params as FindOptions<E>).orWhereIn) {
-      const whereInOptions = Object.keys((params as FindOptions<E>).whereIn);
-      for (const w of whereInOptions) {
-        tempQuery = tempQuery.orWhere(`item.${w} IN (:${w})`, { [w]: (params as FindOptions<E>).whereIn[w] });
-      }
-    }
-    if ((params as FindOptions<E>).orWhereLike) {
-      const whereLikeOptions = Object.keys((params as FindOptions<E>).whereLike);
-      for (const w of whereLikeOptions) {
-        tempQuery = tempQuery.orWhere(`item.${w} LIKE :${w}`, { [w]: `%${(params as FindOptions<E>).whereLike[w]}%` });
-      }
-    }
     if ((params as FindOptions<E>).order) {
       const orderKeys = Object.keys((params as FindOptions<E>).order);
       const options: { [key: string]: any } = {};
@@ -400,8 +379,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         return result;
       }
       if (!((params as FindOptions<E>).start || (params as FindOptions<E>).limit || (params as FindOptions<E>).whereIn
-          || (params as FindOptions<E>).whereLike || (params as FindOptions<E>).orWhere || (params as FindOptions<E>).orWhereIn
-          || (params as FindOptions<E>).orWhereLike)) {
+          || (params as FindOptions<E>).whereLike)) {
         const result = await Entity.find(params);
         return result;
       }
@@ -411,15 +389,6 @@ export class BaseModel<E extends BaseOrmEntity> {
           const value = (params as FindOptions<E>).whereIn[key];
           if (value.length === 0) {
             return [];
-          }
-        }
-      }
-      if ((params as FindOptions<E>).orWhereIn) {
-        const whereInKeys = Object.keys((params as FindOptions<E>).orWhereIn);
-        for (const key of whereInKeys) {
-          const value = (params as FindOptions<E>).orWhereIn[key];
-          if (value.length === 0) {
-            delete (params as FindOptions<E>).orWhereIn[key];
           }
         }
       }
@@ -438,8 +407,7 @@ export class BaseModel<E extends BaseOrmEntity> {
         return result;
       }
       if (!((params as FindOptions<E>).start || (params as FindOptions<E>).limit || (params as FindOptions<E>).whereIn
-          || (params as FindOptions<E>).whereLike || (params as FindOptions<E>).orWhere || (params as FindOptions<E>).orWhereIn
-          || (params as FindOptions<E>).orWhereLike)) {
+          || (params as FindOptions<E>).whereLike)) {
         const result = await Entity.findAndCount(params);
         return result;
       }
@@ -449,15 +417,6 @@ export class BaseModel<E extends BaseOrmEntity> {
           const value = (params as FindOptions<E>).whereIn[key];
           if (value.length === 0) {
             return [[], 0];
-          }
-        }
-      }
-      if ((params as FindOptions<E>).orWhereIn) {
-        const whereInKeys = Object.keys((params as FindOptions<E>).orWhereIn);
-        for (const key of whereInKeys) {
-          const value = (params as FindOptions<E>).orWhereIn[key];
-          if (value.length === 0) {
-            delete (params as FindOptions<E>).orWhereIn[key];
           }
         }
       }
@@ -476,10 +435,7 @@ export class BaseModel<E extends BaseOrmEntity> {
       typeof obj.start === 'number' ||
       typeof obj.limit === 'number' ||
       obj.whereIn instanceof Object ||
-      obj.whereLike instanceof Object ||
-      obj.orWhere instanceof Object ||
-      obj.orWhereIn instanceof Object ||
-      obj.orWhereLike instanceof Object;
+      obj.whereLike instanceof Object;
   }
 
   protected _getPrimaryKey(Entity: any): string {

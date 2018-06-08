@@ -4,20 +4,20 @@
       "connctionName": "demo_0",
       "entities": [
         "DemoEntity_0",
-        "DemoEntity_3",
+        "DemoEntity_3"
       ]
     },
     {
       "connctionName": "demo_1",
       "entities": [
         "DemoEntity_1",
-        "DemoEntity_4",
+        "DemoEntity_4"
       ]
     },
     {
       "connctionName": "demo_2",
       "entities": [
-        "DemoEntity_2",
+        "DemoEntity_2"
       ]
     }
   ],

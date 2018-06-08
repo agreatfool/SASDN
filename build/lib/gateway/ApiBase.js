@@ -13,7 +13,6 @@ class GatewayApiBase {
     register() {
         return [this.uri, this._validate(), this._mock(), this._execute()];
     }
-    ;
     _validate() {
         return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
             let aggregatedParams = this._parseParams(ctx);
@@ -26,9 +25,10 @@ class GatewayApiBase {
                 const validationDetail = error.details ? `: ${error.details[0].message}` : '';
                 const errorObject = {
                     code: 1001001,
-                    message: 'Invalid Params' + validationDetail
+                    message: 'Invalid Params' + validationDetail,
                 };
                 ctx.body = JSON.stringify(errorObject);
+                ctx.set('Content-Type', 'application/json; charset=utf-8');
             }
         });
     }
@@ -55,4 +55,3 @@ class GatewayApiBase {
     }
 }
 exports.GatewayApiBase = GatewayApiBase;
-//# sourceMappingURL=ApiBase.js.map

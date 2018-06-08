@@ -26,7 +26,7 @@ prompt.get([
     {
         name: 'name',
         required: true,
-        default: 'demo'
+        default: 'demo',
     },
     {
         name: 'version',
@@ -41,13 +41,13 @@ prompt.get([
                 }
             }
             return true;
-        }
+        },
     },
     {
         name: 'description',
         required: false,
-        default: ''
-    }
+        default: '',
+    },
 ], (err, input) => {
     ScaffoldCLI.instance().run(input).catch((err) => {
         console.log('err: ', err.message);
@@ -198,4 +198,3 @@ class ScaffoldCLI {
         return JSON.parse(LibFs.readFileSync(path).toString());
     }
 }
-//# sourceMappingURL=sasdn-scaffold.js.map

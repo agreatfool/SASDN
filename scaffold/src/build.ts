@@ -19,4 +19,4 @@ async function main(container: string = ContainerEnv.PM2): Promise<void> {
   process.exit(0);
 }
 
-main(process.env.CONTAINER).catch(_ => _);
+main(process.env.CONTAINER).catch(err => console.log(err));
