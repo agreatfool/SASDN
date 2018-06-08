@@ -4,12 +4,13 @@ import { KoaImpl, ZIPKIN_EVENT } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
 import { Config, ConfigConst } from '../lib/Config';
 import { LEVEL } from 'sasdn-log';
-import { Logger, TOPIC } from '../lib/Logger';
+import { Logger } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
 import { ContainerEnv } from '../constant/const';
 import { Memcached } from '../lib/Memcached';
 import * as LibPath from 'path';
-import { ModuleName } from '../constant/exception';
+import { MODULE_NAME } from '../constant/exception';
+import * as koaCors from 'koa2-cors';
 
 export default class GWDemo {
   private _initialized: boolean;
@@ -31,7 +32,7 @@ export default class GWDemo {
 
     await Logger.instance.initalize({
       loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
-      loggerLevel: LEVEL.INFO
+      loggerLevel: LEVEL.INFO,
     });
 
     await Memcached.instance.initalize();
@@ -40,7 +41,7 @@ export default class GWDemo {
 
     KoaImpl.init({
       transType: 'FILE',
-      filePath: LibPath.join(process.env.ZIPKIN_LOG_FILE_PATH, `${ModuleName}.log`),
+      filePath: LibPath.join(process.env.ZIPKIN_LOG_FILE_PATH, `${MODULE_NAME}.log`),
       serviceName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
       port: Config.instance.getPort(ConfigConst.CONNECT_GATEWAY),
     });
@@ -48,6 +49,24 @@ export default class GWDemo {
     const ZipkinImpl = new KoaImpl();
     const app = new Koa();
     app.use(ZipkinImpl.createMiddleware());
+    app.use(koaCors({
+      origin(ctx) {
+        let origin = '*';
+        const allowDomain = Config.instance.getConfig(ConfigConst.ALLOW_DOMAIN).split(',');
+        for (const i in allowDomain) {
+          if (ctx.header.origin && (ctx.header.origin.indexOf(allowDomain[i]) > -1)) {
+            origin = ctx.header.origin;
+            break;
+          }
+        }
+        return origin;
+      },
+      exposeHeaders: ['WWW-Authenticate', 'Server-Authorization'],
+      maxAge: 86400,
+      credentials: true,
+      allowMethods: ['GET', 'POST', 'DELETE'],
+      allowHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    }));
     app.use(koaBodyParser({ formLimit: '2048kb' })); // post body parser
     app.use(RouterLoader.instance().getRouter().routes());
     app.use(async (ctx, next) => {

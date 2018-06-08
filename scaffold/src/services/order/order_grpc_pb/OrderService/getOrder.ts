@@ -1,6 +1,6 @@
-import { ServerUnaryCall, sendUnaryData as GrpcSendUnaryData } from 'grpc';
-import { RpcContext, RpcMiddleware, MiddlewareNext } from 'sasdn';
-import { GetOrderRequest, Order, } from '../../../../proto/order/order_pb';
+import { sendUnaryData as GrpcSendUnaryData, ServerUnaryCall } from 'grpc';
+import { MiddlewareNext, RpcContext, RpcMiddleware } from 'sasdn';
+import { GetOrderRequest, Order } from '../../../../proto/order/order_pb';
 import { OrderLogic } from '../../../../logic/order/OrderLogic';
 
 export const getOrderHandler: RpcMiddleware = async (ctx: RpcContext, next: MiddlewareNext) => {
@@ -11,7 +11,7 @@ export const getOrderHandler: RpcMiddleware = async (ctx: RpcContext, next: Midd
   try {
     const order = await OrderLogic.getOrder(request);
     callback(null, order);
-  } catch(error) {
+  } catch (error) {
     callback(error, null);
   }
 

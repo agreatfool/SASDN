@@ -32,7 +32,7 @@ prompt.get([
   {
     name: 'name',
     required: true,
-    default: 'demo'
+    default: 'demo',
   },
   {
     name: 'version',
@@ -47,13 +47,13 @@ prompt.get([
         }
       }
       return true;
-    }
+    },
   },
   {
     name: 'description',
     required: false,
-    default: ''
-  }
+    default: '',
+  },
 ], (err, input: PromptInput) => {
   ScaffoldCLI.instance().run(input).catch((err: Error) => {
     console.log('err: ', err.message);
@@ -195,19 +195,19 @@ class ScaffoldCLI {
 
         await LibFs.writeFile(spmConfigPath, Buffer.from(JSON.stringify(spmConfig, null, 2)));
 
-        for(const path of gwRemoveList) {
+        for (const path of gwRemoveList) {
           await LibFsExtra.remove(path);
         }
 
-        for(const renamePath of gwRenameList) {
+        for (const renamePath of gwRenameList) {
           await LibFsExtra.rename.apply(this, renamePath);
         }
       } else if (GATEWAY) {
-        for(const path of msRemoveList) {
+        for (const path of msRemoveList) {
           await LibFsExtra.remove(path);
         }
 
-        for(const renamePath of msRenameList) {
+        for (const renamePath of msRenameList) {
           await LibFsExtra.rename.apply(this, renamePath);
         }
       }

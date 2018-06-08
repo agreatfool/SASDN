@@ -1,13 +1,8 @@
 import { sendUnaryData as GrpcSendUnaryData } from 'grpc';
-import { RpcApplication, WrappedHandler, GrpcServerCall } from 'sasdn';
+import { GrpcServerCall, RpcApplication, WrappedHandler } from 'sasdn';
 
-import {
-  OrderServiceService,
-} from '../proto/order/order_grpc_pb';
-import {
-  GetOrderRequest,
-  Order,
-} from '../proto/order/order_pb';
+import { OrderServiceService } from '../proto/order/order_grpc_pb';
+import { GetOrderRequest, Order } from '../proto/order/order_pb';
 
 import { getOrderHandler } from './order/order_grpc_pb/OrderService/getOrder';
 

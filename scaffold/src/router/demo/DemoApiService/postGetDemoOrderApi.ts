@@ -1,8 +1,8 @@
 import * as Mock from 'mockjs';
 import { GatewayApiBase, GatewayContext, joi as LibJoi, MiddlewareNext } from 'sasdn';
 import { ProtobufJoiValidation as PbJoi } from '../../../lib/ProtobufJoiValidation';
-import { Order, } from '../../../proto/order/order_pb';
-import { GetDemoOrderRequest, } from '../../../proto/demo/demo_pb';
+import { Order } from '../../../proto/order/order_pb';
+import { GetDemoOrderRequest } from '../../../proto/demo/demo_pb';
 import { OrderLogic } from '../../../logic/gateway/OrderLogic';
 
 interface RequestParams {
@@ -17,11 +17,11 @@ class PostGetDemoOrderApi extends GatewayApiBase {
     this.type = 'application/json; charset=utf-8';
     this.schemaDefObj = {
       body: LibJoi.object().keys({
-        paramInt64: PbJoi.vInt64.activate().required().valid(200,300,400),
+        paramInt64: PbJoi.vInt64.activate().required().valid(200, 300, 400),
         paramInt32: PbJoi.vInt32.activate().required().greater(3000).less(6000),
-        paramBool: PbJoi.vBool.activate().optional().truthy('1',1,'true').falsy('0',0,'false'),
+        paramBool: PbJoi.vBool.activate().optional().truthy('1', 1, 'true').falsy('0', 0, 'false'),
         paramString: PbJoi.vString.activate().optional().default('string').max(50).min(5),
-      })
+      }),
     };
   }
 

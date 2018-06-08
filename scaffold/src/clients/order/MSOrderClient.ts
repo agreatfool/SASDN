@@ -3,7 +3,7 @@ import { GatewayContext, RpcContext } from 'sasdn';
 import { GrpcImpl } from 'sasdn-zipkin';
 import { Config, ConfigConst } from '../../lib/Config';
 import { OrderServiceClient } from '../../proto/order/order_grpc_pb';
-import { GetOrderRequest, Order, } from '../../proto/order/order_pb';
+import { GetOrderRequest, Order } from '../../proto/order/order_pb';
 
 export default class MSOrderClient {
   public client: OrderServiceClient;
@@ -18,9 +18,9 @@ export default class MSOrderClient {
     this.client = new GrpcImpl().createClient(
       new OrderServiceClient(
         Config.instance.getAddress(ConfigConst.CONNECT_ORDER),
-        grpc.credentials.createInsecure()
+        grpc.credentials.createInsecure(),
       ),
-      ctx
+      ctx,
     );
   }
 

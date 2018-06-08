@@ -3,7 +3,7 @@ import MSKafkaqueueClient from '../clients/kafkaqueue/MSKafkaqueueClient';
 import { KafkaOptions, LEVEL, Logger as SasdnLogger, LogOptions } from 'sasdn-log';
 import * as LibPath from 'path';
 import * as LibWinston from 'winston';
-import { ModuleName } from '../constant/exception';
+import { MODULE_NAME } from '../constant/exception';
 
 const debug = require('debug')('SASDN:Gateway');
 
@@ -40,7 +40,7 @@ class WinstonLogger extends SasdnLogger {
   private _winstonLogger;
   constructor(options: LogOptions) {
     super(options);
-    const filename = LibPath.join(process.env.LOG_FILE_PATH, `${ModuleName}.log`);
+    const filename = LibPath.join(process.env.LOG_FILE_PATH, `${MODULE_NAME}.log`);
     this._winstonLogger = new LibWinston.Logger({
       transports: [
         new LibWinston.transports.File({ filename }),
@@ -50,7 +50,7 @@ class WinstonLogger extends SasdnLogger {
   async sendMessage(message: string, level: LEVEL, options?: LogOptions): Promise<boolean> {
     if (process.env.NODE_ENV !== 'development') {
       if (!this._winstonLogger) {
-        const filename = LibPath.join(process.env.LOG_FILE_PATH, `${ModuleName}.log`);
+        const filename = LibPath.join(process.env.LOG_FILE_PATH, `${MODULE_NAME}.log`);
         this._winstonLogger = new LibWinston.Logger({
           transports: [
             new LibWinston.transports.File({ filename }),

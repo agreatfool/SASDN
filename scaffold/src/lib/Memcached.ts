@@ -32,7 +32,7 @@ export class Memcached {
     this._memcachedUrls = memcachedUrlsStr.split(',');
 
     const MEMCACHED_POOL_COUNT = parseInt(process.env.MEMCACHED_POOL_COUNT) || 30;
-    for (let i=0;i<MEMCACHED_POOL_COUNT;i++) {
+    for (let i = 0;i < MEMCACHED_POOL_COUNT;i++) {
       this._connections.push(this._createConnection());
     }
   }
@@ -145,7 +145,7 @@ export class Memcached {
           reject(err);
         }
         resolve({ err, result });
-      });1
+      });1;
     });
   }
 

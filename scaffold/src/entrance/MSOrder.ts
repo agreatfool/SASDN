@@ -4,13 +4,13 @@ import { DatabaseFactory, DatabaseOptions } from 'sasdn-database';
 import { Config, ConfigConst } from '../lib/Config';
 import { registerServices } from '../services/Register';
 import { LEVEL } from 'sasdn-log';
-import { Logger, TOPIC } from '../lib/Logger';
+import { Logger } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
 import { DatabaseOption } from '../model/DatabaseOptions';
 import { ContainerEnv } from '../constant/const';
 import { Memcached } from '../lib/Memcached';
 import * as LibPath from 'path';
-import { ModuleName } from '../constant/exception';
+import { MODULE_NAME } from '../constant/exception';
 
 export default class MSOrder {
   private _initialized: boolean;
@@ -30,7 +30,7 @@ export default class MSOrder {
 
     await Config.instance.initalize();
     await Logger.instance.initalize({
-      loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
+      loggerName: Config.instance.getConfig(ConfigConst.CONNECT_ORDER),
       loggerLevel: LEVEL.INFO,
     });
 
@@ -38,7 +38,7 @@ export default class MSOrder {
 
     GrpcImpl.init({
       transType: 'FILE',
-      filePath: LibPath.join(process.env.ZIPKIN_LOG_FILE_PATH, `${ModuleName}.log`),
+      filePath: LibPath.join(process.env.ZIPKIN_LOG_FILE_PATH, `${MODULE_NAME}.log`),
       serviceName: Config.instance.getConfig(ConfigConst.CONNECT_ORDER),
       port: Config.instance.getPort(ConfigConst.CONNECT_ORDER),
     });
