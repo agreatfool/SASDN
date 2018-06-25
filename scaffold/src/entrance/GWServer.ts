@@ -107,7 +107,7 @@ export default class GWServer {
     const host: string = '0.0.0.0';
     const port: number = Config.instance.getPort(ConfigConst.CONNECT_GATEWAY);
     this.app.listen(port, host, () => {
-      Logger.instance.info(`Web App Start, Address: ${host}:${port}!`);
+      Logger.instance.info(`Web Backend Start, Address: ${host}:${port}!`);
     });
   }
 }

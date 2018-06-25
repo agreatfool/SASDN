@@ -22,7 +22,7 @@ const pkg = require('../../package.json');
 program.version(pkg.version)
   .option('-g, --gateway', 'scaffold create gateway code')
   .option('-m, --microservice', 'scaffold create microservice code')
-  .option('-w, --web', 'scaffold create web app code')
+  .option('-w, --web', 'scaffold create web backend code')
   .parse(process.argv);
 
 const GATEWAY = (program as any).gateway !== undefined;

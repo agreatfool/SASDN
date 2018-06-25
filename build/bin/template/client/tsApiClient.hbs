@@ -13,7 +13,7 @@ export interface ReqOptions {
 }
 {{#each @root.namespaceList}}
 
-export namespace {{capitalize this}} { {{setVar 'namespace' this}}
+export namespace {{uppercaseAndReplaceUnderline this}} { {{setVar 'namespace' this}}
   {{#each @root.typeInfos}}
   {{#eq this.namespace @root.namespace}}
 
@@ -57,10 +57,10 @@ namespace ApiClient {
 {{#each @root.selfServiceInfos}}
 {{#each this.methods}}
 
-  export async function {{lcfirst this.methodName}}(body: {{capitalize this.requestType}}, request: ReqFunc, options?: ReqOptions): Promise<{{capitalize this.responseType}}> {
+  export async function {{lcfirst this.methodName}}(body: {{uppercaseAndReplaceUnderline this.requestType}}, request: ReqFunc, options?: ReqOptions): Promise<{{uppercaseAndReplaceUnderline this.responseType}}> {
     const path = '{{this.googleHttpOption.router}}';
     const requestOptions: ReqOptions = Object.assign({}, defaultOptions, options, { body: JSON.stringify(body) });
-    return await request(path, requestOptions) as {{capitalize this.responseType}};
+    return await request(path, requestOptions) as {{uppercaseAndReplaceUnderline this.responseType}};
   }
 {{/each}}
 {{/each}}
