@@ -5,7 +5,7 @@ import { DeepPartial } from 'typeorm/browser/common/DeepPartial';
 
 export class DemoEntityModel extends BaseModel<DemoEntity> {
 
-  constructor(ctx: RpcContext | GatewayContext, shardKey?: string) {
+  constructor(ctx: RpcContext | GatewayContext, shardKey?: string | number) {
     super(DemoEntity.name, ctx, shardKey);
   }
 }

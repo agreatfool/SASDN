@@ -1,0 +1,86 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "demo/demo.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/getDemoOrder": {
+      "post": {
+        "summary": "*\n{\n\"Desc\": \"This is GetDemoOrderApi Description\"\n}",
+        "operationId": "GetDemoOrderApi",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/demoGetDemoOrderResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/demoGetDemoOrderRequest"
+            }
+          }
+        ],
+        "tags": [
+          "DemoApiService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "demoGetDemoOrderRequest": {
+      "type": "object",
+      "properties": {
+        "param_int64": {
+          "type": "string",
+          "format": "int64",
+          "title": "*\n{\n\"Desc\": \"This is param_int64 Description\",\n\"Joi\": {\n\"required\": true,\n\"valid\": [ 200, 300, 400 ]\n}\n}"
+        },
+        "param_int32": {
+          "type": "integer",
+          "format": "int32",
+          "title": "*\n{\n\"Desc\": \"This is param_int32 Description\",\n\"Joi\": {\n\"required\": true,\n\"greater\": 3000,\n\"less\": 6000\n}\n}"
+        },
+        "param_bool": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "*\n{\n\"Desc\": \"This is param_bool Description\",\n\"Joi\": {\n\"required\": false,\n\"defaultValue\": false,\n\"truthy\": [ \"1\", 1, \"true\" ],\n\"falsy\": [ \"0\", 0, \"false\" ]\n}\n}"
+        },
+        "param_string": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"This is param_string Description\",\n\"Joi\": {\n\"required\": false,\n\"defaultValue\": \"string\",\n\"max\": 50,\n\"min\": 5\n}\n}"
+        }
+      }
+    },
+    "demoGetDemoOrderResponse": {
+      "type": "object",
+      "properties": {
+        "order_id": {
+          "type": "integer",
+          "format": "int32",
+          "title": "*\n{\n\"Desc\": \"This is order_id Description\"\n}"
+        },
+        "order_content": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"This is order_content Description\"\n}"
+        }
+      }
+    }
+  }
+}

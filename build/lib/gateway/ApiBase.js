@@ -35,7 +35,7 @@ class GatewayApiBase {
     _mock() {
         return (ctx, next) => __awaiter(this, void 0, void 0, function* () {
             let aggregatedParams = this._parseParams(ctx);
-            if (process.env.NODE_ENV == 'development' && aggregatedParams.hasOwnProperty('mock') && aggregatedParams['mock'] == 1) {
+            if (process.env.NODE_ENV === 'development' && aggregatedParams.hasOwnProperty('mock') && aggregatedParams['mock'] === 1) {
                 ctx.body = yield this.handleMock(ctx, next, aggregatedParams);
             }
             else {

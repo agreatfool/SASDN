@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+
+package demo;
+
+message GetDemoOrderRequest {
+  /**
+   {
+      "Desc": "This is param_int64 Description",
+      "Joi": {
+          "required": true,
+          "valid": [ 200, 300, 400 ]
+      }
+   }
+   */
+  int64 param_int64 = 1;
+  /**
+   {
+      "Desc": "This is param_int32 Description",
+      "Joi": {
+          "required": true,
+          "greater": 3000,
+          "less": 6000
+      }
+   }
+   */
+  int32 param_int32 = 2;
+  /**
+   {
+      "Desc": "This is param_bool Description",
+      "Joi": {
+          "required": false,
+          "defaultValue": false,
+          "truthy": [ "1", 1, "true" ],
+          "falsy": [ "0", 0, "false" ]
+      }
+   }
+   */
+  bool param_bool = 3;
+  /**
+       {
+          "Desc": "This is param_string Description",
+          "Joi": {
+              "required": false,
+              "defaultValue": "string",
+              "max": 50,
+              "min": 5
+          }
+       }
+   */
+  string param_string = 4;
+}
+
+message GetDemoOrderResponse {
+  /**
+     {
+       "Desc": "This is order_id Description"
+     }
+   */
+  int32 order_id = 1;
+  /**
+     {
+       "Desc": "This is order_content Description"
+     }
+   */
+  string order_content = 2;
+}
+
+// gPRC-Gateway Demo
+service DemoApiService {
+  /**
+     {
+        "Desc": "This is GetDemoOrderApi Description"
+     }
+   */
+  rpc GetDemoOrderApi (GetDemoOrderRequest) returns (GetDemoOrderResponse) {
+    option (google.api.http) = {
+            post: "/v1/getDemoOrder"
+            body: "*"
+        };
+  }
+}

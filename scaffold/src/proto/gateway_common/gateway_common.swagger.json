@@ -1,0 +1,278 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "gateway_common/gateway_common.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/common": {
+      "post": {
+        "summary": "*\n{\n\"Desc\": \"强制踢人下线\"\n}",
+        "operationId": "KickOffUser",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/gateway_commonUserKickOffRes"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gateway_commonUserKickOffReq"
+            }
+          }
+        ],
+        "tags": [
+          "CommonApiService"
+        ]
+      }
+    },
+    "/v1/common/getUploadingUrl": {
+      "post": {
+        "summary": "*\n{\n\"Desc\": \"获取上传文件 url\"\n}",
+        "operationId": "GetUploadingUrl",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/gateway_commonUploadingUrlGetRes"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gateway_commonUploadingUrlGetReq"
+            }
+          }
+        ],
+        "tags": [
+          "CommonApiService"
+        ]
+      }
+    },
+    "/v1/common/login": {
+      "post": {
+        "summary": "*\n{\n\"Desc\": \"后台用户登录\"\n}",
+        "operationId": "Login",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/gateway_commonLoginRes"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gateway_commonLoginReq"
+            }
+          }
+        ],
+        "tags": [
+          "CommonApiService"
+        ]
+      }
+    },
+    "/v1/common/logout": {
+      "post": {
+        "summary": "*\n{\n\"Desc\": \"后台用户登出\"\n}",
+        "operationId": "Logout",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/gateway_commonLogoutRes"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/gateway_commonLogoutReq"
+            }
+          }
+        ],
+        "tags": [
+          "CommonApiService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "gateway_commonLoginData": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "format": "uint64",
+          "title": "*\n{\n\"Desc\": \"用户id\"\n}"
+        },
+        "user_name": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"用户账号\"\n}"
+        },
+        "permission_alias_name_list": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"权限别名列表（json格式字符串，如['advManage', 'newsManage', 'guestBookManage', 'jobManage']）。权限：1.轮播管理: advManage，2.新闻管理: newsManage，3.留言管理: guestBookManage，4.招聘管理: jobManage\"\n}"
+        },
+        "display_name": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"用户名称\"\n}"
+        },
+        "jwt": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"Json Web Token\"\n}"
+        }
+      }
+    },
+    "gateway_commonLoginReq": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "integer",
+          "format": "int64",
+          "title": "*\n{\n\"Desc\": \"时间戳（10 位，精确到秒）\",\n\"Joi\": {\n\"required\": true,\n\"min\": 1000000000\n}\n}"
+        },
+        "user_name": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"用户帐号\",\n\"Joi\": {\n\"required\": true,\n\"regex\": \"/^(.){0,32}$/\"\n}\n}"
+        },
+        "password": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"用户密码\",\n\"Joi\": {\n\"required\": true\n}\n}"
+        }
+      }
+    },
+    "gateway_commonLoginRes": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/gateway_commonLoginData"
+        }
+      }
+    },
+    "gateway_commonLogoutReq": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "integer",
+          "format": "int64",
+          "title": "*\n{\n\"Desc\": \"时间戳（10 位，精确到秒）\",\n\"Joi\": {\n\"required\": true,\n\"min\": 1000000000\n}\n}"
+        }
+      }
+    },
+    "gateway_commonLogoutRes": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "gateway_commonUploadingUrl": {
+      "type": "object",
+      "properties": {
+        "uploading_url": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"上传的url\"\n}"
+        }
+      }
+    },
+    "gateway_commonUploadingUrlGetReq": {
+      "type": "object",
+      "properties": {
+        "timestamp": {
+          "type": "integer",
+          "format": "int64",
+          "title": "*\n{\n\"Desc\": \"时间戳（10 位，精确到秒）\",\n\"Joi\": {\n\"required\": true,\n\"min\": 1000000000\n}\n}"
+        },
+        "file_name": {
+          "type": "string",
+          "title": "*\n{\n\"Desc\": \"文件名\",\n\"Joi\": {\n\"required\": true\n}\n}"
+        }
+      }
+    },
+    "gateway_commonUploadingUrlGetRes": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        },
+        "data": {
+          "$ref": "#/definitions/gateway_commonUploadingUrl"
+        }
+      }
+    },
+    "gateway_commonUserKickOffReq": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uint64"
+          },
+          "title": "*\n{\n\"Desc\": \"用户id列表\",\n\"Joi\": {\n\"required\": false\n}\n}"
+        },
+        "type": {
+          "type": "integer",
+          "format": "int64",
+          "title": "*\n{\n\"Desc\": \"登出类型\",\n\"Joi\": {\n\"required\": true\n}\n}"
+        }
+      }
+    },
+    "gateway_commonUserKickOffRes": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
