@@ -1,0 +1,206 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+package web_common;
+
+message LoginReq {
+  /**
+     {
+       "Desc": "时间戳（10 位，精确到秒）",
+       "Joi": {
+         "required": true,
+         "min": 1000000000
+       }
+     }
+   */
+  uint32 timestamp = 1;
+  /**
+     {
+       "Desc": "用户帐号",
+       "Joi": {
+         "required": true,
+         "regex": "/^(.){0,32}$/"
+       }
+     }
+   */
+  string user_name = 2;
+  /**
+     {
+       "Desc": "用户密码",
+       "Joi": {
+         "required": true
+       }
+     }
+   */
+  string password = 3;
+}
+
+message LoginRes {
+  int32 code = 1;
+  string message = 2;
+  LoginData data = 3;
+}
+
+message LoginData {
+  /**
+		{
+			"Desc": "用户id"
+		}
+	*/
+  uint64 user_id = 1;
+  /**
+		{
+			"Desc": "用户账号"
+		}
+	*/
+  string user_name = 2;
+  /**
+		{
+			"Desc": "权限别名列表（json格式字符串，如['advManage', 'newsManage', 'guestBookManage', 'jobManage']）。权限：1.轮播管理: advManage，2.新闻管理: newsManage，3.留言管理: guestBookManage，4.招聘管理: jobManage"
+		}
+	*/
+  string permission_alias_name_list = 3;
+  /**
+		{
+			"Desc": "用户名称"
+		}
+	*/
+  string display_name = 4;
+  /**
+		{
+			"Desc": "Json Web Token"
+		}
+	*/
+  string jwt = 5;
+}
+
+message LogoutReq {
+  /**
+     {
+       "Desc": "时间戳（10 位，精确到秒）",
+       "Joi": {
+         "required": true,
+         "min": 1000000000
+       }
+     }
+   */
+  uint32 timestamp = 1;
+}
+
+message LogoutRes {
+  int32 code = 1;
+  string message = 2;
+}
+
+message UploadingUrlGetReq {
+  /**
+     {
+       "Desc": "时间戳（10 位，精确到秒）",
+       "Joi": {
+         "required": true,
+         "min": 1000000000
+       }
+     }
+   */
+  uint32 timestamp = 1;
+  /**
+     {
+       "Desc": "文件名",
+       "Joi": {
+         "required": true
+       }
+     }
+   */
+  string file_name = 2;
+}
+
+message UploadingUrlGetRes {
+  uint32 code = 1;
+  string message = 2;
+  UploadingUrl data = 3;
+}
+
+message UploadingUrl {
+  /**
+     {
+       "Desc": "上传的url"
+     }
+   */
+  string uploading_url = 1;
+}
+
+message UserKickOffReq {
+  /**
+     {
+       "Desc": "用户id列表",
+       "Joi": {
+         "required": false
+       }
+     }
+   */
+  repeated uint64 user_id = 1;
+  /**
+     {
+       "Desc": "登出类型",
+       "Joi": {
+         "required": true
+       }
+     }
+   */
+  uint32 type = 2;
+}
+
+message UserKickOffRes {
+  uint32 code = 1;
+  string message = 2;
+}
+
+service CommonApiService {
+  /**
+     {
+       "Desc": "后台用户登录"
+     }
+   */
+  rpc Login (LoginReq) returns (LoginRes) {
+    option (google.api.http) = {
+      post: "/v1/common/login"
+      body: "*"
+    };
+  }
+
+  /**
+     {
+       "Desc": "后台用户登出"
+     }
+   */
+  rpc Logout (LogoutReq) returns (LogoutRes) {
+    option (google.api.http) = {
+      post: "/v1/common/logout"
+      body: "*"
+    };
+  }
+
+  /**
+     {
+       "Desc": "获取上传文件 url"
+     }
+   */
+  rpc GetUploadingUrl (UploadingUrlGetReq) returns (UploadingUrlGetRes) {
+    option (google.api.http) = {
+      post: "/v1/common/getUploadingUrl"
+      body: "*"
+    };
+  }
+
+  /**
+     {
+       "Desc": "强制踢人下线"
+     }
+   */
+  rpc KickOffUser (UserKickOffReq) returns (UserKickOffRes) {
+    option (google.api.http) = {
+      post: "/common"
+      body: "*"
+    };
+  }
+}

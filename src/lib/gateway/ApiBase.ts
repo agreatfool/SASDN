@@ -53,7 +53,7 @@ export abstract class GatewayApiBase {
   protected _mock(): KoaMiddleware {
     return async (ctx: GatewayContext, next: MiddlewareNext): Promise<void> => {
       let aggregatedParams = this._parseParams(ctx);
-      if (process.env.NODE_ENV == 'development' && aggregatedParams.hasOwnProperty('mock') && aggregatedParams['mock'] == 1) {
+      if (process.env.NODE_ENV === 'development' && aggregatedParams.hasOwnProperty('mock') && aggregatedParams['mock'] === 1) {
         ctx.body = await this.handleMock(ctx, next, aggregatedParams);
       } else {
         await next();

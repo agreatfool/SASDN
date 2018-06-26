@@ -1,11 +1,9 @@
 import * as Router from 'koa-router';
 import {GatewayApiBase} from 'sasdn';
+import * as glob from 'glob';
+import * as LibPath from 'path';
 
-const API_PATHS = [
-  {{#each infos}}
-  '../router/{{this.packageName}}/{{this.serviceName}}/{{this.fileName}}',
-  {{/each}}
-];
+const API_PATHS = glob.sync(LibPath.join(__dirname, '*', '*', '*.js'));
 
 export default class RouteLoader {
   private static _instance: RouteLoader;

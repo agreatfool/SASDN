@@ -1,0 +1,15 @@
+{
+  "unlessOptions": {
+    "path": [
+      "/v1/getDemoOrder",
+      "/v1/common/login",
+      "/v1/common/getUploadingUrl",
+      "/common"
+    ]
+  },
+  "permissionPathMap": {
+  },
+  "needCheckSignPathList": [
+    "/common"
+  ]
+}

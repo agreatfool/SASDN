@@ -1,0 +1,103 @@
+{
+  "name": "Demo",
+  "version": "0.0.1",
+  "description": "This is web app demo",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "apitest": "jest --collectCoverage false --testRegex /src/router/RouterAPITest.ts",
+    "deploy": "better-npm-run deploy",
+    "envdeploy": "better-npm-run envdeploy",
+    "build": "better-npm-run build",
+    "dev": "better-npm-run dev"
+  },
+  "betterScripts": {
+    "deploy": {
+      "command": "gulp clean && gulp typescript && gulp protoc-copy",
+      "env": {
+        "DEBUG": "SASDN:*"
+      }
+    },
+    "envdeploy": {
+      "command": "gulp clean && gulp typescript && gulp protoc-copy",
+      "env": {
+        "DEBUG": "SASDN:*"
+      }
+    },
+    "dev": {
+      "command": "source ./env.sh && npm run build && node index.js",
+      "env": {
+        "NODE_ENV": "development",
+        "DEBUG": "SASDN:*"
+      }
+    },
+    "build": {
+      "command": "npm run envdeploy && node build/build.js",
+      "env": {
+        "NODE_ENV": "build",
+        "DEBUG": "SASDN:*"
+      }
+    }
+  },
+  "license": "MIT",
+  "dependencies": {
+    "better-npm-run": "0.1.0",
+    "dotenv": "4.0.0",
+    "glob": "7.1.2",
+    "jsonwebtoken": "8.2.2",
+    "koa-convert": "1.2.0",
+    "koa-jwt": "3.3.2",
+    "koa-unless": "1.0.7",
+    "koa2-cors": "2.0.5",
+    "memcached": "2.2.2",
+    "mockjs": "1.0.1-beta3",
+    "mysql": "2.15.0",
+    "promise-retry": "1.1.1",
+    "protobufjs": "5.0.2",
+    "sasdn": "^1.6.2",
+    "sasdn-database": "^1.0.8",
+    "sasdn-log": "^1.0.1",
+    "sasdn-zipkin": "^1.0.8"
+  },
+  "devDependencies": {
+    "@types/google-protobuf": "3.2.5",
+    "@types/jest": "20.0.8",
+    "@types/koa": "2.0.39",
+    "@types/koa-bodyparser": "3.0.23",
+    "@types/koa-router": "7.0.22",
+    "@types/mz": "0.0.31",
+    "@types/node": "8.0.31",
+    "@types/supertest": "2.0.3",
+    "@types/dotenv": "4.0.2",
+    "@types/joi": "13.0.5",
+    "grpc": "1.9.1",
+    "grpc_tools_node_protoc_ts": "2.2.2",
+    "gulp": "3.9.1",
+    "gulp-copy": "1.0.0",
+    "gulp-rename": "1.2.2",
+    "gulp-shell": "0.6.3",
+    "gulp-typescript": "3.1.7",
+    "jest": "21.0.1",
+    "koa": "2.3.0",
+    "koa-bodyparser": "4.2.0",
+    "koa-router": "7.2.1",
+    "merge2": "1.0.3",
+    "del": "3.0.0",
+    "mz": "2.6.0",
+    "supertest": "3.0.0",
+    "ts-jest": "21.0.0",
+    "typescript": "2.6.2"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "transform": {
+      "^.+\\.(ts|tsx)?$": "<rootDir>/node_modules/ts-jest/preprocessor.js"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ]
+  }
+}
