@@ -5,7 +5,7 @@ import * as LibPath from 'path';
 import * as LibWinston from 'winston';
 import { MODULE_NAME } from '../constant/exception';
 
-const debug = require('debug')('SASDN:Gateway');
+const debug = require('debug')('SASDN:WEB');
 
 export enum TOPIC {
   SYSTEM = 'SystemTopic',

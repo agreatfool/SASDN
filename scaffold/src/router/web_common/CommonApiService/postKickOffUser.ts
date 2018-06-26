@@ -1,7 +1,7 @@
 import { GatewayApiBase, GatewayContext, joi as LibJoi, MiddlewareNext } from 'sasdn';
 import { ProtobufJoiValidation as PbJoi } from '../../../lib/ProtobufJoiValidation';
-import { UserKickOffReq, UserKickOffRes } from '../../../proto/gateway_common/gateway_common_pb';
-import { CommonLogic } from '../../../logic/gateway/CommonLogic';
+import { UserKickOffReq, UserKickOffRes } from '../../../proto/web_common/web_common_pb';
+import { CommonLogic } from '../../../logic/common/CommonLogic';
 import { Exception } from '../../../lib/Exception';
 
 interface RequestParams {
@@ -18,6 +18,7 @@ class PostKickOffUser extends GatewayApiBase {
       body: LibJoi.object().keys({
         userIdList: LibJoi.array().items(PbJoi.vUint64.activate().optional()),
         type: PbJoi.vUint32.activate().required(),
+        sign: PbJoi.vString.activate().required(),
       }),
     };
   }

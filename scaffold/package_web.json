@@ -25,7 +25,7 @@
       }
     },
     "dev": {
-      "command": "source .env && npm run build && node index.js",
+      "command": "source ./env.sh && npm run build && node index.js",
       "env": {
         "NODE_ENV": "development",
         "DEBUG": "SASDN:*"

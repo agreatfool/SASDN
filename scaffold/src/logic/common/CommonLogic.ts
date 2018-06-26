@@ -9,16 +9,20 @@ import {
   UploadingUrlGetRes,
   UserKickOffReq,
   UserKickOffRes,
-} from '../../proto/gateway_common/gateway_common_pb';
+} from '../../proto/web_common/web_common_pb';
 import { GatewayContext, MiddlewareNext } from 'sasdn';
 import { GenApiSign } from '../../lib/GenApiSign';
 import { APP_ID, CacheKeys, JWT_SECRET, LogoutType, SEVEN_DAY_EXPIRE } from '../../constant/const';
-import { Gateway, GatewayApiClient, GatewayUser } from '../../lib/GatewayApiClient';
+import { Gateway, GatewayUser, GatewayApiClient } from '../../lib/GatewayApiClient';
 import { HttpRequest } from '../../lib/HttpRequest';
 import * as jwt from 'jsonwebtoken';
 import { Config, ConfigConst } from '../../lib/Config';
 import { Cache, MemcachedObject } from '../../lib/Cache';
 import { JwtUserInfo } from '../../middleware/PermissionVerifyMiddleware';
+
+export interface GatewayLoginOrRegisterResponseWithCookie extends  GatewayUser.GatewayLoginOrRegisterResponse {
+  cookies?: string[];
+}
 
 export namespace CommonLogic {
   export async function login(ctx: GatewayContext, next?: MiddlewareNext, params?: any): Promise<LoginRes> {
@@ -32,7 +36,15 @@ export namespace CommonLogic {
       sign: '',
     };
     szLoginReq.sign = GenApiSign.genApiSign(szLoginReq);
-    let szLoginRes: GatewayUser.GatewayLoginOrRegisterResponse = await GatewayApiClient.userApiLogin(szLoginReq, HttpRequest.postWithCtx(ctx));
+    let szLoginRes: GatewayLoginOrRegisterResponseWithCookie = await GatewayApiClient.userApiLogin(szLoginReq, HttpRequest.post);
+
+    // 设置 cookie（兼容 api-gateway)
+    let cookies: string[] = szLoginRes.cookies;
+    for (let cookie of cookies) {
+      let [cookieKey, cookieValue] = cookie.split(';')[0].split('=');
+      ctx.cookies.set(cookieKey, cookieValue, { domain: Config.instance.getConfig(ConfigConst.COOKIE_DOMAIN) });
+      ctx.set('Access-Control-Origin', ctx.header.origin);
+    }
 
     // 根据登录接口返回的信息调用 api-gateway 的 checkST 接口，获取用户权限，并过滤
     let szCheckStReq: GatewayUser.GatewayCheckSTRequest = {
@@ -60,7 +72,6 @@ export namespace CommonLogic {
       expire: SEVEN_DAY_EXPIRE,
     });
 
-    // 设置 cookie（兼容 api-gateway）这一步已经在 ShinezoneApiClient.userApiLogin 这个方法中完成
     let res = new LoginRes();
     let loginData = new LoginData();
     loginData.setUserId(szLoginRes.data.userId);

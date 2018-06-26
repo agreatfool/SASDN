@@ -1,7 +1,7 @@
 import { GatewayApiBase, GatewayContext, joi as LibJoi, MiddlewareNext } from 'sasdn';
 import { ProtobufJoiValidation as PbJoi } from '../../../lib/ProtobufJoiValidation';
-import { LoginData, LoginReq, LoginRes } from '../../../proto/gateway_common/gateway_common_pb';
-import { CommonLogic } from '../../../logic/gateway/CommonLogic';
+import { LoginData, LoginReq, LoginRes } from '../../../proto/web_common/web_common_pb';
+import { CommonLogic } from '../../../logic/common/CommonLogic';
 import { Exception } from '../../../lib/Exception';
 
 interface RequestParams {

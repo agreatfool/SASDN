@@ -6,7 +6,7 @@ export namespace GenApiSign {
   export function genApiSign(data: { [key: string]: any; }): string {
     delete data.sign;
     let srcString = _genParamStr(data);
-    let hmac = crypto.createHmac('sha1', Config.instance.getConfig(ConfigConst.DEMO_PRIVATE_KEY));
+    let hmac = crypto.createHmac('sha1', Config.instance.getConfig(ConfigConst.WEB_PRIVATE_KEY));
     hmac.update(srcString);
     let sign = hmac.digest('hex');
     return sign;

@@ -1,4 +1,4 @@
-import GWServer from './entrance/GWServer';
+import GWServer from './entrance/WebServer';
 import { Logger } from './lib/Logger';
 
 const server = new GWServer();
@@ -7,7 +7,7 @@ server.init(process.env.CONTAINER)
     server.start();
   })
   .catch((error) => {
-    Logger.instance.error(`Gateway init failed error = ${error.stack}`);
+    Logger.instance.error(`Web init failed error = ${error.stack}`);
   });
 
 process.on('uncaughtException', (error) => {
@@ -19,6 +19,6 @@ process.on('unhandledRejection', (error) => {
 });
 
 process.on('SIGINT', () => {
-  Logger.instance.warn('MSServer shutdown by SIGINT');
+  Logger.instance.warn('Web shutdown by SIGINT');
   process.exit(0);
 });

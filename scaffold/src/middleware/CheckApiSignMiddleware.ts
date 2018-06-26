@@ -16,7 +16,7 @@ export namespace CheckApiSign {
 
         const sign = body.sign || '';
 
-        let privateKey = Config.instance.getConfig(ConfigConst.DEMO_PRIVATE_KEY);
+        let privateKey = Config.instance.getConfig(ConfigConst.WEB_PRIVATE_KEY);
 
         let bodyCopy = JSON.parse(JSON.stringify(body));
         delete bodyCopy.sign;

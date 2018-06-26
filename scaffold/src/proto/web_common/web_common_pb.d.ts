@@ -1,5 +1,5 @@
-// package: gateway_common
-// file: gateway_common/gateway_common.proto
+// package: web_common
+// file: web_common/web_common.proto
 
 /* tslint:disable */
 

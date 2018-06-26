@@ -1,14 +1,14 @@
 export class ConfigConst {
-  public static CONNECT_GATEWAY: string = 'GATEWAY';
+  public static CONNECT_WEB: string = 'WEB';
 
   public static ALLOW_DOMAIN: string = 'ALLOW_DOMAIN';
   public static COOKIE_DOMAIN: string = 'COOKIE_DOMAIN';
   public static MEMCACHED_URLS: string = 'MEMCACHED_URLS';
   public static SHINEZONE_GATEWAY_HOST: string = 'SHINEZONE_GATEWAY_HOST';
-  public static DEMO_PRIVATE_KEY: string = 'DEMO_PRIVATE_KEY';
+  public static WEB_PRIVATE_KEY: string = 'WEB_PRIVATE_KEY';
 }
 
-const debug = require('debug')('SASDN:Gateway');
+const debug = require('debug')('SASDN:WEB');
 
 export class Config {
   private static _instance: Config;

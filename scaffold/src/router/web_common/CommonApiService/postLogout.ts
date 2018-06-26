@@ -1,8 +1,8 @@
 import { GatewayApiBase, GatewayContext, joi as LibJoi, MiddlewareNext } from 'sasdn';
 import { ProtobufJoiValidation as PbJoi } from '../../../lib/ProtobufJoiValidation';
-import { LogoutReq, LogoutRes } from '../../../proto/gateway_common/gateway_common_pb';
+import { LogoutReq, LogoutRes } from '../../../proto/web_common/web_common_pb';
 import { Exception } from '../../../lib/Exception';
-import { CommonLogic } from '../../../logic/gateway/CommonLogic';
+import { CommonLogic } from '../../../logic/common/CommonLogic';
 
 interface RequestParams {
   body: LogoutReq.AsObject;

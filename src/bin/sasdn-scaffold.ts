@@ -148,26 +148,26 @@ class ScaffoldCLI {
       const msDocPath = LibPath.join(outputDir, 'document_ms');
 
       const webDocPath = LibPath.join(outputDir, 'document_web');
-      const webCommonProtoPath = LibPath.join(outputDir, 'proto', 'gateway_common');
+      const webCommonProtoPath = LibPath.join(outputDir, 'proto', 'web_common');
       const webConstantPath = LibPath.join(outputDir, 'src', 'constant_web');
-      const webEntrancePath = LibPath.join(outputDir, 'src', 'entrance', 'GWServer.ts');
+      const webEntrancePath = LibPath.join(outputDir, 'src', 'entrance', 'WebServer.ts');
       const webGenApiSignPath = LibPath.join(outputDir, 'src', 'lib', 'GenApiSign.ts');
       const webConfigPath = LibPath.join(outputDir, 'src', 'lib', 'Config_web.ts');
       const webHttpRequestPath = LibPath.join(outputDir, 'src', 'lib', 'HttpRequest.ts');
       const webGatewayApiClientPath = LibPath.join(outputDir, 'src', 'lib', 'GatewayApiClient.ts');
-      const webCommonLogicPath = LibPath.join(outputDir, 'src', 'logic', 'CommonLogic.ts');
+      const webCommonLogicPath = LibPath.join(outputDir, 'src', 'logic', 'common');
       const webMiddlewarePath = LibPath.join(outputDir, 'src', 'middleware');
-      const webCommonPbPath = LibPath.join(outputDir, 'src', 'proto', 'gateway_common');
-      const webCommonRouterPath = LibPath.join(outputDir, 'src', 'router', 'gateway_common');
+      const webCommonPbPath = LibPath.join(outputDir, 'src', 'proto', 'web_common');
+      const webCommonRouterPath = LibPath.join(outputDir, 'src', 'router', 'web_common');
       const webPackagePath = LibPath.join(outputDir, 'package_web.json');
-      const webPermissionOptionsPath = LibPath.join(outputDir, 'permissionOptions.json');
+      const webPermissionOptionsPath = LibPath.join(outputDir, 'permissionOptions.json.sample');
       const webDemoProtoPath = LibPath.join(outputDir, 'proto', 'demo', 'demo_web.proto');
       const webDemoPbPath = LibPath.join(outputDir, 'src', 'proto', 'demo_web');
       const webDemoRouterPath = LibPath.join(outputDir, 'src', 'router', 'demo_web');
       const webIndexPath = LibPath.join(outputDir, 'src', 'WEBIndex.ts');
-      const webLogicPath = LibPath.join(outputDir, 'src', 'logic', 'gateway_web');
+      const webLogicPath = LibPath.join(outputDir, 'src', 'logic', 'web');
       const webLoggerPath = LibPath.join(outputDir, 'src', 'lib', 'Logger_web.ts');
-      const webEnvPath = LibPath.join(outputDir, '.env.sample_web');
+      const webEnvPath = LibPath.join(outputDir, 'env.sh.sample_web');
 
       const servicesPath = LibPath.join(outputDir, 'src', 'services');
       const routerPath = LibPath.join(outputDir, 'src', 'router');
@@ -187,7 +187,7 @@ class ScaffoldCLI {
       const spmPath = LibPath.join(outputDir, 'spm.json');
       const clientsPath = LibPath.join(outputDir, 'src', 'clients');
       const loggerPath = LibPath.join(outputDir, 'src', 'lib', 'Logger.ts');
-      const envPath = LibPath.join(outputDir, '.env.sample');
+      const envPath = LibPath.join(outputDir, 'env.sh.sample');
 
       const msRemoveList = [
         gwIndexPath,
@@ -300,12 +300,12 @@ class ScaffoldCLI {
         [webConstantPath, constantPath],
         [webConfigPath, configPath],
         [webPackagePath, packagePath],
-        [webLogicPath, gwLogicPath],
         [webDemoProtoPath, protoPath],
         [webDemoPbPath, pbPath],
         [webDemoRouterPath, demoRouterPath],
         [webIndexPath, indexPath],
         [webLoggerPath, loggerPath],
+        [webEnvPath, envPath],
       ];
 
       if (MICROSERVICE) {

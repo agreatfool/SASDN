@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "gateway_common/gateway_common.proto",
+    "title": "web_common/web_common.proto",
     "version": "version not set"
   },
   "schemes": [
@@ -23,7 +23,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/gateway_commonUserKickOffRes"
+              "$ref": "#/definitions/web_commonUserKickOffRes"
             }
           }
         },
@@ -33,7 +33,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/gateway_commonUserKickOffReq"
+              "$ref": "#/definitions/web_commonUserKickOffReq"
             }
           }
         ],
@@ -50,7 +50,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/gateway_commonUploadingUrlGetRes"
+              "$ref": "#/definitions/web_commonUploadingUrlGetRes"
             }
           }
         },
@@ -60,7 +60,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/gateway_commonUploadingUrlGetReq"
+              "$ref": "#/definitions/web_commonUploadingUrlGetReq"
             }
           }
         ],
@@ -77,7 +77,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/gateway_commonLoginRes"
+              "$ref": "#/definitions/web_commonLoginRes"
             }
           }
         },
@@ -87,7 +87,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/gateway_commonLoginReq"
+              "$ref": "#/definitions/web_commonLoginReq"
             }
           }
         ],
@@ -104,7 +104,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/gateway_commonLogoutRes"
+              "$ref": "#/definitions/web_commonLogoutRes"
             }
           }
         },
@@ -114,7 +114,7 @@
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/gateway_commonLogoutReq"
+              "$ref": "#/definitions/web_commonLogoutReq"
             }
           }
         ],
@@ -125,7 +125,7 @@
     }
   },
   "definitions": {
-    "gateway_commonLoginData": {
+    "web_commonLoginData": {
       "type": "object",
       "properties": {
         "user_id": {
@@ -151,7 +151,7 @@
         }
       }
     },
-    "gateway_commonLoginReq": {
+    "web_commonLoginReq": {
       "type": "object",
       "properties": {
         "timestamp": {
@@ -169,7 +169,7 @@
         }
       }
     },
-    "gateway_commonLoginRes": {
+    "web_commonLoginRes": {
       "type": "object",
       "properties": {
         "code": {
@@ -180,11 +180,11 @@
           "type": "string"
         },
         "data": {
-          "$ref": "#/definitions/gateway_commonLoginData"
+          "$ref": "#/definitions/web_commonLoginData"
         }
       }
     },
-    "gateway_commonLogoutReq": {
+    "web_commonLogoutReq": {
       "type": "object",
       "properties": {
         "timestamp": {
@@ -194,7 +194,7 @@
         }
       }
     },
-    "gateway_commonLogoutRes": {
+    "web_commonLogoutRes": {
       "type": "object",
       "properties": {
         "code": {
@@ -206,7 +206,7 @@
         }
       }
     },
-    "gateway_commonUploadingUrl": {
+    "web_commonUploadingUrl": {
       "type": "object",
       "properties": {
         "uploading_url": {
@@ -215,7 +215,7 @@
         }
       }
     },
-    "gateway_commonUploadingUrlGetReq": {
+    "web_commonUploadingUrlGetReq": {
       "type": "object",
       "properties": {
         "timestamp": {
@@ -229,7 +229,7 @@
         }
       }
     },
-    "gateway_commonUploadingUrlGetRes": {
+    "web_commonUploadingUrlGetRes": {
       "type": "object",
       "properties": {
         "code": {
@@ -240,11 +240,11 @@
           "type": "string"
         },
         "data": {
-          "$ref": "#/definitions/gateway_commonUploadingUrl"
+          "$ref": "#/definitions/web_commonUploadingUrl"
         }
       }
     },
-    "gateway_commonUserKickOffReq": {
+    "web_commonUserKickOffReq": {
       "type": "object",
       "properties": {
         "user_id": {
@@ -262,7 +262,7 @@
         }
       }
     },
-    "gateway_commonUserKickOffRes": {
+    "web_commonUserKickOffRes": {
       "type": "object",
       "properties": {
         "code": {

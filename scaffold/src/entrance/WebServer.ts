@@ -1,6 +1,5 @@
 import * as Koa from 'koa';
 import * as koaBodyParser from 'koa-bodyparser';
-import { KoaImpl, ZIPKIN_EVENT } from 'sasdn-zipkin';
 import RouterLoader from '../router/Router';
 import { Config, ConfigConst } from '../lib/Config';
 import { LEVEL } from 'sasdn-log';
@@ -8,8 +7,6 @@ import { Logger } from '../lib/Logger';
 import * as LibDotEnv from 'dotenv';
 import { ContainerEnv, JWT_SECRET, UNLESS_OPTIONS } from '../constant/const';
 import { Memcached } from '../lib/Memcached';
-import * as LibPath from 'path';
-import { MODULE_NAME } from '../constant/exception';
 import { AccessLog } from '../middleware/AccessLogMiddleware';
 import * as jwt from 'koa-jwt';
 import { PermissionVerify } from '../middleware/PermissionVerifyMiddleware';
@@ -19,7 +16,7 @@ import { DatabaseOption } from '../model/DatabaseOptions';
 import * as koaCors from 'koa2-cors';
 import { CheckApiSign } from '../middleware/CheckApiSignMiddleware';
 
-export default class GWServer {
+export default class WebServer {
   private _initialized: boolean;
   public app: Koa;
 
@@ -38,7 +35,7 @@ export default class GWServer {
     await Config.instance.initalize();
 
     await Logger.instance.initalize({
-      loggerName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
+      loggerName: Config.instance.getConfig(ConfigConst.CONNECT_WEB),
       loggerLevel: LEVEL.INFO,
     });
 
@@ -48,16 +45,7 @@ export default class GWServer {
 
     await DatabaseFactory.instance.initialize(DatabaseOption.getOptions());
 
-    KoaImpl.init({
-      transType: 'FILE',
-      filePath: LibPath.join(process.env.ZIPKIN_LOG_FILE_PATH, `${MODULE_NAME}.log`),
-      serviceName: Config.instance.getConfig(ConfigConst.CONNECT_GATEWAY),
-      port: Config.instance.getPort(ConfigConst.CONNECT_GATEWAY),
-    });
-
-    const ZipkinImpl = new KoaImpl();
     const app = new Koa();
-    app.use(ZipkinImpl.createMiddleware());
     app.use(koaCors({
       origin(ctx) {
         let origin = '*';
@@ -85,13 +73,6 @@ export default class GWServer {
       app.use(PermissionVerify.createMiddleware().unless(UNLESS_OPTIONS));
     }
     app.use(RouterLoader.instance().getRouter().routes());
-    app.use(async (ctx, next) => {
-      ZipkinImpl.setCustomizedRecords(ZIPKIN_EVENT.SERVER_SEND, {
-        httpRequest: JSON.stringify(ctx.request.body),
-        httpResponse: JSON.stringify(ctx.body),
-      });
-      await next();
-    });
     this.app = app;
 
     this._initialized = true;
@@ -105,7 +86,7 @@ export default class GWServer {
     }
 
     const host: string = '0.0.0.0';
-    const port: number = Config.instance.getPort(ConfigConst.CONNECT_GATEWAY);
+    const port: number = Config.instance.getPort(ConfigConst.CONNECT_WEB);
     this.app.listen(port, host, () => {
       Logger.instance.info(`Web Backend Start, Address: ${host}:${port}!`);
     });
